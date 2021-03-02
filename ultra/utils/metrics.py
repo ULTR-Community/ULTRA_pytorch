@@ -31,6 +31,8 @@ from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from ultra.utils import metric_utils as utils
+import torch.nn.functional as F
+import torch
 
 
 class RankingMetricKey(object):
@@ -266,22 +268,18 @@ def mean_reciprocal_rank(labels, predictions, weights=None, name=None):
     Returns:
       A metric for the weighted mean reciprocal rank of the batch.
     """
-    with ops.name_scope(name, 'mean_reciprocal_rank',
-                        (labels, predictions, weights)):
-        _, list_size = array_ops.unstack(array_ops.shape(predictions))
-        labels, predictions, weights, topn = _prepare_and_validate_params(
-            labels, predictions, weights, list_size)
-        sorted_labels, = utils.sort_by_scores(predictions, [labels], topn=topn)
-        # Relevance = 1.0 when labels >= 1.0 to accommodate graded relevance.
-        relevance = math_ops.to_float(
-            math_ops.greater_equal(
-                sorted_labels, 1.0))
-        reciprocal_rank = 1.0 / math_ops.to_float(math_ops.range(1, topn + 1))
-        # MRR has a shape of [batch_size, 1]
-        mrr = math_ops.reduce_max(
-            relevance * reciprocal_rank, axis=1, keepdims=True)
-        return math_ops.reduce_mean(
-            mrr * array_ops.ones_like(weights) * weights)
+    _, list_size = torch.unbind(predictions.size())
+    labels, predictions, weights, topn = _prepare_and_validate_params(
+        labels, predictions, weights, list_size)
+    sorted_labels, = utils.sort_by_scores(predictions, [labels], topn=topn)
+    # Relevance = 1.0 when labels >= 1.0 to accommodate graded relevance.
+    relevance = torch.ge(sorted_labels, 1.0).type(torch.float)
+    reciprocal_rank = 1.0 / torch.range(1, topn + 1).type(torch.float)
+    # MRR has a shape of [batch_size, 1]
+    mrr = torch.max(
+        relevance * reciprocal_rank, axis=1, keepdims=True)
+    return torch.mean(
+        mrr * torch.ones_like(weights) * weights)
 
 
 def expected_reciprocal_rank(
@@ -462,23 +460,21 @@ def normalized_discounted_cumulative_gain(labels,
       A metric for the weighted normalized discounted cumulative gain of the
       batch.
     """
-    with ops.name_scope(name, 'normalized_discounted_cumulative_gain',
-                        (labels, predictions, weights)):
-        labels, predictions, weights, topn = _prepare_and_validate_params(
-            labels, predictions, weights, topn)
-        sorted_labels, sorted_weights = utils.sort_by_scores(
-            predictions, [labels, weights], topn=topn)
-        dcg = _discounted_cumulative_gain(sorted_labels, sorted_weights)
-        # Sorting over the weighted labels to get ideal ranking.
-        ideal_sorted_labels, ideal_sorted_weights = utils.sort_by_scores(
-            weights * labels, [labels, weights], topn=topn)
-        ideal_dcg = _discounted_cumulative_gain(ideal_sorted_labels,
-                                                ideal_sorted_weights)
-        per_list_ndcg = _safe_div(dcg, ideal_dcg)
-        per_list_weights = _per_example_weights_to_per_list_weights(
-            weights=weights,
-            relevance=math_ops.pow(2.0, math_ops.to_float(labels)) - 1.0)
-        return math_ops.reduce_mean(per_list_ndcg * per_list_weights)
+    labels, predictions, weights, topn = _prepare_and_validate_params(
+        labels, predictions, weights, topn)
+    sorted_labels, sorted_weights = utils.sort_by_scores(
+        predictions, [labels, weights], topn=topn)
+    dcg = _discounted_cumulative_gain(sorted_labels, sorted_weights)
+    # Sorting over the weighted labels to get ideal ranking.
+    ideal_sorted_labels, ideal_sorted_weights = utils.sort_by_scores(
+        weights * labels, [labels, weights], topn=topn)
+    ideal_dcg = _discounted_cumulative_gain(ideal_sorted_labels,
+                                            ideal_sorted_weights)
+    per_list_ndcg = _safe_div(dcg, ideal_dcg)
+    per_list_weights = _per_example_weights_to_per_list_weights(
+        weights=weights,
+        relevance=math_ops.pow(labels.to(torch.float), 2.0) - 1.0)
+    return torch.mean(per_list_ndcg * per_list_weights)
 
 
 def discounted_cumulative_gain(labels,

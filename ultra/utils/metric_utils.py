@@ -77,9 +77,9 @@ def sort_by_scores(scores,
     if shuffle_ties:
         shuffle_ind = _to_nd_indices(
             torch.argsort(
-                torch.rand(scores.size(), seed=seed),
+                torch.rand(scores.size()),
                 stable=True))
-        scores = tf.gather_nd(scores, shuffle_ind)
+        scores = gather_nd(scores, shuffle_ind)
     _, indices = torch.top_k(scores, topn, sorted=True)
     nd_indices = _to_nd_indices(indices)
     if shuffle_ind is not None:
@@ -215,8 +215,8 @@ def approx_ranks(logits, alpha=10.):
 
 
 def inverse_max_dcg(labels,
-                    gain_fn=lambda labels: tf.pow(2.0, labels) - 1.,
-                    rank_discount_fn=lambda rank: 1. / tf.math.log1p(rank),
+                    gain_fn=lambda labels: torch.pow(labels, 2.0) - 1.,
+                    rank_discount_fn=lambda rank: 1. / torch.log1p(rank),
                     topn=None):
     """Computes the inverse of max DCG.
 
@@ -232,14 +232,14 @@ def inverse_max_dcg(labels,
       A `Tensor` with shape [batch_size, 1].
     """
     ideal_sorted_labels, = sort_by_scores(labels, [labels], topn=topn)
-    rank = tf.range(tf.shape(input=ideal_sorted_labels)[1]) + 1
+    rank = torch.range(ideal_sorted_labels.size()[1]) + 1
     discounted_gain = gain_fn(ideal_sorted_labels) * rank_discount_fn(
-        tf.cast(rank, dtype=tf.float32))
-    discounted_gain = tf.reduce_sum(
-        input_tensor=discounted_gain, axis=1, keepdims=True)
-    return tf.compat.v1.where(
-        tf.greater(discounted_gain, 0.), 1. / discounted_gain,
-        tf.zeros_like(discounted_gain))
+        rank.type(dtype=torch.float32))
+    discounted_gain = torch.sum(
+        input=discounted_gain, axis=1, keepdims=True)
+    return torch.where(
+        torch.greater(discounted_gain, 0.), 1. / discounted_gain,
+        torch.zeros_like(discounted_gain))
 
 
 def ndcg(labels, ranks=None, perm_mat=None):
@@ -262,14 +262,14 @@ def ndcg(labels, ranks=None, perm_mat=None):
         raise ValueError('Cannot use both ranks and perm_mat simultaneously.')
 
     if ranks is None:
-        list_size = tf.shape(labels)[1]
-        ranks = tf.range(list_size) + 1
-    discounts = 1. / tf.math.log1p(tf.cast(ranks, dtype=tf.float32))
-    gains = tf.pow(2., tf.cast(labels, dtype=tf.float32)) - 1.
+        list_size = labels.size()[1]
+        ranks = torch.range(list_size) + 1
+    discounts = 1. /torch.log1p(ranks.type(torch.float32))
+    gains = torch.pow(labels.type(torch.float32), 2.) - 1.
     if perm_mat is not None:
-        gains = tf.reduce_sum(
-            input_tensor=perm_mat * tf.expand_dims(gains, 1), axis=-1)
-    dcg = tf.reduce_sum(input_tensor=gains * discounts, axis=-1, keepdims=True)
+        gains = torch.sum(
+            input=perm_mat * torch.unsqueeze(gains, 1), axis=-1)
+    dcg = torch.sum(input=gains * discounts, axis=-1, keepdims=True)
     ndcg_ = dcg * inverse_max_dcg(labels)
 
     return ndcg_
