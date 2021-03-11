@@ -106,7 +106,7 @@ class BaseAlgorithm(ABC):
             raise AssertionError(
                 'Input id list is shorter than output score list when remove padding.')
         # Build mask
-        valid_flags = torch.cat(values=[torch.ones([torch.Size(self.letor_features)[0]]), torch.zeros([1])], axis=0)
+        valid_flags = torch.cat((torch.ones(self.letor_features.size()[0]), torch.zeros([1])), dim=0)
         valid_flags = valid_flags.type(torch.bool)
         input_flag_list = []
         for i in range(len(output_scores)):
@@ -114,6 +114,7 @@ class BaseAlgorithm(ABC):
                 torch.index_select(
                     valid_flags, 0, input_id_list[i]))
         # Mask padding documents
+        output_scores = list(output_scores)
         for i in range(len(output_scores)):
             output_scores[i] = torch.where(
                 input_flag_list[i],
@@ -162,6 +163,7 @@ class BaseAlgorithm(ABC):
             input_feature_list.append(
                 torch.index_select(
                     letor_features,0, input_id_list[i]))
+
         return model.build(
             input_feature_list, is_training=is_training, **kwargs)
 

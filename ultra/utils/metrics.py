@@ -230,26 +230,32 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
       (labels, predictions, weights, topn) ready to be used for metric
       calculation.
     """
-    labels = ops.convert_to_tensor(labels)
-    predictions = ops.convert_to_tensor(predictions)
-    weights = 1.0 if weights is None else ops.convert_to_tensor(weights)
-    example_weights = array_ops.ones_like(labels) * weights
-    predictions.get_shape().assert_is_compatible_with(example_weights.get_shape())
-    predictions.get_shape().assert_is_compatible_with(labels.get_shape())
-    predictions.get_shape().assert_has_rank(2)
+    labels = torch.tensor(labels)
+    predictions = torch.tensor(predictions)
+    print(predictions.shape)
+    weights = 1.0 if weights is None else torch.tensor(weights)
+    example_weights = torch.ones_like(labels) * weights
+    print(example_weights.shape)
+    assert predictions.shape == example_weights.shape
+    assert predictions.shape == labels.shape
+    assert predictions.dim() == 2
+    # predictions.get_shape().assert_is_compatible_with(example_weights.get_shape())
+    # predictions.get_shape().assert_is_compatible_with(labels.get_shape())
+    # predictions.get_shape().assert_has_rank(2)
     if topn is None:
-        topn = array_ops.shape(predictions)[1]
+        topn = predictions.shape[1]
 
     # All labels should be >= 0. Invalid entries are reset.
     is_label_valid = utils.is_label_valid(labels)
-    labels = array_ops.where(
+    is_label_valid.type(torch.bool)
+    labels = torch.where(
         is_label_valid,
         labels,
-        array_ops.zeros_like(labels))
-    predictions = array_ops.where(
+        torch.zeros_like(labels))
+    predictions = torch.where(
         is_label_valid, predictions,
-        -1e-6 * array_ops.ones_like(predictions) + math_ops.reduce_min(
-            predictions, axis=1, keepdims=True))
+        -1e-6 * torch.ones_like(predictions) + torch.min(
+            input=predictions, dim=1, keepdims=True))
     return labels, predictions, example_weights, topn
 
 
@@ -268,7 +274,7 @@ def mean_reciprocal_rank(labels, predictions, weights=None, name=None):
     Returns:
       A metric for the weighted mean reciprocal rank of the batch.
     """
-    _, list_size = torch.unbind(predictions.size())
+    list_size = torch.unbind(predictions)[-1]
     labels, predictions, weights, topn = _prepare_and_validate_params(
         labels, predictions, weights, list_size)
     sorted_labels, = utils.sort_by_scores(predictions, [labels], topn=topn)

@@ -131,7 +131,7 @@ class IPWrank(BaseAlgorithm):
             self.max_candidate_num)
 
         # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
-        reshaped_labels = torch.transpose(torch(labels_data), 0,1)
+        reshaped_labels = torch.transpose(torch.tensor(labels_data), 0,1)
         pad_removed_output = self.remove_padding_for_metric_eval(
             self.docid_inputs, self.output)
 
