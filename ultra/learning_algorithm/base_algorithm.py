@@ -37,13 +37,12 @@ class BaseAlgorithm(ABC):
     PADDING_SCORE = -100000
 
     @abstractmethod
-    def __init__(self, data_set, exp_settings, forward_only=False):
+    def __init__(self, data_set, exp_settings):
         """Create the model.
 
         Args:
             data_set: (Raw_data) The dataset used to build the input layer.
             exp_settings: (dictionary) The dictionary containing the model settings.
-            forward_only: Set true to conduct prediction only, false to conduct training.
         """
         self.is_training = None
         self.docid_inputs = None  # a list of top documents
@@ -57,14 +56,41 @@ class BaseAlgorithm(ABC):
         self.optimizer_func = torch.optim.adagrad()
         pass
 
+
+    # def step(self, session, input_feed, forward_only):
+    #     """Run a step of the model feeding the given inputs.
+    #
+    #     Args:
+    #         session: (tf.Session) tensorflow session to use.
+    #         input_feed: (dictionary) A dictionary containing all the input feed data.
+    #         forward_only: whether to do the backward step (False) or only forward (True).
+    #
+    #     Returns:
+    #         A triple consisting of the loss, outputs (None if we do backward),
+    #         and a tf.summary containing related information about the step.
+    #
+    #     """
+    #     pass
     @abstractmethod
-    def step(self, session, input_feed, forward_only):
-        """Run a step of the model feeding the given inputs.
+    def train(self, input_feed):
+        """Run a step of the model feeding the given inputs for training.
 
         Args:
-            session: (tf.Session) tensorflow session to use.
             input_feed: (dictionary) A dictionary containing all the input feed data.
-            forward_only: whether to do the backward step (False) or only forward (True).
+
+        Returns:
+            A triple consisting of the loss, outputs (None if we do backward),
+            and a tf.summary containing related information about the step.
+
+        """
+        pass
+
+    @abstractmethod
+    def validation(self, input_feed):
+        """Run a step of the model feeding the given inputs for validating process.
+
+        Args:
+            input_feed: (dictionary) A dictionary containing all the input feed data.
 
         Returns:
             A triple consisting of the loss, outputs (None if we do backward),
@@ -129,8 +155,8 @@ class BaseAlgorithm(ABC):
             # Build feature padding
         PAD_embed = torch.zeros([1, self.feature_size], dtype = torch.float32)
         letor_features = torch.cat(
-            axis=0, values=[
-                self.letor_features, PAD_embed])
+            axis=0, tensors=(
+                self.letor_features, PAD_embed))
         input_feature_list = []
         for i in range(len(input_id_list)):
             input_feature_list.append(

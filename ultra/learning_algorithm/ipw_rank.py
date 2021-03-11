@@ -38,7 +38,7 @@ class IPWrank(BaseAlgorithm):
 
     """
 
-    def __init__(self, data_set, exp_settings, forward_only=False):
+    def __init__(self, data_set, exp_settings):
         """Create the model.
 
         Args:
@@ -62,19 +62,20 @@ class IPWrank(BaseAlgorithm):
         self.writer = SummaryWriter()
         self.train_summary = {}
         self.eval_summary = {}
-
-        self.step_count = 0
-        self.model = self.create_model()
+        self.is_training = "is_train"
         print(exp_settings['learning_algorithm_hparams'])
         self.hparams.parse(exp_settings['learning_algorithm_hparams'])
         self.exp_settings = exp_settings
+        self.rank_list_size = self.exp_settings['selection_bias_cutoff']
+        self.letor_features = "letor_features"
+        self.model = self.create_model()
         self.propensity_estimator = ultra.utils.find_class(
             self.hparams.propensity_estimator_type)(
             self.hparams.propensity_estimator_json)
 
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.feature_size = data_set.feature_size
-        with torch.no_grad:
+        with torch.no_grad():
             self.learning_rate = float(self.hparams.learning_rate)
             self.global_step = 0
 
@@ -83,26 +84,10 @@ class IPWrank(BaseAlgorithm):
         self.docid_inputs = []  # a list of top documents
         self.labels = []  # the labels for the documents (e.g., clicks)
         for i in range(self.max_candidate_num):
-            self.docid_inputs.append(name="docid_input{0}".format(i))
-            self.labels.append(name="label{0}".format(i))
-        self.PAD_embed = torch.zeros([1, self.feature_size], dtype=tf.float32)
-
-        self.saver = tf.train.Saver(tf.global_variables())
-
-    def step(self, session, input_feed, forward_only):
-        """Run a step of the model feeding the given inputs.
-
-        Args:
-            session: (tf.Session) tensorflow session to use.
-            input_feed: (dictionary) A dictionary containing all the input feed data.
-            forward_only: whether to do the backward step (False) or only forward (True).
-
-        Returns:
-            A triple consisting of the loss, outputs (None if we do backward),
-            and a tf.summary containing related information about the step.
-
-        """
-        pass
+            self.docid_inputs.append("docid_input{0}".format(i))
+            self.labels.append("label{0}".format(i))
+        self.PAD_embed = torch.zeros(1, self.feature_size)
+        self.PAD_embed = self.PAD_embed.to(dtype = torch.float32)
 
     def train(self, input_feed):
         """Run a step of the model feeding the given inputs for training process.
@@ -118,16 +103,17 @@ class IPWrank(BaseAlgorithm):
         # Output feed: depends on whether we do a backward step or not.
         # compute propensity weights for the input data.
 
-        self.step_count += 1
+        self.global_step += 1
+        self.letor_features = torch.from_numpy(input_feed["letor_features"])
         labels_data = []
         docids_data = []
         pw = []
         for l in range(self.rank_list_size):
-            input_feed[self.propensity_weights[l].name] = []
-        for i in range(len(input_feed[self.labels[0].name])):
-            click_list = [input_feed[self.labels[l].name][i]
+            input_feed["propensity_weights{0}".format(l)] = []
+        for i in range(len(input_feed[self.labels[0]])):
+            click_list = [input_feed[self.labels[l]][i]
                           for l in range(self.rank_list_size)]
-            docids_input = [input_feed[self.docid_inputs[l].name][i]
+            docids_input = [input_feed[self.docid_inputs[l]][i]
                           for l in range(self.rank_list_size)]
             docids_data.append(docids_input)
             labels_data.append(click_list)
@@ -135,11 +121,12 @@ class IPWrank(BaseAlgorithm):
                 click_list)
             pw.append(pw_list)
             for l in range(self.rank_list_size):
-                input_feed[self.propensity_weights[l].name].append(
+                input_feed["propensity_weights{0}".format(l)].append(
                     pw_list[l])
 
         # Build model
-        self.docid_inputs = docids_data
+        self.docid_inputs = torch.Tensor(docids_data)
+        self.docid_inputs = self.docid_inputs.type(dtype=torch.int64)
         self.output = self.ranking_model(self.model,
             self.max_candidate_num)
 
@@ -154,16 +141,15 @@ class IPWrank(BaseAlgorithm):
                     metric, topn)(reshaped_labels, pad_removed_output, None)
                 self.writer.add_scalar(
                     tag = '%s_%d' %
-                    (metric, topn), scalar_value = metric_value, global_step= self.step_count)
+                    (metric, topn), scalar_value = metric_value, global_step= self.global_step)
                 self.eval_summary['%s_%d' %(metric, topn)].append(metric_value)
 
         self.propensity_weights = pw
         # Gradients and SGD update operation for training the model.
-        self.rank_list_size = self.exp_settings['selection_bias_cutoff']
+
         train_output = self.ranking_model(
             self.rank_list_size)
         train_labels = self.labels[:self.rank_list_size]
-        self.propensity_weights = []
         print('Loss Function is ' + self.hparams.loss_func)
         self.loss = None
 
@@ -216,11 +202,11 @@ class IPWrank(BaseAlgorithm):
         self.writer.add_scalar(
             'Learning Rate',
             self.learning_rate,
-            self.step_count)
+            self.global_step)
         self.train_summary['Learning_rate'].append(self.learning_rate)
         self.writer.add_scalar(
             'Loss', torch.mean(
-                self.loss), self.step_count)
+                self.loss), self.global_step)
         self.train_summary['Loss'].append(self.loss)
 
         clipped_labels = nn.utils.clip_grad_value_(reshaped_train_labels, [0, 1])
@@ -236,19 +222,19 @@ class IPWrank(BaseAlgorithm):
                     reshaped_train_labels, pad_removed_train_output, None)
                 self.writer.add_scalar(
                     '%s_%d' %
-                    (metric, topn), metric_value, self.step_count)
+                    (metric, topn), metric_value, self.global_step)
                 self.train_summary['%s_%d' %
                     (metric, topn)].append(metric_value)
                 weighted_metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
                     reshaped_train_labels, pad_removed_train_output, list_weights)
                 self.writer.add_scalar(
                     'Weighted_%s_%d' %
-                    (metric, topn), weighted_metric_value, self.step_count)
+                    (metric, topn), weighted_metric_value, self.global_step)
                 self.train_summary['Weighted_%s_%d' %
                     (metric, topn)].append(weighted_metric_value)
 
 
-        input_feed[self.is_training.name] = True
+        input_feed[self.is_training] = True
         output_feed = [ self.loss,  # Loss for this batch.
                        self.train_summary  # Summarize statistics.
                        ]
@@ -267,16 +253,16 @@ class IPWrank(BaseAlgorithm):
             and a tf.summary containing related information about the step.
 
         """
-        self.step_count += 1
+        self.global_step += 1
         labels_data = []
         docids_data = []
         pw = []
         for l in range(self.rank_list_size):
-            input_feed[self.propensity_weights[l].name] = []
-        for i in range(len(input_feed[self.labels[0].name])):
-            click_list = [input_feed[self.labels[l].name][i]
+            input_feed["propensity_weights{0}".format(l)] = []
+        for i in range(len(input_feed[self.labels[0]])):
+            click_list = [input_feed[self.labels[l]][i]
                           for l in range(self.rank_list_size)]
-            docids_input = [input_feed[self.docid_inputs[l].name][i]
+            docids_input = [input_feed[self.docid_inputs[l]][i]
                             for l in range(self.rank_list_size)]
             docids_data.append(docids_input)
             labels_data.append(click_list)
@@ -284,7 +270,7 @@ class IPWrank(BaseAlgorithm):
                 click_list)
             pw.append(pw_list)
             for l in range(self.rank_list_size):
-                input_feed[self.propensity_weights[l].name].append(
+                input_feed["propensity_weights{0}".format(l)].append(
                     pw_list[l])
 
         self.docid_inputs = docids_data
@@ -302,8 +288,8 @@ class IPWrank(BaseAlgorithm):
                     metric, topn)(reshaped_labels, pad_removed_output, None)
                 self.writer.add_scalar(
                     tag = '%s_%d' %
-                    (metric, topn), scalar_value = metric_value, global_step= self.step_count)
+                    (metric, topn), scalar_value = metric_value, global_step= self.global_step)
                 self.eval_summary['%s_%d' %(metric, topn)].append(metric_value)
 
-        input_feed[self.is_training.name] = False
+        input_feed[self.is_training] = False
         return None, self.output, self.eval_summary  # loss, outputs, summary.

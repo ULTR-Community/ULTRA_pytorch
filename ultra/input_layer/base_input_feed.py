@@ -39,7 +39,7 @@ class BaseInputFeed(ABC):
         return
 
     @abstractmethod
-    def __init__(self, model, batch_size, hparam_str, session):
+    def __init__(self, model, batch_size, hparam_str):
         """Create the model.
 
         Args:

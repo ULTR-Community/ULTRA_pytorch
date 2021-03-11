@@ -25,7 +25,7 @@ class DirectLabelFeed(BaseInputFeed):
     by directly feeding the model with the true labels of each query-document pair.
     """
 
-    def __init__(self, model, batch_size, hparam_str, session=None):
+    def __init__(self, model, batch_size, hparam_str):
         """Create the model.
 
         Args:
