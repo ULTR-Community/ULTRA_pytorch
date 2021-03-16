@@ -61,16 +61,16 @@ class Initializer(object):
 class BaseRankingModel(ABC, nn.Module):
 
     ACT_FUNC_DIC = {
-        ActivationFunctions.ELU: F.elu,
-        ActivationFunctions.RELU: F.relu,
+        ActivationFunctions.ELU: nn.ELU(),
+        ActivationFunctions.RELU: nn.ReLU(),
         ActivationFunctions.SELU: selu,
-        ActivationFunctions.TANH: F.tanh,
-        ActivationFunctions.SIGMOID: F.sigmoid
+        ActivationFunctions.TANH: nn.Tanh(),
+        ActivationFunctions.SIGMOID: nn.Sigmoid()
     }
 
     NORM_FUNC_DIC = {
-        NormalizationFunctions.BATCH: nn.BatchNorm2d,
-        NormalizationFunctions.LAYER: nn.LayerNorm
+        NormalizationFunctions.BATCH: F.batch_norm,
+        NormalizationFunctions.LAYER: F.layer_norm
     }
 
     # INITIALIZER_DIC = {

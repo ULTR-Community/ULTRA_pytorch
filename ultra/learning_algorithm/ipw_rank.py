@@ -68,13 +68,13 @@ class IPWrank(BaseAlgorithm):
         self.exp_settings = exp_settings
         self.rank_list_size = self.exp_settings['selection_bias_cutoff']
         self.letor_features = "letor_features"
-        self.model = self.create_model()
+        self.feature_size = data_set.feature_size
+        self.model = self.create_model(self.feature_size)
         self.propensity_estimator = ultra.utils.find_class(
             self.hparams.propensity_estimator_type)(
             self.hparams.propensity_estimator_json)
 
         self.max_candidate_num = exp_settings['max_candidate_num']
-        self.feature_size = data_set.feature_size
         with torch.no_grad():
             self.learning_rate = float(self.hparams.learning_rate)
             self.global_step = 0
@@ -102,7 +102,6 @@ class IPWrank(BaseAlgorithm):
         """
         # Output feed: depends on whether we do a backward step or not.
         # compute propensity weights for the input data.
-
         self.global_step += 1
         self.letor_features = torch.from_numpy(input_feed["letor_features"])
         labels_data = []
@@ -127,29 +126,15 @@ class IPWrank(BaseAlgorithm):
         # Build model
         self.docid_inputs = torch.Tensor(docids_data)
         self.docid_inputs = self.docid_inputs.type(dtype=torch.int64)
-        self.output = self.ranking_model(self.model,
-            self.max_candidate_num)
-
-        # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
-        reshaped_labels = torch.transpose(torch.tensor(labels_data), 0,1)
-        pad_removed_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, self.output)
-
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(reshaped_labels, pad_removed_output, None)
-                self.writer.add_scalar(
-                    tag = '%s_%d' %
-                    (metric, topn), scalar_value = metric_value, global_step= self.global_step)
-                self.eval_summary['%s_%d' %(metric, topn)].append(metric_value)
 
         self.propensity_weights = pw
         # Gradients and SGD update operation for training the model.
+        self.labels = labels_data
 
-        train_output = self.ranking_model(
+        train_output = self.ranking_model(self.model,
             self.rank_list_size)
         train_labels = self.labels[:self.rank_list_size]
+        train_pw = self.propensity_weights[:self.rank_list_size]
         print('Loss Function is ' + self.hparams.loss_func)
         self.loss = None
 
@@ -158,7 +143,7 @@ class IPWrank(BaseAlgorithm):
             torch.tensor(train_labels), 0, 1)
         # reshape from [rank_list_size, ?] to [?, rank_list_size]
         reshaped_propensity = torch.transpose(
-            torch.tensor(self.propensity_weights), 0, 1)
+            torch.tensor(train_pw), 0, 1)
         if self.hparams.loss_func == 'sigmoid_loss':
             self.loss = self.sigmoid_loss_on_list(
                 train_output, reshaped_train_labels, reshaped_propensity)
@@ -166,6 +151,7 @@ class IPWrank(BaseAlgorithm):
             self.loss = self.pairwise_loss_on_list(
                 train_output, reshaped_train_labels, reshaped_propensity)
         else:
+
             self.loss = self.softmax_loss(
                 train_output, reshaped_train_labels, reshaped_propensity)
 
@@ -176,10 +162,10 @@ class IPWrank(BaseAlgorithm):
                 self.loss += self.hparams.l2_loss * nn.MSELoss(p) * 0.5
 
         # Select optimizer
-        self.optimizer_func = torch.optim.adagrad(self.model.parameters(), lr=self.hparams.learning_rate)
+        self.optimizer_func = torch.optim.Adagrad(params, lr=self.hparams.learning_rate)
         # tf.train.AdagradOptimizer
         if self.hparams.grad_strategy == 'sgd':
-            self.optimizer_func = torch.optim.sgd(self.model.parameters(), lr=self.hparams.learning_rate)
+            self.optimizer_func = torch.optim.SGD(params, lr=self.hparams.learning_rate)
             # tf.train.GradientDescentOptimizer
 
         opt = self.optimizer_func
@@ -190,7 +176,7 @@ class IPWrank(BaseAlgorithm):
             opt.zero_grad()
             self.loss.backward()
             self.clipped_gradient = nn.utils.clip_grad_norm(
-                self.model.parameters, self.hparams.max_gradient_norm)
+                params, self.hparams.max_gradient_norm)
             opt.step()
         else:
             self.norm = None
@@ -203,10 +189,12 @@ class IPWrank(BaseAlgorithm):
             'Learning Rate',
             self.learning_rate,
             self.global_step)
+        self.train_summary['Learning_rate'] = []
         self.train_summary['Learning_rate'].append(self.learning_rate)
         self.writer.add_scalar(
             'Loss', torch.mean(
                 self.loss), self.global_step)
+        self.train_summary['Loss'] = []
         self.train_summary['Loss'].append(self.loss)
 
         clipped_labels = nn.utils.clip_grad_value_(reshaped_train_labels, [0, 1])

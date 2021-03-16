@@ -232,16 +232,12 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
     """
     labels = torch.tensor(labels)
     predictions = torch.tensor(predictions)
-    print(predictions.shape)
     weights = 1.0 if weights is None else torch.tensor(weights)
     example_weights = torch.ones_like(labels) * weights
     print(example_weights.shape)
     assert predictions.shape == example_weights.shape
     assert predictions.shape == labels.shape
     assert predictions.dim() == 2
-    # predictions.get_shape().assert_is_compatible_with(example_weights.get_shape())
-    # predictions.get_shape().assert_is_compatible_with(labels.get_shape())
-    # predictions.get_shape().assert_has_rank(2)
     if topn is None:
         topn = predictions.shape[1]
 

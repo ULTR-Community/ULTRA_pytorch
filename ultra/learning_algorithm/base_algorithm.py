@@ -8,7 +8,6 @@ from __future__ import print_function
 
 import torch.nn.functional as F
 import torch
-import tensorflow as tf
 from abc import ABC, abstractmethod
 
 import ultra
@@ -156,7 +155,7 @@ class BaseAlgorithm(ABC):
             # Build feature padding
         PAD_embed = torch.zeros([1, self.feature_size], dtype = torch.float32)
         letor_features = torch.cat(
-            axis=0, tensors=(
+            dim=0, tensors=(
                 self.letor_features, PAD_embed))
         input_feature_list = []
         for i in range(len(input_id_list)):
@@ -167,7 +166,7 @@ class BaseAlgorithm(ABC):
         return model.build(
             input_feature_list, is_training=is_training, **kwargs)
 
-    def create_model(self):
+    def create_model(self, feature_size):
         """ Initialize the ranking model.
 
         ReturnsL
@@ -177,7 +176,7 @@ class BaseAlgorithm(ABC):
         if not hasattr(self, "model"):
             model = utils.find_class(
                 self.exp_settings['ranking_model'])(
-                self.exp_settings['ranking_model_hparams'])
+                self.exp_settings['ranking_model_hparams'], feature_size)
         return model
 
     def pairwise_cross_entropy_loss(
@@ -287,7 +286,7 @@ class BaseAlgorithm(ABC):
         loss = None
         weighted_labels = (labels + 0.0000001) * propensity_weights
         label_dis = weighted_labels / \
-            torch.sum(weighted_labels, 1, keep_dims=True)
+            torch.sum(weighted_labels, 1, keepdim=True)
         loss = softmax_cross_entropy_with_logits(
             logits = output, labels = label_dis)* torch.sum(weighted_labels, 1)
         return torch.sum(loss) / torch.sum(weighted_labels)
