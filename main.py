@@ -214,6 +214,10 @@ def train(exp_settings):
 
             if args.max_train_iteration > 0 and current_step > args.max_train_iteration:
                 break
+    train_writer.close()
+    valid_writer.close()
+    if args.test_while_train:
+        test_writer.close()
 
 
 def test(exp_settings):

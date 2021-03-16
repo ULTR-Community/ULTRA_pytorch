@@ -36,7 +36,7 @@ def _to_nd_indices(indices):
       or tf.scatter_nd.
 
     """
-    indices.get_shape().assert_has_rank(2)
+    assert indices.dim() == 2
     batch_ids = torch.ones_like(indices) * torch.unsqueeze(
         torch.arange(end = indices.size()[0]), 1)
     return torch.stack([batch_ids, indices], axis=-1)
@@ -68,19 +68,18 @@ def sort_by_scores(scores,
       A list of `Tensor`s as the list of sorted features by `scores`.
     """
     scores = scores.type(torch.float32)
-    scores.get_shape().assert_has_rank(2)
-    list_size = scores.size[1]
+    assert scores.dim() == 2
+    list_size = scores.size()[1]
     if topn is None:
         topn = list_size
-    topn = torch.minimum(topn, list_size)
+    topn = min(topn, list_size)
     shuffle_ind = None
     if shuffle_ties:
         shuffle_ind = _to_nd_indices(
             torch.argsort(
-                torch.rand(scores.size()),
-                stable=True))
+                torch.rand(scores.size())))
         scores = gather_nd(scores, shuffle_ind)
-    _, indices = torch.top_k(scores, topn, sorted=True)
+    _, indices = torch.topk(scores, topn, sorted=True)
     nd_indices = _to_nd_indices(indices)
     if shuffle_ind is not None:
         nd_indices = gather_nd(shuffle_ind, nd_indices)
@@ -518,5 +517,5 @@ def gather_nd(params,indices):
     '''
     newshape=indices.shape[:-1]+params.shape[indices.shape[-1]:]
     indices=indices.view(-1,indices.shape[-1]).tolist()
-    out=torch.cat([params.__getitem__(tuple(i)) for i in indices])
+    out=torch.stack([params.__getitem__(tuple(i)) for i in indices])
     return out.reshape(newshape)

@@ -175,7 +175,7 @@ class IPWrank(BaseAlgorithm):
             # tf.clip_by_global_norm(self.gradients,self.hparams.max_gradient_norm)
             opt.zero_grad()
             self.loss.backward()
-            self.clipped_gradient = nn.utils.clip_grad_norm(
+            self.clipped_gradient = nn.utils.clip_grad_norm_(
                 params, self.hparams.max_gradient_norm)
             opt.step()
         else:
@@ -197,20 +197,23 @@ class IPWrank(BaseAlgorithm):
         self.train_summary['Loss'] = []
         self.train_summary['Loss'].append(self.loss)
 
-        clipped_labels = nn.utils.clip_grad_value_(reshaped_train_labels, [0, 1])
+        nn.utils.clip_grad_value_(reshaped_train_labels, 1)
+
         # tf.clip_by_value(
         # reshaped_train_labels, clip_value_min=0, clip_value_max=1)
         pad_removed_train_output = self.remove_padding_for_metric_eval(
             self.docid_inputs, train_output)
         for metric in self.exp_settings['metrics']:
             for topn in self.exp_settings['metrics_topn']:
-                list_weights = tf.reduce_mean(
-                    reshaped_propensity * clipped_labels, axis=1, keep_dims=True)
+                list_weights = torch.mean(
+                    reshaped_propensity * reshaped_train_labels, dim=1, keepdim=True)
                 metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
                     reshaped_train_labels, pad_removed_train_output, None)
                 self.writer.add_scalar(
                     '%s_%d' %
                     (metric, topn), metric_value, self.global_step)
+                self.train_summary['%s_%d' %
+                                   (metric, topn)] = []
                 self.train_summary['%s_%d' %
                     (metric, topn)].append(metric_value)
                 weighted_metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
@@ -218,6 +221,8 @@ class IPWrank(BaseAlgorithm):
                 self.writer.add_scalar(
                     'Weighted_%s_%d' %
                     (metric, topn), weighted_metric_value, self.global_step)
+                self.train_summary['Weighted_%s_%d' %
+                                   (metric, topn)] = []
                 self.train_summary['Weighted_%s_%d' %
                     (metric, topn)].append(weighted_metric_value)
 
@@ -228,6 +233,7 @@ class IPWrank(BaseAlgorithm):
                        ]
 
         # outputs = session.run(output_feed, input_feed)
+        print("Global step: ", self.global_step)
         return self.loss, None, self.train_summary
 
     def validation(self, input_feed):
@@ -277,6 +283,7 @@ class IPWrank(BaseAlgorithm):
                 self.writer.add_scalar(
                     tag = '%s_%d' %
                     (metric, topn), scalar_value = metric_value, global_step= self.global_step)
+                self.eval_summary['%s_%d' % (metric, topn)] = []
                 self.eval_summary['%s_%d' %(metric, topn)].append(metric_value)
 
         input_feed[self.is_training] = False

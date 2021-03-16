@@ -168,11 +168,10 @@ def _safe_div(numerator, denominator, name='safe_div'):
     Returns:
       The element-wise value of the numerator divided by the denominator.
     """
-    return array_ops.where(
-        math_ops.equal(denominator, 0),
-        array_ops.zeros_like(numerator),
-        math_ops.div(numerator, denominator),
-        name=name)
+    return torch.where(
+        torch.eq(denominator, 0),
+        torch.zeros_like(numerator),
+        torch.div(numerator, denominator))
 
 
 def _per_example_weights_to_per_list_weights(weights, relevance):
@@ -186,8 +185,8 @@ def _per_example_weights_to_per_list_weights(weights, relevance):
       The per list `Tensor` of shape [batch_size, 1]
     """
     per_list_weights = _safe_div(
-        math_ops.reduce_sum(weights * relevance, 1, keepdims=True),
-        math_ops.reduce_sum(relevance, 1, keepdims=True))
+        torch.sum(weights * relevance, 1, keepdim=True),
+        torch.sum(relevance, 1, keepdim=True))
     return per_list_weights
 
 
@@ -206,12 +205,12 @@ def _discounted_cumulative_gain(labels, weights=None):
       A `Tensor` as the weighted discounted cumulative gain per-list. The
       tensor shape is [batch_size, 1].
     """
-    list_size = array_ops.shape(labels)[1]
-    position = math_ops.to_float(math_ops.range(1, list_size + 1))
-    denominator = math_ops.log(position + 1)
-    numerator = math_ops.pow(2.0, math_ops.to_float(labels)) - 1.0
-    return math_ops.reduce_sum(
-        weights * numerator / denominator, 1, keepdims=True)
+    list_size = labels.shape[1]
+    position = torch.arange(1, list_size + 1).to(dtype=torch.float32)
+    denominator = torch.log(position + 1)
+    numerator = torch.pow(exponent=2.0, input=labels.to(torch.float32)) - 1.0
+    return torch.sum(
+        input=weights * numerator / denominator, dim=1, keepdim=True)
 
 
 def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
@@ -234,7 +233,6 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
     predictions = torch.tensor(predictions)
     weights = 1.0 if weights is None else torch.tensor(weights)
     example_weights = torch.ones_like(labels) * weights
-    print(example_weights.shape)
     assert predictions.shape == example_weights.shape
     assert predictions.shape == labels.shape
     assert predictions.dim() == 2
@@ -251,7 +249,7 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
     predictions = torch.where(
         is_label_valid, predictions,
         -1e-6 * torch.ones_like(predictions) + torch.min(
-            input=predictions, dim=1, keepdims=True))
+            input=predictions, dim=1, keepdim=True).values)
     return labels, predictions, example_weights, topn
 
 
@@ -270,16 +268,16 @@ def mean_reciprocal_rank(labels, predictions, weights=None, name=None):
     Returns:
       A metric for the weighted mean reciprocal rank of the batch.
     """
-    list_size = torch.unbind(predictions)[-1]
+    list_size = predictions.size()[-1]
     labels, predictions, weights, topn = _prepare_and_validate_params(
         labels, predictions, weights, list_size)
     sorted_labels, = utils.sort_by_scores(predictions, [labels], topn=topn)
     # Relevance = 1.0 when labels >= 1.0 to accommodate graded relevance.
     relevance = torch.ge(sorted_labels, 1.0).type(torch.float)
-    reciprocal_rank = 1.0 / torch.range(1, topn + 1).type(torch.float)
+    reciprocal_rank = 1.0 / torch.arange(1, topn+1).type(torch.float)
     # MRR has a shape of [batch_size, 1]
     mrr = torch.max(
-        relevance * reciprocal_rank, axis=1, keepdims=True)
+        relevance * reciprocal_rank, dim=1, keepdim=True).values
     return torch.mean(
         mrr * torch.ones_like(weights) * weights)
 
@@ -475,7 +473,7 @@ def normalized_discounted_cumulative_gain(labels,
     per_list_ndcg = _safe_div(dcg, ideal_dcg)
     per_list_weights = _per_example_weights_to_per_list_weights(
         weights=weights,
-        relevance=math_ops.pow(labels.to(torch.float), 2.0) - 1.0)
+        relevance=torch.pow(labels.to(torch.float), 2.0) - 1.0)
     return torch.mean(per_list_ndcg * per_list_weights)
 
 
