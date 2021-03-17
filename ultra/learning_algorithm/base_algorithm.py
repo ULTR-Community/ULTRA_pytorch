@@ -99,8 +99,7 @@ class BaseAlgorithm(ABC):
         pass
 
     def remove_padding_for_metric_eval(self, input_id_list, model_output):
-        # output_scores = tf.unstack(model_output, axis=1)
-        output_scores = torch.unbind(model_output, axis = 1)
+        output_scores = torch.unbind(model_output, dim=1)
         if len(output_scores) > len(input_id_list):
             raise AssertionError(
                 'Input id list is shorter than output score list when remove padding.')
@@ -162,7 +161,6 @@ class BaseAlgorithm(ABC):
             input_feature_list.append(
                 torch.index_select(
                     letor_features,0, input_id_list[i]))
-
         return model.build(
             input_feature_list, is_training=is_training, **kwargs)
 
@@ -267,7 +265,7 @@ class BaseAlgorithm(ABC):
         # / (tf.reduce_sum(propensity_weights)+1)
         return torch.sum(loss) / batch_size.type(torch.float32)
 
-    def softmax_loss(self, output, labels, propensity_weights=None, name=None):
+    def softmax_loss(self, output, labels, propensity_weights=None):
         """Computes listwise softmax loss without propensity weighting.
 
         Args:
@@ -276,17 +274,16 @@ class BaseAlgorithm(ABC):
             labels: (tf.Tensor) A tensor of the same shape as `output`. A value >= 1 means a
             relevant example.
             propensity_weights: (tf.Tensor) A tensor of the same shape as `output` containing the weight of each element.
-            name: A string used as the name for this variable scope.
 
         Returns:
             (tf.Tensor) A single value tensor containing the loss.
         """
         if propensity_weights is None:
             propensity_weights = torch.ones_like(labels)
-        loss = None
         weighted_labels = (labels + 0.0000001) * propensity_weights
         label_dis = weighted_labels / \
             torch.sum(weighted_labels, 1, keepdim=True)
+        label_dis[label_dis!=label_dis] = 0
         loss = softmax_cross_entropy_with_logits(
             logits = output, labels = label_dis)* torch.sum(weighted_labels, 1)
         return torch.sum(loss) / torch.sum(weighted_labels)

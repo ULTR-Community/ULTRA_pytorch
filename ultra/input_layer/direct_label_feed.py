@@ -122,10 +122,10 @@ class DirectLabelFeed(BaseInputFeed):
                           for batch_idx in range(local_batch_size)], dtype=np.float32))
         # Create input feed map
         input_feed = {}
-        input_feed[self.model.letor_features.name] = np.array(letor_features)
+        input_feed[self.model.letor_features_name] = np.array(letor_features)
         for l in range(self.rank_list_size):
-            input_feed[self.model.docid_inputs[l].name] = batch_docid_inputs[l]
-            input_feed[self.model.labels[l].name] = batch_labels[l]
+            input_feed[self.model.docid_inputs_name[l]] = batch_docid_inputs[l]
+            input_feed[self.model.labels_name[l]] = batch_labels[l]
         # Create info_map to store other information
         info_map = {
             'rank_list_idxs': rank_list_idxs,
@@ -187,10 +187,10 @@ class DirectLabelFeed(BaseInputFeed):
                           for batch_idx in range(local_batch_size)], dtype=np.float32))
         # Create input feed map
         input_feed = {}
-        input_feed[self.model.letor_features.name] = np.array(letor_features)
+        input_feed[self.model.letor_features_name] = np.array(letor_features)
         for l in range(self.rank_list_size):
-            input_feed[self.model.docid_inputs[l].name] = batch_docid_inputs[l]
-            input_feed[self.model.labels[l].name] = batch_labels[l]
+            input_feed[self.model.docid_inputs_name[l]] = batch_docid_inputs[l]
+            input_feed[self.model.labels_name[l]] = batch_labels[l]
         # Create others_map to store other information
         others_map = {
             'input_list': docid_inputs,
@@ -245,10 +245,10 @@ class DirectLabelFeed(BaseInputFeed):
                           for batch_idx in range(1)], dtype=np.float32))
         # Create input feed map
         input_feed = {}
-        input_feed[self.model.letor_features.name] = np.array(letor_features)
+        input_feed[self.model.letor_features_name] = np.array(letor_features)
         for l in range(self.rank_list_size):
-            input_feed[self.model.docid_inputs[l].name] = batch_docid_inputs[l]
-            input_feed[self.model.labels[l].name] = batch_labels[l]
+            input_feed[self.model.docid_inputs_name[l]] = batch_docid_inputs[l]
+            input_feed[self.model.labels_name[l]] = batch_labels[l]
         # Create others_map to store other information
         others_map = {
             'input_list': docid_inputs,
