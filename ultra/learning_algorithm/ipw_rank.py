@@ -11,7 +11,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -110,15 +109,12 @@ class IPWrank(BaseAlgorithm):
         labels_data = []
         docids_data = []
         pw = []
+        self.model.train()
         for l in range(self.rank_list_size):
             input_feed["propensity_weights{0}".format(l)] = []
         for i in range(len(input_feed[self.labels_name[0]])):
             click_list = [input_feed[self.labels_name[l]][i]
                           for l in range(self.rank_list_size)]
-            docids_input = [input_feed[self.docid_inputs_name[l]][i]
-                          for l in range(self.rank_list_size)]
-            docids_data.append(docids_input)
-            labels_data.append(click_list)
             pw_list = self.propensity_estimator.getPropensityForOneList(
                 click_list)
             pw.append(pw_list)
@@ -126,43 +122,41 @@ class IPWrank(BaseAlgorithm):
                 input_feed["propensity_weights{0}".format(l)].append(
                     pw_list[l])
 
+        for i in range(self.rank_list_size):
+            docids_data.append(input_feed[self.docid_inputs_name[i]])
+            labels_data.append(input_feed[self.labels_name[i]])
+
         # Build model
         self.docid_inputs = torch.Tensor(docids_data)
         self.docid_inputs = self.docid_inputs.type(dtype=torch.int64)
 
         self.propensity_weights = pw
         # Gradients and SGD update operation for training the model.
-        self.labels = labels_data
+        self.labels = torch.transpose(torch.tensor(labels_data),0,1)
 
         train_output = self.ranking_model(self.model,
             self.rank_list_size)
-        train_labels = self.labels[:self.rank_list_size]
-        train_pw = self.propensity_weights[:self.rank_list_size]
+        train_labels = torch.tensor(self.labels)
+        train_pw = torch.tensor(self.propensity_weights)
         print('Loss Function is ' + self.hparams.loss_func)
         self.loss = None
 
-        # reshape from [rank_list_size, ?] to [?, rank_list_size]
-        reshaped_train_labels = torch.transpose(
-            torch.tensor(train_labels), 0, 1)
-        # reshape from [rank_list_size, ?] to [?, rank_list_size]
-        reshaped_propensity = torch.transpose(
-            torch.tensor(train_pw), 0, 1)
         if self.hparams.loss_func == 'sigmoid_loss':
             self.loss = self.sigmoid_loss_on_list(
-                train_output, reshaped_train_labels, reshaped_propensity)
+                train_output, train_labels, train_pw)
         elif self.hparams.loss_func == 'pairwise_loss':
             self.loss = self.pairwise_loss_on_list(
-                train_output, reshaped_train_labels, reshaped_propensity)
+                train_output, train_labels, train_pw)
         else:
             self.loss = self.softmax_loss(
-                train_output, reshaped_train_labels, reshaped_propensity)
+                train_output, train_labels, train_pw)
 
         # params = tf.trainable_variables()
         params = self.model.parameters()
         if self.hparams.l2_loss > 0:
             for p in params:
                 self.loss += self.hparams.l2_loss * nn.MSELoss(p) * 0.5
-
+        print(self.loss)
         # Select optimizer
         self.optimizer_func = torch.optim.Adagrad(params, lr=self.hparams.learning_rate)
         # tf.train.AdagradOptimizer
@@ -184,8 +178,6 @@ class IPWrank(BaseAlgorithm):
             opt.zero_grad()
             self.loss.backward()
             opt.step()
-            # opt.apply_gradients(zip(self.gradients, params),
-            #                               global_step=self.global_step)
         self.writer.add_scalar(
             'Learning Rate',
             self.learning_rate,
@@ -196,30 +188,30 @@ class IPWrank(BaseAlgorithm):
                 self.loss), self.global_step)
         self.train_summary['Loss at global step %d' % self.global_step] = self.loss
 
-        nn.utils.clip_grad_value_(reshaped_train_labels, 1)
+        #nn.utils.clip_grad_value_(train_labels, 1)
 
         pad_removed_train_output = self.remove_padding_for_metric_eval(
             self.docid_inputs, train_output)
         for metric in self.exp_settings['metrics']:
             for topn in self.exp_settings['metrics_topn']:
                 list_weights = torch.mean(
-                    reshaped_propensity * reshaped_train_labels, dim=1, keepdim=True)
+                    train_pw * train_labels, dim=1, keepdim=True)
                 metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-                    reshaped_train_labels, pad_removed_train_output, None)
+                    train_pw, pad_removed_train_output, None)
                 self.writer.add_scalar(
                     '%s_%d' %
                     (metric, topn), metric_value, self.global_step)
                 self.train_summary['%s_%d at global step %d' %
                     (metric, topn, self.global_step)] = metric_value
                 weighted_metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-                    reshaped_train_labels, pad_removed_train_output, list_weights)
+                    train_labels, pad_removed_train_output, list_weights)
                 self.writer.add_scalar(
                     'Weighted_%s_%d' %
                     (metric, topn), weighted_metric_value, self.global_step)
 
                 self.train_summary['Weighted_%s_%d at global step %d' %
                     (metric, topn, self.global_step)] = weighted_metric_value
-
+                print(metric, topn, metric_value)
 
         input_feed[self.is_training] = True
         print("Global Step: ", self.global_step)
@@ -240,35 +232,31 @@ class IPWrank(BaseAlgorithm):
         self.letor_features = torch.from_numpy(input_feed["letor_features"])
         labels_data = []
         docids_data = []
-        for i in range(len(input_feed[self.labels_name[0]])):
-            click_list = [input_feed[self.labels_name[l]][i]
-                          for l in range(self.max_candidate_num)]
-            docids_input = [input_feed[self.docid_inputs_name[l]][i]
-                            for l in range(self.max_candidate_num)]
-            docids_data.append(docids_input)
-            labels_data.append(click_list)
 
+        for i in range(self.rank_list_size):
+          docids_data.append(input_feed[self.docid_inputs_name[i]])
+          labels_data.append(input_feed[self.labels_name[i]])
 
+        self.model.eval()
         self.docid_inputs = torch.Tensor(docids_data)
         self.docid_inputs = self.docid_inputs.type(dtype=torch.int64)
         self.labels = labels_data
-        val_labels = self.labels[:self.max_candidate_num]
+        val_labels = torch.transpose(torch.tensor(self.labels),0,1)
         self.output = self.ranking_model(self.model,
             self.max_candidate_num)
 
-        # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
-        reshaped_labels = torch.transpose(torch.tensor(val_labels), 0,1)
         pad_removed_output = self.remove_padding_for_metric_eval(
             self.docid_inputs, self.output)
 
         for metric in self.exp_settings['metrics']:
             for topn in self.exp_settings['metrics_topn']:
                 metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(reshaped_labels, pad_removed_output, None)
+                    metric, topn)(val_labels, pad_removed_output, None)
                 self.writer.add_scalar(
                     tag = '%s_%d' %
                     (metric, topn), scalar_value = metric_value, global_step= self.global_step)
                 self.eval_summary['%s_%d' %(metric, topn)] = metric_value
 
         input_feed[self.is_training] = False
+        print(self.output)
         return None, self.output, self.eval_summary  # loss, outputs, summary.

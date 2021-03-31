@@ -134,7 +134,7 @@ class BaseAlgorithm(ABC):
 
         """
         output_scores = self.get_ranking_scores(model = model,
-             input_id_list= self.docid_inputs[:list_size], is_training=self.is_training)
+             input_id_list= self.docid_inputs, is_training=self.is_training)
         return torch.cat(output_scores, 1)
 
     def get_ranking_scores(self, model, input_id_list,
@@ -156,6 +156,7 @@ class BaseAlgorithm(ABC):
         letor_features = torch.cat(
             dim=0, tensors=(
                 self.letor_features, PAD_embed))
+        print(self.letor_features)
         input_feature_list = []
         for i in range(len(input_id_list)):
             input_feature_list.append(
@@ -280,6 +281,7 @@ class BaseAlgorithm(ABC):
         """
         if propensity_weights is None:
             propensity_weights = torch.ones_like(labels)
+        print(output)
         weighted_labels = (labels + 0.0000001) * propensity_weights
         label_dis = weighted_labels / \
             torch.sum(weighted_labels, 1, keepdim=True)

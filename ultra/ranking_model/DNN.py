@@ -36,6 +36,7 @@ class DNN(nn.Module):
         self.initializer = None
         self.act_func = None
         self.output_sizes = self.hparams.hidden_layer_sizes + [1]
+        self.layer_norm = None
 
         if self.hparams.activation_func in BaseRankingModel.ACT_FUNC_DIC:
             self.act_func = BaseRankingModel.ACT_FUNC_DIC[self.hparams.activation_func]
@@ -45,13 +46,14 @@ class DNN(nn.Module):
 
         modules = []
         for j in range(len(self.output_sizes)):
-            if self.hparams.norm in BaseRankingModel.NORM_FUNC_DIC:
+            if self.layer_norm is None and self.hparams.norm in BaseRankingModel.NORM_FUNC_DIC:
                 if self.hparams.norm == "layer":
                     modules.append(nn.LayerNorm(feature_size).to(dtype=torch.float32))
                 else:
                     modules.append(nn.BatchNorm2d(feature_size).to(dtype=torch.float32))
             modules.append(nn.Linear(feature_size, self.output_sizes[j]))
-            modules.append(self.act_func)
+            if j != len(self.output_sizes) - 1:
+                modules.append(self.act_func)
             feature_size = self.output_sizes[j]
         self.sequential = nn.Sequential(*modules).to(dtype=torch.float32)
 
@@ -72,4 +74,5 @@ class DNN(nn.Module):
         input_data = torch.cat(input_list, dim=0)
         input_data = input_data.to(dtype=torch.float32)
         output_data = self.sequential(input_data)
-        return torch.split(output_data, len(input_list), dim=0)
+        output_shape = input_list[0].shape[0]
+        return torch.split(output_data, output_shape, dim=0)
