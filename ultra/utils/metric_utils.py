@@ -22,7 +22,7 @@ import tensorflow as tf
 import torch.nn.functional as F
 import torch
 
-
+device = torch.device("cuda")
 def _to_nd_indices(indices):
     """Returns indices used for tf.gather_nd or tf.scatter_nd.
 
@@ -37,9 +37,10 @@ def _to_nd_indices(indices):
 
     """
     assert indices.dim() == 2
-    batch_ids = torch.ones_like(indices) * torch.unsqueeze(
-        torch.arange(end = indices.size()[0]), 1)
-    return torch.stack([batch_ids, indices], axis=-1)
+    indices = indices.to(device=device)
+    batch_ids = torch.ones_like(indices).to(device=device) * torch.unsqueeze(
+        torch.arange(indices.size()[0]), 1).to(device=device)
+    return torch.stack([batch_ids, indices], dim=-1)
 
 
 def is_label_valid(labels):

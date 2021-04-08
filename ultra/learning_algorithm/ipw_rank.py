@@ -188,7 +188,7 @@ class IPWrank(BaseAlgorithm):
                 self.loss), self.global_step)
         self.train_summary['Loss at global step %d' % self.global_step] = self.loss
 
-        #nn.utils.clip_grad_value_(train_labels, 1)
+        nn.utils.clip_grad_value_(train_labels, 1)
 
         pad_removed_train_output = self.remove_padding_for_metric_eval(
             self.docid_inputs, train_output)
@@ -233,7 +233,7 @@ class IPWrank(BaseAlgorithm):
         labels_data = []
         docids_data = []
 
-        for i in range(self.rank_list_size):
+        for i in range(self.max_candidate_num):
           docids_data.append(input_feed[self.docid_inputs_name[i]])
           labels_data.append(input_feed[self.labels_name[i]])
 

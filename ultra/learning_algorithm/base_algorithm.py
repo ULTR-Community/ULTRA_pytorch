@@ -99,6 +99,7 @@ class BaseAlgorithm(ABC):
         pass
 
     def remove_padding_for_metric_eval(self, input_id_list, model_output):
+        model_output = model_output.cpu()
         output_scores = torch.unbind(model_output, dim=1)
         if len(output_scores) > len(input_id_list):
             raise AssertionError(
@@ -134,11 +135,10 @@ class BaseAlgorithm(ABC):
 
         """
         output_scores = self.get_ranking_scores(model = model,
-             input_id_list= self.docid_inputs, is_training=self.is_training)
+             input_id_list= self.docid_inputs)
         return torch.cat(output_scores, 1)
 
-    def get_ranking_scores(self, model, input_id_list,
-                           is_training=False, **kwargs):
+    def get_ranking_scores(self, model, input_id_list, **kwargs):
         """Compute ranking scores with the given inputs.
 
         Args:
@@ -156,14 +156,13 @@ class BaseAlgorithm(ABC):
         letor_features = torch.cat(
             dim=0, tensors=(
                 self.letor_features, PAD_embed))
-        print(self.letor_features)
         input_feature_list = []
         for i in range(len(input_id_list)):
             input_feature_list.append(
                 torch.index_select(
                     letor_features,0, input_id_list[i]))
         return model.build(
-            input_feature_list, is_training=is_training, **kwargs)
+            input_feature_list, **kwargs)
 
     def create_model(self, feature_size):
         """ Initialize the ranking model.
@@ -176,6 +175,7 @@ class BaseAlgorithm(ABC):
             model = utils.find_class(
                 self.exp_settings['ranking_model'])(
                 self.exp_settings['ranking_model_hparams'], feature_size)
+            model.to(self.cuda)
         return model
 
     def pairwise_cross_entropy_loss(
@@ -281,7 +281,6 @@ class BaseAlgorithm(ABC):
         """
         if propensity_weights is None:
             propensity_weights = torch.ones_like(labels)
-        print(output)
         weighted_labels = (labels + 0.0000001) * propensity_weights
         label_dis = weighted_labels / \
             torch.sum(weighted_labels, 1, keepdim=True)

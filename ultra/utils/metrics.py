@@ -34,7 +34,7 @@ from ultra.utils import metric_utils as utils
 import torch.nn.functional as F
 import torch
 
-
+device = torch.device("cuda")
 class RankingMetricKey(object):
     """Ranking metric key strings."""
     # Mean Receiprocal Rank. For binary relevance.
@@ -184,6 +184,7 @@ def _per_example_weights_to_per_list_weights(weights, relevance):
     Returns:
       The per list `Tensor` of shape [batch_size, 1]
     """
+    relevance = relevance.to(device=device)
     per_list_weights = _safe_div(
         torch.sum(weights * relevance, 1, keepdim=True),
         torch.sum(relevance, 1, keepdim=True))
@@ -207,8 +208,9 @@ def _discounted_cumulative_gain(labels, weights=None):
     """
     list_size = labels.shape[1]
     position = torch.arange(1, list_size + 1).to(dtype=torch.float32)
-    denominator = torch.log(position + 1)
-    numerator = torch.pow(exponent=2.0, input=labels.to(torch.float32)) - 1.0
+    denominator = torch.log(position + 1).to(device=device)
+    numerator = torch.pow(exponent=labels.to(torch.float32), input=torch.tensor(2.0)) - 1.0
+    numerator = numerator.to(device=device)
     return torch.sum(
         input=weights * numerator / denominator, dim=1, keepdim=True)
 
@@ -229,8 +231,6 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
       (labels, predictions, weights, topn) ready to be used for metric
       calculation.
     """
-    labels = torch.tensor(labels)
-    predictions = torch.tensor(predictions)
     weights = 1.0 if weights is None else torch.tensor(weights)
     example_weights = torch.ones_like(labels) * weights
     assert predictions.shape == example_weights.shape
@@ -242,6 +242,8 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
     # All labels should be >= 0. Invalid entries are reset.
     is_label_valid = utils.is_label_valid(labels)
     is_label_valid.type(torch.bool)
+    is_label_valid = is_label_valid.cpu()
+    labels = labels.cpu()
     labels = torch.where(
         is_label_valid,
         labels,
@@ -279,7 +281,7 @@ def mean_reciprocal_rank(labels, predictions, weights=None, name=None):
     mrr = torch.max(
         relevance * reciprocal_rank, dim=1, keepdim=True).values
     return torch.mean(
-        mrr * torch.ones_like(weights) * weights)
+        mrr.to(device=device) * torch.ones_like(weights).to(device=device) * weights.to(device=device))
 
 
 def expected_reciprocal_rank(
@@ -467,13 +469,13 @@ def normalized_discounted_cumulative_gain(labels,
     dcg = _discounted_cumulative_gain(sorted_labels, sorted_weights)
     # Sorting over the weighted labels to get ideal ranking.
     ideal_sorted_labels, ideal_sorted_weights = utils.sort_by_scores(
-        weights * labels, [labels, weights], topn=topn)
+        weights * labels.to(device=device), [labels, weights], topn=topn)
     ideal_dcg = _discounted_cumulative_gain(ideal_sorted_labels,
                                             ideal_sorted_weights)
     per_list_ndcg = _safe_div(dcg, ideal_dcg)
     per_list_weights = _per_example_weights_to_per_list_weights(
         weights=weights,
-        relevance=torch.pow(labels.to(torch.float), 2.0) - 1.0)
+        relevance=torch.pow(torch.tensor(2.0),labels.to(torch.float)) - 1.0)
     return torch.mean(per_list_ndcg * per_list_weights)
 
 

@@ -10,24 +10,44 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import math
-import os
-import random
-import sys
-import time
-import numpy as np
-import tensorflow as tf
+import torch.nn as nn
+import torch
+from torch.utils.tensorboard import SummaryWriter
 
-import copy
-import itertools
 from six.moves import zip
-from tensorflow import dtypes
 from ultra.learning_algorithm.base_algorithm import BaseAlgorithm
 import ultra.utils
 
 
 def sigmoid_prob(logits):
-    return tf.sigmoid(logits - tf.reduce_mean(logits, -1, keep_dims=True))
+    return torch.sigmoid(logits - torch.mean(logits, -1, keepdim=True))
+
+class DenoisingNet(nn.Module):
+    def __init__(self, input_vec_size):
+        super(DenoisingNet, self).__init__()
+        self.linear_layer = nn.Linear(input_vec_size, 1)
+        self.elu_layer = nn.ELU()
+        self.propensity_net = nn.Sequential(self.linear_layer, self.elu_layer)
+        self.list_size = input_vec_size
+
+    def forward(self, input_list):
+        output_propensity_list = []
+        for i in range(self.list_size):
+            # Add position information (one-hot vector)
+            click_feature = [
+                torch.unsqueeze(
+                    torch.zeros_like(
+                        input_list[i]), -1) for _ in range(self.list_size)]
+            click_feature[i] = torch.unsqueeze(
+                torch.ones_like(input_list[i]), -1)
+            # Predict propensity with a simple network
+            output_propensity_list.append(
+                self.propensity_net(
+                    torch.cat(
+                        click_feature, 1)))
+
+        return torch.cat(output_propensity_list, 1)
+
 
 
 class DLA(BaseAlgorithm):
@@ -67,278 +87,237 @@ class DLA(BaseAlgorithm):
             grad_strategy='ada',            # Select gradient strategy
         )
         print(exp_settings['learning_algorithm_hparams'])
+        self.cuda = torch.device('cuda')
+        self.writer = SummaryWriter()
+        self.train_summary = {}
+        self.eval_summary = {}
         self.hparams.parse(exp_settings['learning_algorithm_hparams'])
         self.exp_settings = exp_settings
-        self.model = None
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.feature_size = data_set.feature_size
-        if self.hparams.propensity_learning_rate < 0:
-            self.propensity_learning_rate = tf.Variable(
-                float(self.hparams.learning_rate), trainable=False)
-        else:
-            self.propensity_learning_rate = tf.Variable(
-                float(self.hparams.propensity_learning_rate), trainable=False)
-        self.learning_rate = tf.Variable(
-            float(self.hparams.learning_rate), trainable=False)
-
-        # Feeds for inputs.
-        self.is_training = tf.placeholder(tf.bool, name="is_train")
+        self.rank_list_size = exp_settings['selection_bias_cutoff']
+        self.propensity_model = DenoisingNet(self.rank_list_size).to(device=self.cuda)
+        self.model = self.create_model(self.feature_size)
+        self.rank_list_size = exp_settings['selection_bias_cutoff']
+        self.letor_features_name = "letor_features"
+        self.letor_features = None
+        self.docid_inputs_name = []  # a list of top documents
+        self.labels_name = []  # the labels for the documents (e.g., clicks)
         self.docid_inputs = []  # a list of top documents
-        self.letor_features = tf.placeholder(tf.float32, shape=[None, self.feature_size],
-                                             name="letor_features")  # the letor features for the documents
         self.labels = []  # the labels for the documents (e.g., clicks)
         for i in range(self.max_candidate_num):
-            self.docid_inputs.append(tf.placeholder(tf.int64, shape=[None],
-                                                    name="docid_input{0}".format(i)))
-            self.labels.append(tf.placeholder(tf.float32, shape=[None],
-                                              name="label{0}".format(i)))
+            self.docid_inputs_name.append("docid_input{0}".format(i))
+            self.labels_name.append("label{0}".format(i))
 
-        self.global_step = tf.Variable(0, trainable=False)
+        if self.hparams.propensity_learning_rate < 0:
+            self.propensity_learning_rate = float(self.hparams.learning_rate)
+        else:
+            self.propensity_learning_rate = float(self.hparams.propensity_learning_rate)
+        self.learning_rate = float(self.hparams.learning_rate)
+
+        self.global_step = 0
 
         # Select logits to prob function
-        self.logits_to_prob = tf.nn.softmax
+        self.logits_to_prob = nn.Softmax()
         if self.hparams.logits_to_prob == 'sigmoid':
             self.logits_to_prob = sigmoid_prob
 
-        self.output = self.ranking_model(
-            self.max_candidate_num, scope='ranking_model')
-        pad_removed_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, self.output)
-        # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
-        reshaped_labels = tf.transpose(tf.convert_to_tensor(self.labels))
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(reshaped_labels, pad_removed_output, None)
-                tf.summary.scalar(
-                    '%s_%d' %
-                    (metric, topn), metric_value, collections=['eval'])
 
-        if not forward_only:
-            # Build model
-            self.rank_list_size = exp_settings['selection_bias_cutoff']
-            train_output = self.ranking_model(
-                self.rank_list_size, scope='ranking_model')
-            self.propensity = self.DenoisingNet(
-                self.rank_list_size, forward_only)
-            train_labels = self.labels[:self.rank_list_size]
 
-            print('Loss Function is ' + self.hparams.loss_func)
-            # Select loss function
-            self.loss_func = None
-            if self.hparams.loss_func == 'sigmoid_loss':
-                self.loss_func = self.sigmoid_loss_on_list
-            elif self.hparams.loss_func == 'pairwise_loss':
-                self.loss_func = self.pairwise_loss_on_list
-            else:  # softmax loss without weighting
-                self.loss_func = self.softmax_loss
-
-            # Compute rank loss
-            # reshape from [rank_list_size, ?] to [?, rank_list_size]
-            reshaped_train_labels = tf.transpose(
-                tf.convert_to_tensor(train_labels))
-            self.propensity_weights = self.get_normalized_weights(
-                self.logits_to_prob(self.propensity))
-            self.rank_loss = self.loss_func(
-                train_output, reshaped_train_labels, self.propensity_weights)
-            pw_list = tf.unstack(
-                self.propensity_weights,
-                axis=1)  # Compute propensity weights
-            for i in range(len(pw_list)):
-                tf.summary.scalar(
-                    'Inverse Propensity weights %d' %
-                    i, tf.reduce_mean(
-                        pw_list[i]), collections=['train'])
-            tf.summary.scalar(
-                'Rank Loss',
-                tf.reduce_mean(
-                    self.rank_loss),
-                collections=['train'])
-
-            # Compute examination loss
-            self.relevance_weights = self.get_normalized_weights(
-                self.logits_to_prob(train_output))
-            self.exam_loss = self.loss_func(
-                self.propensity,
-                reshaped_train_labels,
-                self.relevance_weights)
-            rw_list = tf.unstack(
-                self.relevance_weights,
-                axis=1)  # Compute propensity weights
-            for i in range(len(rw_list)):
-                tf.summary.scalar(
-                    'Relevance weights %d' %
-                    i, tf.reduce_mean(
-                        rw_list[i]), collections=['train'])
-            tf.summary.scalar(
-                'Exam Loss',
-                tf.reduce_mean(
-                    self.exam_loss),
-                collections=['train'])
-
-            # Gradients and SGD update operation for training the model.
-            self.loss = self.exam_loss + self.hparams.ranker_loss_weight * self.rank_loss
-
-            # Select optimizer
-            self.optimizer_func = tf.train.AdagradOptimizer
-            if self.hparams.grad_strategy == 'sgd':
-                self.optimizer_func = tf.train.GradientDescentOptimizer
-
-            self.separate_gradient_update()
-
-            tf.summary.scalar(
-                'Gradient Norm',
-                self.norm,
-                collections=['train'])
-            tf.summary.scalar(
-                'Learning Rate',
-                self.learning_rate,
-                collections=['train'])
-            tf.summary.scalar(
-                'Final Loss', tf.reduce_mean(
-                    self.loss), collections=['train'])
-
-            clipped_labels = tf.clip_by_value(
-                reshaped_train_labels, clip_value_min=0, clip_value_max=1)
-            pad_removed_train_output = self.remove_padding_for_metric_eval(
-                self.docid_inputs, train_output)
-            for metric in self.exp_settings['metrics']:
-                for topn in self.exp_settings['metrics_topn']:
-                    list_weights = tf.reduce_mean(
-                        self.propensity_weights * clipped_labels, axis=1, keep_dims=True)
-                    metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-                        reshaped_train_labels, pad_removed_train_output, None)
-                    tf.summary.scalar(
-                        '%s_%d' %
-                        (metric, topn), metric_value, collections=['train'])
-                    weighted_metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-                        reshaped_train_labels, pad_removed_train_output, list_weights)
-                    tf.summary.scalar(
-                        'Weighted_%s_%d' %
-                        (metric, topn), weighted_metric_value, collections=['train'])
-
-        self.train_summary = tf.summary.merge_all(key='train')
-        self.eval_summary = tf.summary.merge_all(key='eval')
-        self.saver = tf.train.Saver(tf.global_variables())
+        print('Loss Function is ' + self.hparams.loss_func)
+        # Select loss function
+        self.loss_func = None
+        if self.hparams.loss_func == 'sigmoid_loss':
+            self.loss_func = self.sigmoid_loss_on_list
+        elif self.hparams.loss_func == 'pairwise_loss':
+            self.loss_func = self.pairwise_loss_on_list
+        else:  # softmax loss without weighting
+            self.loss_func = self.softmax_loss
 
     def separate_gradient_update(self):
-        denoise_params = tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, "denoising_model")
-        ranking_model_params = tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, "ranking_model")
+        denoise_params = self.propensity_model.parameters()
+        ranking_model_params = self.model.parameters()
+        # Select optimizer
+        self.optimizer_func = torch.optim.Adagrad
+        if self.hparams.grad_strategy == 'sgd':
+            self.optimizer_func = torch.optim.SGD
+
 
         if self.hparams.l2_loss > 0:
             # for p in denoise_params:
             #    self.exam_loss += self.hparams.l2_loss * tf.nn.l2_loss(p)
             for p in ranking_model_params:
-                self.rank_loss += self.hparams.l2_loss * tf.nn.l2_loss(p)
+                self.rank_loss += self.hparams.l2_loss * nn.MSELoss(p) * 0.5
         self.loss = self.exam_loss + self.hparams.ranker_loss_weight * self.rank_loss
 
-        denoise_gradients = tf.gradients(self.exam_loss, denoise_params)
-        ranking_model_gradients = tf.gradients(
-            self.rank_loss, ranking_model_params)
+        opt_denoise = self.optimizer_func(denoise_params, self.propensity_learning_rate)
+        opt_ranker = self.optimizer_func(ranking_model_params, self.learning_rate)
+
+        opt_denoise.zero_grad()
+        opt_ranker.zero_grad()
+
+        self.loss.backward()
+
         if self.hparams.max_gradient_norm > 0:
-            denoise_gradients, denoise_norm = tf.clip_by_global_norm(denoise_gradients,
-                                                                     self.hparams.max_gradient_norm)
-            ranking_model_gradients, ranking_model_norm = tf.clip_by_global_norm(ranking_model_gradients,
-                                                                                 self.hparams.max_gradient_norm * self.hparams.ranker_loss_weight)
-        self.norm = tf.global_norm(denoise_gradients + ranking_model_gradients)
+            nn.utils.clip_grad_norm_(denoise_params, self.hparams.max_gradient_norm)
+            nn.utils.clip_grad_norm_(ranking_model_params, self.hparams.max_gradient_norm)
 
-        opt_denoise = self.optimizer_func(self.propensity_learning_rate)
-        opt_ranker = self.optimizer_func(self.learning_rate)
+        opt_denoise.step()
+        opt_ranker.step()
 
-        denoise_updates = opt_denoise.apply_gradients(zip(denoise_gradients, denoise_params),
-                                                      global_step=self.global_step)
-        ranker_updates = opt_ranker.apply_gradients(
-            zip(ranking_model_gradients, ranking_model_params))
+        total_norm = 0
 
-        self.updates = tf.group(denoise_updates, ranker_updates)
+        for p in denoise_params:
+            param_norm = p.grad.data.norm(2)
+            total_norm += param_norm.item() ** 2
+        for p in ranking_model_params:
+            param_norm = p.grad.data.norm(2)
+            total_norm += param_norm.item() ** 2
+        total_norm = total_norm ** (1. / 2)
+        self.norm = total_norm
 
-    def DenoisingNet(self, list_size, forward_only=False, scope=None):
-        with tf.variable_scope(scope or "denoising_model"):
-            # If we are in testing, do not compute propensity
-            if forward_only:
-                return tf.ones_like(self.output)  # , tf.ones_like(self.output)
-            input_vec_size = list_size
-
-            def propensity_network(input_data, index):
-                reuse = None if index < 1 else True
-                propensity_initializer = tf.constant_initializer(
-                    0.001) if self.hparams.constant_propensity_initialization else None
-                with tf.variable_scope("propensity_network", initializer=propensity_initializer,
-                                       reuse=reuse):
-                    output_data = input_data
-                    current_size = input_vec_size
-                    output_sizes = [
-                        #int((list_size+1)/2) + 1,
-                        #int((list_size+1)/4) + 1,
-                        1
-                    ]
-                    for i in range(len(output_sizes)):
-                        expand_W = tf.get_variable(
-                            "W_%d" % i, [current_size, output_sizes[i]])
-                        expand_b = tf.get_variable(
-                            "b_%d" % i, [output_sizes[i]])
-                        output_data = tf.nn.bias_add(
-                            tf.matmul(output_data, expand_W), expand_b)
-                        output_data = tf.nn.elu(output_data)
-                        current_size = output_sizes[i]
-                    #expand_W = tf.get_variable("final_W", [current_size, 1])
-                    #expand_b = tf.get_variable("final_b" , [1])
-                    #output_data = tf.nn.bias_add(tf.matmul(output_data, expand_W), expand_b)
-                    return output_data
-
-            output_propensity_list = []
-            for i in range(list_size):
-                # Add position information (one-hot vector)
-                click_feature = [
-                    tf.expand_dims(
-                        tf.zeros_like(
-                            self.labels[i]), -1) for _ in range(list_size)]
-                click_feature[i] = tf.expand_dims(
-                    tf.ones_like(self.labels[i]), -1)
-                # Predict propensity with a simple network
-                output_propensity_list.append(
-                    propensity_network(
-                        tf.concat(
-                            click_feature, 1), i))
-
-        return tf.concat(output_propensity_list, 1)
-
-    def step(self, session, input_feed, forward_only):
+    def train(self, input_feed):
         """Run a step of the model feeding the given inputs.
 
         Args:
-            session: (tf.Session) tensorflow session to use.
             input_feed: (dictionary) A dictionary containing all the input feed data.
-            forward_only: whether to do the backward step (False) or only forward (True).
 
         Returns:
             A triple consisting of the loss, outputs (None if we do backward),
             and a tf.summary containing related information about the step.
 
         """
+        # Build model
+        self.model.train()
 
-        # Output feed: depends on whether we do a backward step or not.
-        if not forward_only:
-            input_feed[self.is_training.name] = True
-            output_feed = [self.updates,    # Update Op that does SGD.
-                           self.loss,    # Loss for this batch.
-                           self.train_summary  # Summarize statistics.
-                           ]
-        else:
-            input_feed[self.is_training.name] = False
-            output_feed = [
-                self.eval_summary,  # Summarize statistics.
-                self.output   # Model outputs
-            ]
+        self.labels = []
+        self.docid_inputs = []
+        self.letor_features = torch.from_numpy(input_feed["letor_features"])
+        for i in range(self.rank_list_size):
+            self.docid_inputs.append(input_feed[self.docid_inputs_name[i]])
+            self.labels.append(input_feed[self.labels_name[i]])
 
-        outputs = session.run(output_feed, input_feed)
-        if not forward_only:
-            # loss, no outputs, summary.
-            return outputs[1], None, outputs[-1]
-        else:
-            return None, outputs[1], outputs[0]    # no loss, outputs, summary.
+        self.labels = torch.tensor(data=self.labels, device=self.cuda)
+        train_labels = self.labels
+        self.docid_inputs = torch.tensor(data=self.docid_inputs,dtype=torch.int64)
+        train_output = self.ranking_model(self.model,
+            self.rank_list_size)
+        self.propensity_model.train()
+        self.propensity = self.propensity_model(
+            self.labels)
+        # Compute rank loss
+        # reshape from [rank_list_size, ?] to [?, rank_list_size]
+        reshaped_train_labels = torch.transpose(
+            train_labels, 0, 1)
+        self.propensity_weights = self.get_normalized_weights(
+            self.logits_to_prob(self.propensity))
+        self.rank_loss = self.loss_func(
+            train_output, reshaped_train_labels, self.propensity_weights)
+        pw_list = torch.unbind(
+            self.propensity_weights,
+            dim=1)  # Compute propensity weights
+        for i in range(len(pw_list)):
+            self.writer.add_scalar(
+                'Inverse Propensity weights %d' %
+                i, torch.mean(
+                    pw_list[i]))
+            self.train_summary['Inverse Propensity weights %d' %i] = torch.mean(pw_list[i])
+        self.writer.add_scalar(
+            'Rank Loss',
+            torch.mean(
+                self.rank_loss))
+        self.train_summary['Rank Loss'] =  torch.mean(
+                self.rank_loss)
+
+        # Compute examination loss
+        self.relevance_weights = self.get_normalized_weights(
+            self.logits_to_prob(train_output))
+        self.exam_loss = self.loss_func(
+            self.propensity,
+            reshaped_train_labels,
+            self.relevance_weights)
+        rw_list = torch.unbind(
+            self.relevance_weights,
+            dim=1)  # Compute propensity weights
+        for i in range(len(rw_list)):
+            self.writer.add_scalar(
+                'Relevance weights %d' %
+                i, torch.mean(
+                    rw_list[i]))
+            self.train_summary['Relevance weights %d' %i] =  torch.mean(rw_list[i])
+        self.writer.add_scalar(
+            'Exam Loss',
+            torch.mean(
+                self.exam_loss))
+        self.train_summary['Exam Loss'] = torch.mean(self.exam_loss)
+
+        # Gradients and SGD update operation for training the model.
+        self.loss = self.exam_loss + self.hparams.ranker_loss_weight * self.rank_loss
+        self.separate_gradient_update()
+
+        self.writer.add_scalar(
+            'Gradient Norm',
+            self.norm)
+        self.train_summary['Gradient Norm'] = self.norm
+        self.writer.add_scalar(
+            'Learning Rate',
+            self.learning_rate)
+        self.train_summary['Learning Rate'] = self.learning_rate
+        self.writer.add_scalar(
+            'Final Loss', torch.mean(self.loss))
+        self.train_summary['Final Loss'] = torch.mean(self.loss)
+
+        self.clip_grad_value(reshaped_train_labels, clip_value_min=0, clip_value_max=1)
+        pad_removed_train_output = self.remove_padding_for_metric_eval(
+            self.docid_inputs, train_output)
+        for metric in self.exp_settings['metrics']:
+            for topn in self.exp_settings['metrics_topn']:
+                list_weights = torch.mean(
+                    self.propensity_weights * reshaped_train_labels, dim=1, keepdim=True)
+                metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
+                    reshaped_train_labels, pad_removed_train_output, None)
+                self.writer.add_scalar(
+                    '%s_%d' %
+                    (metric, topn), metric_value)
+                self.train_summary['%s_%d' %
+                    (metric, topn)] = metric_value
+                weighted_metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
+                    reshaped_train_labels, pad_removed_train_output, list_weights)
+                self.writer.add_scalar(
+                    'Weighted_%s_%d' %
+                    (metric, topn), weighted_metric_value)
+                self.train_summary['Weighted_%s_%d' %
+                                   (metric, topn)] = weighted_metric_value
+        # loss, no outputs, summary.
+        return self.loss, None, self.train_summary
+
+    def validation(self, input_feed):
+        self.model.eval()
+        self.propensity_model.eval()
+        self.labels = []
+        self.docid_inputs = []
+        for i in range(self.max_candidate_num):
+            self.docid_inputs.append(input_feed[self.docid_inputs_name[i]])
+            self.labels.append(input_feed[self.labels_name[i]])
+        self.labels = torch.tensor(data=self.labels, device=self.cuda)
+        self.docid_inputs = torch.tensor(data=self.docid_inputs,dtype=torch.int64)
+        self.output = self.ranking_model(self.model,
+                                         self.max_candidate_num)
+        pad_removed_output = self.remove_padding_for_metric_eval(
+            self.docid_inputs, self.output)
+
+        # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
+        reshaped_labels = torch.transpose(torch.tensor(self.labels),0,1)
+        for metric in self.exp_settings['metrics']:
+            for topn in self.exp_settings['metrics_topn']:
+                metric_value = ultra.utils.make_ranking_metric_fn(
+                    metric, topn)(reshaped_labels, pad_removed_output, None)
+                self.writer.add_scalar(
+                    '%s_%d' %
+                    (metric, topn), metric_value)
+                self.eval_summary['%s_%d' %
+                    (metric, topn)] = metric_value
+        return None, self.output, self.eval_summary # no loss, outputs, summary.
 
     def get_normalized_weights(self, propensity):
         """Computes listwise softmax loss with propensity weighting.
@@ -349,19 +328,36 @@ class DLA(BaseAlgorithm):
         Returns:
             (tf.Tensor) A tensor containing the propensity weights.
         """
-        propensity_list = tf.unstack(
-            propensity, axis=1)  # Compute propensity weights
+        propensity_list = torch.unbind(
+            propensity, dim=1)  # Compute propensity weights
         pw_list = []
         for i in range(len(propensity_list)):
             pw_i = propensity_list[0] / propensity_list[i]
             pw_list.append(pw_i)
-        propensity_weights = tf.stack(pw_list, axis=1)
+        propensity_weights = torch.stack(pw_list, dim=1)
         if self.hparams.max_propensity_weight > 0:
-            propensity_weights = tf.clip_by_value(
-                propensity_weights,
-                clip_value_min=0,
+            self.clip_grad_value(propensity_weights,clip_value_min=0,
                 clip_value_max=self.hparams.max_propensity_weight)
         return propensity_weights
+
+    def clip_grad_value(self, parameters, clip_value_min, clip_value_max) -> None:
+        r"""Clips gradient of an iterable of parameters at specified value.
+
+        Gradients are modified in-place.
+
+        Args:
+            parameters (Iterable[Tensor] or Tensor): an iterable of Tensors or a
+                single Tensor that will have gradients normalized
+            clip_value (float or int): maximum allowed value of the gradients.
+                The gradients are clipped in the range
+                :math:`\left[\text{-clip\_value}, \text{clip\_value}\right]`
+        """
+        if isinstance(parameters, torch.Tensor):
+            parameters = [parameters]
+        clip_value_min = float(clip_value_min)
+        clip_value_max = float(clip_value_max)
+        for p in filter(lambda p: p.grad is not None, parameters):
+            p.grad.data.clamp_(min=clip_value_min, max=clip_value_max)
 
     '''
     def click_weighted_softmax_cross_entropy_loss(

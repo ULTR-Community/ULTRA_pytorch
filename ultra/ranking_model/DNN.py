@@ -1,7 +1,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import torch.nn as nn
-import torch.nn.functional as F
 import torch
 
 from ultra.ranking_model import BaseRankingModel
@@ -58,7 +57,7 @@ class DNN(nn.Module):
         self.sequential = nn.Sequential(*modules).to(dtype=torch.float32)
 
     def build(self, input_list, noisy_params=None,
-              noise_rate=0.05, is_training=False, **kwargs):
+              noise_rate=0.05, **kwargs):
         """ Create the DNN model
 
         Args:
