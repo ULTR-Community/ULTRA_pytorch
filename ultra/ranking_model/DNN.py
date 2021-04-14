@@ -7,7 +7,7 @@ from ultra.ranking_model import BaseRankingModel
 from ultra.ranking_model import ActivationFunctions
 import ultra.utils
 
-
+device = torch.device('cuda')
 class DNN(nn.Module):
     """The deep neural network model for learning to rank.
 
@@ -71,7 +71,7 @@ class DNN(nn.Module):
             A list of tf.Tensor containing the ranking scores for each instance in input_list.
         """
         input_data = torch.cat(input_list, dim=0)
-        input_data = input_data.to(dtype=torch.float32)
+        input_data = input_data.to(dtype=torch.float32, device=device)
         output_data = self.sequential(input_data)
         output_shape = input_list[0].shape[0]
         return torch.split(output_data, output_shape, dim=0)
