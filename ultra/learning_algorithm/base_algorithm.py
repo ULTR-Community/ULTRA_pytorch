@@ -167,7 +167,7 @@ class BaseAlgorithm(ABC):
     def create_model(self, feature_size):
         """ Initialize the ranking model.
 
-        ReturnsL
+        Returns
             The ranking model that will be used to computer the ranking score.
 
         """
@@ -177,6 +177,66 @@ class BaseAlgorithm(ABC):
                 self.exp_settings['ranking_model_hparams'], feature_size)
             model.to(self.cuda)
         return model
+
+    def create_input_feed(self, input_feed, list_size):
+        """Create the input from input_feed to run the model
+
+        Args:
+            input_feed: (dictionary) A dictionary containing all the input feed data.
+            list_size: (int) The top number of documents to consider in the input docids.
+        """
+        self.labels = []
+        self.docid_inputs = []
+        self.letor_features = torch.from_numpy(input_feed["letor_features"])
+        for i in range(list_size):
+            self.docid_inputs.append(input_feed[self.docid_inputs_name[i]])
+            self.labels.append(input_feed[self.labels_name[i]])
+        self.labels = torch.tensor(data=self.labels, device=self.cuda)
+        self.docid_inputs = torch.tensor(data=self.docid_inputs, dtype=torch.int64)
+
+    def create_summary(self, scalar_name, summarize_name, value, is_training):
+        """ Summarize the result of an operation
+
+        Args:
+            scalar_name: (str) A string used as the name for the result of the operation to add to Tensorboard.
+            summarize_name: (str) A string used as the name for the summarization of the operation.
+            value: The value of the result of the operation.
+            is_training: (Boolean) if the model is in training mode or eval mode.
+
+        Returns
+            The ranking model that will be used to computer the ranking score.
+
+        """
+        self.writer.add_scalar(
+            scalar_name, value, self.global_step)
+        if is_training:
+            self.train_summary[summarize_name] = value
+        else:
+            self.eval_summary[summarize_name] = value
+
+    def opt_step(self, opt, params):
+        """ Perform an optimization step
+
+        Args:
+            opt: Optimization Function to use
+            params: Model's parameters
+
+        Returns
+            The ranking model that will be used to computer the ranking score.
+
+        """
+        if self.hparams.max_gradient_norm > 0:
+            # tf.clip_by_global_norm(self.gradients,self.hparams.max_gradient_norm)
+            opt.zero_grad()
+            self.loss.backward()
+            self.clipped_gradient = torch.nn.utils.clip_grad_norm_(
+                params, self.hparams.max_gradient_norm)
+            opt.step()
+        else:
+            self.norm = None
+            opt.zero_grad()
+            self.loss.backward()
+            opt.step()
 
     def pairwise_cross_entropy_loss(
             self, pos_scores, neg_scores, propensity_weights=None, name=None):
@@ -196,12 +256,12 @@ class BaseAlgorithm(ABC):
         if propensity_weights is None:
             propensity_weights = torch.ones_like(pos_scores)
         label_dis = torch.cat(
-            [torch.ones_like(pos_scores), torch.zeros_like(neg_scores)], axis=1)
+            [torch.ones_like(pos_scores), torch.zeros_like(neg_scores)], dim=1)
         # loss = tf.nn.softmax_cross_entropy_with_logits(
         #     logits=torch.cat([pos_scores, neg_scores], axis=1), labels=label_dis
         # ) * propensity_weights
         loss = softmax_cross_entropy_with_logits(
-            logits = torch.cat([pos_scores, neg_scores], axis=1), labels = label_dis)* propensity_weights
+            logits = torch.cat([pos_scores, neg_scores], dim=1), labels = label_dis)* propensity_weights
         return loss
 
     def sigmoid_loss_on_list(self, output, labels,
@@ -209,23 +269,23 @@ class BaseAlgorithm(ABC):
         """Computes pointwise sigmoid loss without propensity weighting.
 
         Args:
-            output: (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is
+            output: (torch.Tensor) A tensor with shape [batch_size, list_size]. Each value is
             the ranking score of the corresponding example.
-            labels: (tf.Tensor) A tensor of the same shape as `output`. A value >= 1 means a
+            labels: (torch.Tensor) A tensor of the same shape as `output`. A value >= 1 means a
             relevant example.
-            propensity_weights: (tf.Tensor) A tensor of the same shape as `output` containing the weight of each element.
+            propensity_weights: (torch.Tensor) A tensor of the same shape as `output` containing the weight of each element.
             name: A string used as the name for this variable scope.
 
         Returns:
-            (tf.Tensor) A single value tensor containing the loss.
+            (torch.Tensor) A single value tensor containing the loss.
         """
         if propensity_weights is None:
             propensity_weights = torch.ones_like(labels)
 
         label_dis = torch.minimum(labels, 1)
-        loss = softmax_cross_entropy_with_logits(
-            logits = output, labels = label_dis) * propensity_weights
-        return torch.mean(torch.sum(loss, axis=1))
+        criterion =  torch.nn.BCEWithLogitsLoss(reduction="none")
+        loss = criterion(output, labels) * propensity_weights
+        return torch.mean(torch.sum(loss, dim=1))
 
     def pairwise_loss_on_list(self, output, labels,
                               propensity_weights=None, name=None):
@@ -246,9 +306,9 @@ class BaseAlgorithm(ABC):
             propensity_weights = torch.ones_like(labels)
 
         loss = None
-        sliced_output = torch.unbind(output, axis=1)
-        sliced_label = torch.unbind(labels, axis=1)
-        sliced_propensity = torch.unbind(propensity_weights, axis=1)
+        sliced_output = torch.unbind(output, dim=1)
+        sliced_label = torch.unbind(labels, dim=1)
+        sliced_propensity = torch.unbind(propensity_weights, dim=1)
         for i in range(len(sliced_output)):
             for j in range(i + 1, len(sliced_output)):
                 cur_label_weight = torch.sign(

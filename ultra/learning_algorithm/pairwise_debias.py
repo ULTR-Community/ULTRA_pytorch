@@ -89,40 +89,44 @@ class PairDebias(BaseAlgorithm):
 
         self.global_step = 0
         self.rank_list_size = exp_settings['selection_bias_cutoff']
+        self.t_plus = torch.ones([1, self.rank_list_size]).to(device=self.cuda)
+        self.t_plus.requires_grad = False
+        self.t_minus = torch.ones([1, self.rank_list_size]).to(device=self.cuda)
+        self.t_minus.requires_grad = False
+
+        # Select optimizer
+        self.optimizer_func = torch.optim.Adagrad(self.model.parameters(), lr=self.hparams.learning_rate)
+        if self.hparams.grad_strategy == 'sgd':
+            self.optimizer_func = torch.optim.SGD(self.model.parameters(), lr=self.hparams.learning_rate)
 
     def train(self, input_feed):
-        self.model.train()
-        self.labels = []
-        self.docid_inputs = []
-        self.letor_features = torch.from_numpy(input_feed["letor_features"])
-        for i in range(self.rank_list_size):
-            self.docid_inputs.append(input_feed[self.docid_inputs_name[i]])
-            self.labels.append(input_feed[self.labels_name[i]])
+        """Run a step of the model feeding the given inputs for training process.
 
-        self.labels = torch.tensor(data=self.labels, device=self.cuda)
-        train_labels = self.labels
-        self.docid_inputs = torch.tensor(data=self.docid_inputs, dtype=torch.int64)
+        Args:
+            input_feed: (dictionary) A dictionary containing all the input feed data.
+
+        Returns:
+            A triple consisting of the loss, outputs (None if we do backward),
+            and a tf.summary containing related information about the step.
+
+        """
+        self.model.train()
+        self.create_input_feed(input_feed, self.rank_list_size)
         train_output = self.ranking_model(self.model,
                                           self.rank_list_size)
-        with torch.no_grad():
-            self.t_plus = torch.ones([1, self.rank_list_size])
-            self.t_minus = torch.ones([1, self.rank_list_size])
+
         self.splitted_t_plus = torch.split(
             self.t_plus, 1, dim=1)
         self.splitted_t_minus = torch.split(
             self.t_minus, 1, dim=1)
         for i in range(self.rank_list_size):
-            self.writer.add_scalar(
-                't_plus Probability %d' %
-                i,
-                torch.max(
-                    self.splitted_t_plus[i]))
-            self.train_summary['t_plus Probability %d' % i] = torch.max(self.splitted_t_plus[i])
-            self.writer.add_scalar(
-                't_minus Probability %d' %
-                i,
-                torch.max(
-                    self.splitted_t_minus[i]))
+            self.create_summary('t_plus Probability %d' % i,
+                                't_plus Probability %d at global step %d' % (i, self.global_step),
+                                torch.max(self.splitted_t_plus[i]), True)
+
+            self.create_summary('t_minus Probability %d' % i,
+                                't_minus Probability %d at global step %d' % (i, self.global_step),
+                                torch.max(self.splitted_t_plus[i]), True)
 
         # Build pairwise loss based on clicks (0 for unclick, 1 for click)
         split_size = int(train_output.shape[1] / self.rank_list_size)
@@ -147,92 +151,40 @@ class PairDebias(BaseAlgorithm):
                 t_minus_loss_list[j] = pair_loss / self.splitted_t_plus[i]
                 self.loss += pair_loss / \
                              self.splitted_t_plus[i] / self.splitted_t_minus[j]
-                # t_plus_loss_list[i] = torch.tensor(t_plus_loss_list[i])
-                # t_minus_loss_list[i] = torch.tensor(t_minus_loss_list[i])
-
-            # Update propensity
-            # self.update_propensity_op = tf.group(
-            #     self.t_plus.assign(
-            #         (1 - self.hparams.EM_step_size) * self.t_plus + self.hparams.EM_step_size * torch.pow(
-            #             torch.cat(t_plus_loss_list, dim=1) / t_plus_loss_list[0], 1 / (self.hparams.regulation_p + 1))
-            #     ),
-            #     self.t_minus.assign(
-            #         (1 - self.hparams.EM_step_size) * self.t_minus + self.hparams.EM_step_size * torch.pow(torch.cat(
-            #             t_minus_loss_list, dim=1) / t_minus_loss_list[0], 1 / (self.hparams.regulation_p + 1))
-            #     )
-            # )
-
-            self.t_plus.assign(
-                (1 - self.hparams.EM_step_size) * self.t_plus + self.hparams.EM_step_size * torch.pow(
+        with torch.no_grad():
+            self.t_plus = (1 - self.hparams.EM_step_size) * self.t_plus + self.hparams.EM_step_size * torch.pow(
                     torch.cat(t_plus_loss_list, dim=1) / t_plus_loss_list[0], 1 / (self.hparams.regulation_p + 1))
-            ),
-            self.t_minus.assign(
-                (1 - self.hparams.EM_step_size) * self.t_minus + self.hparams.EM_step_size * torch.pow(torch.cat(
+            self.t_minus = (1 - self.hparams.EM_step_size) * self.t_minus + self.hparams.EM_step_size * torch.pow(torch.cat(
                     t_minus_loss_list, dim=1) / t_minus_loss_list[0], 1 / (self.hparams.regulation_p + 1))
-            )
+
         # Add l2 loss
         params = self.model.parameters()
         if self.hparams.l2_loss > 0:
             for p in params:
                 self.loss += self.hparams.l2_loss * torch.nn.MSELoss(p) * 0.5
 
-        # Select optimizer
-        self.optimizer_func = torch.optim.Adagrad(params, lr=self.hparams.learning_rate)
-        # tf.train.AdagradOptimizer
-        if self.hparams.grad_strategy == 'sgd':
-            self.optimizer_func = torch.optim.SGD(params, lr=self.hparams.learning_rate)
-            # tf.train.GradientDescentOptimizer
-
-        opt = self.optimizer_func
-        # tf.gradients(self.loss, params)
-        if self.hparams.max_gradient_norm > 0:
-            # tf.clip_by_global_norm(self.gradients,self.hparams.max_gradient_norm)
-            opt.zero_grad()
-            self.loss.backward()
-            self.clipped_gradient = nn.utils.clip_grad_norm_(
-                params, self.hparams.max_gradient_norm)
-            opt.step()
-        else:
-            self.norm = None
-            opt.zero_grad()
-            self.loss.backward()
-            opt.step()
-        self.writer.add_scalar(
-            'Learning Rate',
-            self.learning_rate,
-            self.global_step)
-        self.train_summary['Learning_rate at global step %d' % self.global_step] = self.learning_rate
-        self.writer.add_scalar(
-            'Loss', torch.mean(
-                self.loss), self.global_step)
-        self.train_summary['Loss at global step %d' % self.global_step] = self.loss
+        self.opt_step(self.optimizer_func, params)
+        self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
+                            True)
+        self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate,True)
 
         # reshape from [rank_list_size, ?] to [?, rank_list_size]
-        reshaped_train_labels = torch.transpose(train_labels, 0, 1)
+        reshaped_train_labels = torch.transpose(self.labels, 0, 1)
         pad_removed_train_output = self.remove_padding_for_metric_eval(
             self.docid_inputs, train_output)
         for metric in self.exp_settings['metrics']:
             for topn in self.exp_settings['metrics_topn']:
                 metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
                     reshaped_train_labels, pad_removed_train_output, None)
-                self.writer.add_scalar(
-                    '%s_%d' %
-                    (metric, topn), metric_value, self.global_step)
-                self.train_summary['%s_%d at global step %d' %
-                                   (metric, topn, self.global_step)] = metric_value
+                self.create_summary( '%s_%d' % (metric, topn),
+                                     '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, True)
 
         return self.loss, None, self.train_summary
 
     def validation(self, input_feed):
         self.model.eval()
         self.letor_features = torch.from_numpy(input_feed["letor_features"])
-        self.labels = []
-        self.docid_inputs = []
-        for i in range(self.max_candidate_num):
-            self.docid_inputs.append(input_feed[self.docid_inputs_name[i]])
-            self.labels.append(input_feed[self.labels_name[i]])
-        self.labels = torch.tensor(data=self.labels, device=self.cuda)
-        self.docid_inputs = torch.tensor(data=self.docid_inputs, dtype=torch.int64)
+        self.create_input_feed(input_feed, self.max_candidate_num)
         self.output = self.ranking_model(self.model,
                                          self.max_candidate_num)
         pad_removed_output = self.remove_padding_for_metric_eval(
@@ -244,9 +196,6 @@ class PairDebias(BaseAlgorithm):
             for topn in self.exp_settings['metrics_topn']:
                 metric_value = ultra.utils.make_ranking_metric_fn(
                     metric, topn)(reshaped_labels, pad_removed_output, None)
-                self.writer.add_scalar(
-                    '%s_%d' %
-                    (metric, topn), metric_value)
-                self.eval_summary['%s_%d' %
-                                  (metric, topn)] = metric_value
+                self.create_summary('%s_%d' % (metric, topn),
+                                    '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, False)
         return None, self.output, self.eval_summary  # no loss, outputs, summary.
