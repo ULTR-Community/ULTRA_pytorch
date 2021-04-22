@@ -143,7 +143,7 @@ class BaseAlgorithm(ABC):
 
         Args:
             model: (BaseRankingModel) The model that is used to compute the ranking score.
-            input_id_list: (list<tf.Tensor>) A list of tensors containing document ids.
+            input_id_list: (list<torch.Tensor>) A list of tensors containing document ids.
                             Each tensor must have a shape of [None].
             is_training: (bool) A flag indicating whether the model is running in training mode.
 
@@ -348,6 +348,9 @@ class BaseAlgorithm(ABC):
         loss = softmax_cross_entropy_with_logits(
             logits = output, labels = label_dis)* torch.sum(weighted_labels, 1)
         return torch.sum(loss) / torch.sum(weighted_labels)
+
+    def l2_loss(self, input):
+        return torch.sum(input ** 2)/2
 
 
 

@@ -154,7 +154,7 @@ class RegressionEM(BaseAlgorithm):
         params = self.model.parameters()
         if self.hparams.l2_loss > 0:
             for p in params:
-                self.loss += self.hparams.l2_loss * nn.MSELoss(p) * 0.5
+                self.loss += self.hparams.l2_loss * self.l2_loss(p)
 
         # Select optimizer
         self.optimizer_func = torch.optim.Adagrad(params, lr=self.hparams.learning_rate)

@@ -91,10 +91,10 @@ class IPWrank(BaseAlgorithm):
         self.PAD_embed = torch.zeros(1, self.feature_size)
         self.PAD_embed = self.PAD_embed.to(dtype = torch.float32)
 
-        self.optimizer_func = torch.optim.Adagrad(self.model.parameters(), lr=self.hparams.learning_rate)
+        self.optimizer_func = torch.optim.Adagrad(self.model.parameters(), lr=self.learning_rate)
         # tf.train.AdagradOptimizer
         if self.hparams.grad_strategy == 'sgd':
-            self.optimizer_func = torch.optim.SGD(self.model.parameters(), lr=self.hparams.learning_rate)
+            self.optimizer_func = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
             # tf.train.GradientDescentOptimizer
 
     def train(self, input_feed):
@@ -152,7 +152,7 @@ class IPWrank(BaseAlgorithm):
         params = self.model.parameters()
         if self.hparams.l2_loss > 0:
             for p in params:
-                self.loss += self.hparams.l2_loss * nn.MSELoss(p) * 0.5
+                self.loss += self.hparams.l2_loss * self.l2_loss(p)
 
         self.opt_step(self.optimizer_func, params)
         self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,

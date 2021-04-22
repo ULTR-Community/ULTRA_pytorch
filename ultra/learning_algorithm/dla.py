@@ -145,7 +145,7 @@ class DLA(BaseAlgorithm):
             # for p in denoise_params:
             #    self.exam_loss += self.hparams.l2_loss * tf.nn.l2_loss(p)
             for p in ranking_model_params:
-                self.rank_loss += self.hparams.l2_loss * nn.MSELoss(p) * 0.5
+                self.rank_loss += self.hparams.l2_loss * self.l2_loss(p)
         self.loss = self.exam_loss + self.hparams.ranker_loss_weight * self.rank_loss
 
         opt_denoise = self.optimizer_func(denoise_params, self.propensity_learning_rate)
