@@ -61,6 +61,16 @@ class Linear( nn.Module):
         """
         input_data = torch.cat(input_list, dim=0)
         input_data = input_data.to(dtype=torch.float32, device=device)
-        output_data = self.sequential(input_data)
+        if (noisy_params==None):
+            output_data = self.sequential(input_data)
+        else:
+            ctr = 0
+            for layer in self.sequential:
+                if isinstance(layer, nn.Linear):
+                    layer.weight += noisy_params[ctr]
+                    ctr += 1
+                    layer.bias += noisy_params[ctr]
+                    ctr += 1
+            output_data = self.sequential(input_data)
         output_shape = input_list[0].shape[0]
         return torch.split(output_data, output_shape, dim=0)

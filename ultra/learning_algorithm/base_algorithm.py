@@ -135,7 +135,7 @@ class BaseAlgorithm(ABC):
 
         """
         output_scores = self.get_ranking_scores(model = model,
-             input_id_list= self.docid_inputs)
+             input_id_list= self.docid_inputs[:list_size])
         return torch.cat(output_scores, 1)
 
     def get_ranking_scores(self, model, input_id_list, **kwargs):
@@ -225,18 +225,12 @@ class BaseAlgorithm(ABC):
             The ranking model that will be used to computer the ranking score.
 
         """
+        opt.zero_grad()
+        self.loss.backward()
         if self.hparams.max_gradient_norm > 0:
-            # tf.clip_by_global_norm(self.gradients,self.hparams.max_gradient_norm)
-            opt.zero_grad()
-            self.loss.backward()
             self.clipped_gradient = torch.nn.utils.clip_grad_norm_(
                 params, self.hparams.max_gradient_norm)
-            opt.step()
-        else:
-            self.norm = None
-            opt.zero_grad()
-            self.loss.backward()
-            opt.step()
+        opt.step()
 
     def pairwise_cross_entropy_loss(
             self, pos_scores, neg_scores, propensity_weights=None, name=None):

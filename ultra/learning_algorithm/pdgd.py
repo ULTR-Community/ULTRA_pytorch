@@ -222,7 +222,6 @@ class PDGD(BaseAlgorithm):
 
     def validation(self, input_feed):
         self.model.eval()
-        self.letor_features = torch.from_numpy(input_feed["letor_features"])
         self.create_input_feed(input_feed, self.max_candidate_num)
         self.output = self.ranking_model(self.model,
                                          self.max_candidate_num)

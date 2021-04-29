@@ -35,7 +35,7 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
     each query-document pair and a predefined click model.
     """
 
-    def __init__(self, model, batch_size, hparam_str, session):
+    def __init__(self, model, batch_size, hparam_str):
         """Create the model.
 
         Args:
@@ -73,7 +73,6 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
         self.feature_size = model.feature_size
         self.batch_size = batch_size
         self.model = model
-        self.session = session
         self.global_batch_count = 0
 
         # Check whether the model needs result interleaving.
@@ -118,22 +117,20 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
 
         """
         # Compute ranking scores with input_feed
-        input_feed[self.model.is_training.name] = False
-        rank_scores = self.session.run([self.model.output], input_feed)[0]
+        rank_scores = self.model.validation(input_feed)[1].cpu()
         # Rerank documents and collect clicks
-        letor_features_length = len(input_feed[self.model.letor_features.name])
-        local_batch_size = len(input_feed[self.model.docid_inputs[0].name])
+        letor_features_length = len(input_feed[self.model.letor_features_name])
+        local_batch_size = len(input_feed[self.model.docid_inputs_name[0]])
 
         if self.need_interleave:
-            input_feed[self.model.winners.name] = [
+            input_feed[self.model.winners_name] = [
                 None for _ in range(local_batch_size)]
 
         for i in range(local_batch_size):
             # Get valid doc index
             valid_idx = self.max_candidate_num - 1
             while valid_idx > -1:
-                if input_feed[self.model.docid_inputs[valid_idx]
-                              .name][i] < letor_features_length:  # a valid doc
+                if input_feed[self.model.docid_inputs_name[valid_idx]][i] < letor_features_length:  # a valid doc
                     break
                 valid_idx -= 1
             list_len = valid_idx + 1
@@ -175,8 +172,8 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
             new_docid_list = np.zeros(list_len)
             new_label_list = np.zeros(list_len)
             for j in range(list_len):
-                new_docid_list[j] = input_feed[self.model.docid_inputs[rerank_list[j]].name][i]
-                new_label_list[j] = input_feed[self.model.labels[rerank_list[j]].name][i]
+                new_docid_list[j] = input_feed[self.model.docid_inputs_name[rerank_list[j]]][i]
+                new_label_list[j] = input_feed[self.model.labels_name[rerank_list[j]]][i]
             # Collect clicks online
             click_list = None
             if self.hparams.oracle_mode:
@@ -192,15 +189,15 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
                     sample_count += 1
             # update input_feed
             for j in range(list_len):
-                input_feed[self.model.docid_inputs[j].name][i] = new_docid_list[j]
+                input_feed[self.model.docid_inputs_name[j]][i] = new_docid_list[j]
                 if j < self.rank_list_size:
-                    input_feed[self.model.labels[j].name][i] = click_list[j]
+                    input_feed[self.model.labels_name[j]][i] = click_list[j]
                 else:
-                    input_feed[self.model.labels[j].name][i] = 0
+                    input_feed[self.model.labels_name[j]][i] = 0
 
             if self.need_interleave:
                 # Infer winner in interleaving
-                input_feed[self.model.winners.name][i] = self.interleaving.infer_winner(
+                input_feed[self.model.winners_name][i] = self.interleaving.infer_winner(
                     click_list)
 
         return input_feed
@@ -254,10 +251,10 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
                           for batch_idx in range(local_batch_size)], dtype=np.float32))
         # Create input feed map
         input_feed = {}
-        input_feed[self.model.letor_features.name] = np.array(letor_features)
+        input_feed[self.model.letor_features_name] = np.array(letor_features)
         for l in range(self.max_candidate_num):
-            input_feed[self.model.docid_inputs[l].name] = batch_docid_inputs[l]
-            input_feed[self.model.labels[l].name] = batch_labels[l]
+            input_feed[self.model.docid_inputs_name[l]] = batch_docid_inputs[l]
+            input_feed[self.model.labels_name[l]] = batch_labels[l]
 
         # Simulate online environment and collect clicks.
         input_feed = self.simulate_clicks_online(input_feed, check_validation)
@@ -334,8 +331,8 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
         input_feed = {}
         input_feed[self.model.letor_features.name] = np.array(letor_features)
         for l in range(self.max_candidate_num):
-            input_feed[self.model.docid_inputs[l].name] = batch_docid_inputs[l]
-            input_feed[self.model.labels[l].name] = batch_labels[l]
+            input_feed[self.model.docid_inputs_name[l]] = batch_docid_inputs[l]
+            input_feed[self.model.labels_name[l]] = batch_labels[l]
 
         # Simulate online environment and collect clicks.
         input_feed = self.simulate_clicks_online(input_feed, check_validation)
@@ -396,8 +393,8 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
         input_feed = {}
         input_feed[self.model.letor_features.name] = np.array(letor_features)
         for l in range(self.max_candidate_num):
-            input_feed[self.model.docid_inputs[l].name] = batch_docid_inputs[l]
-            input_feed[self.model.labels[l].name] = batch_labels[l]
+            input_feed[self.model.docid_inputs_name[l]] = batch_docid_inputs[l]
+            input_feed[self.model.labels_name[l]] = batch_labels[l]
 
         # Simulate online environment and collect clicks.
         input_feed = self.simulate_clicks_online(input_feed, check_validation)
