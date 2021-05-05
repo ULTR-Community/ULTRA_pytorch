@@ -58,6 +58,7 @@ class DBGD(BaseAlgorithm):
         self.hparams.parse(exp_settings['learning_algorithm_hparams'])
         self.exp_settings = exp_settings
         self.feature_size = data_set.feature_size
+        self.rank_list_size = exp_settings['selection_bias_cutoff']
         self.model = self.create_model(self.feature_size)
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.learning_rate = self.hparams.learning_rate
@@ -97,37 +98,29 @@ class DBGD(BaseAlgorithm):
         self.winners = input_feed[self.winners_name]
         self.output = self.ranking_model(self.model, self.max_candidate_num)
         train_output = self.ranking_model(self.model, self.rank_list_size)
-        self.labels = self.labels[:self.rank_list_size]
         # Create random unit noise
-
-        noisy_params = []
-        for sequential in self.model.children():
-            for layer in sequential:
-                if isinstance(layer, nn.Linear):
-                    weight_noise = F.normalize(torch.normal(mean=0.0, std=1.0, size=layer.weight.shape))
-                    bias_noise = F.normalize(torch.normal(mean=0.0, std=1.0, size=layer.bias.shape))
-                    noisy_params.append(weight_noise)
-                    noisy_params.append(bias_noise)
+        noisy_params = self.create_noisy_param()
 
         # Apply the noise to get new ranking scores
         if self.hparams.need_interleave:  # compute scores on whole list if needs interleave
-            new_output_list = self.get_ranking_scores(
-                self.docid_inputs, is_training=self.is_training, scope='ranking_model', noisy_params=noisy_params,
-                noise_rate=self.hparams.learning_rate)
+            new_output_list = self.get_ranking_scores(self.model,
+                self.docid_inputs, noisy_params=noisy_params, noise_rate=self.hparams.learning_rate)
         else:
-            new_output_list = self.get_ranking_scores(
-                self.docid_inputs[:self.rank_list_size], is_training=self.is_training, scope='ranking_model',
-                noisy_params=noisy_params, noise_rate=self.hparams.learning_rate)
+            new_output_list = self.get_ranking_scores(self.model,
+                self.docid_inputs[:self.rank_list_size], noisy_params=noisy_params, noise_rate=self.hparams.learning_rate)
 
         # Compute NDCG for the old ranking scores and new ranking scores
         # reshape from [rank_list_size, ?] to [?, rank_list_size]
-        reshaped_train_labels = torch.transpose(self.labels, 0 ,1)
+        reshaped_train_labels = torch.transpose(self.labels[:self.rank_list_size], 0 ,1)
+        print(reshaped_train_labels.shape)
         self.new_output = torch.cat(new_output_list, 1)
 
         previous_ndcg = ultra.utils.make_ranking_metric_fn(
             'ndcg', self.rank_list_size)(
             reshaped_train_labels, train_output, None)
-        self.loss = 1.0 - previous_ndcg
+        self.loss = torch.sub(1,previous_ndcg)
+        self.loss.requires_grad=True
+        print(self.loss)
 
         if self.hparams.need_interleave:
             self.output = (self.output, self.new_output)
@@ -169,7 +162,7 @@ class DBGD(BaseAlgorithm):
                                     '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, True)
         # loss, no outputs, summary.
         self.global_step+=1
-        return self.loss, None, self.train_summary
+        return self.loss, self.output, self.train_summary
 
     def validation(self, input_feed):
         self.model.eval()
@@ -187,28 +180,61 @@ class DBGD(BaseAlgorithm):
                     metric, topn)(reshaped_labels, pad_removed_output, None)
                 self.create_summary('%s_%d' % (metric, topn),
                                     '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, False)
-        return None, self.output, self.eval_summary  # no loss, outputs, summary.
+
+        noisy_params = self.create_noisy_param()
+        # Apply the noise to get new ranking scores
+        if self.hparams.need_interleave:  # compute scores on whole list if needs interleave
+            new_output_list = self.get_ranking_scores(self.model,
+                                                      self.docid_inputs, noisy_params=noisy_params,
+                                                      noise_rate=self.hparams.learning_rate)
+
+        self.new_output = torch.cat(new_output_list, 1)
+        pair_outputs = (self.output, self.new_output)
+
+        return pair_outputs, self.output, self.eval_summary  # no loss, outputs, summary.
 
     def compute_gradient(self, final_winners, noisy_params):
+        self.model.to('cpu')
         ctr = 0
         for sequential in self.model.children():
-            for layer in sequential:
-                if isinstance(layer, nn.Linear):
-                    for parameter in layer.parameters():
-                        gradient_matrix = torch.unsqueeze(
-                            torch.stack([torch.zeros_like(parameter), noisy_params[ctr]]), dim=0)
-                        ctr += 1
-                        expended_winners = final_winners
-                        for i in range(gradient_matrix.dim() - expended_winners.dim()):
-                            expended_winners = torch.unsqueeze(
-                                expended_winners, dim=-1)
-                        gradient = torch.mean(
-                            torch.sum(
-                                expended_winners * gradient_matrix,
-                                dim=1
-                            ),
-                            dim=0)
-                        parameter.grad = gradient
+            if isinstance(sequential, nn.Sequential):
+                for layer in sequential:
+                    if isinstance(layer, nn.Linear):
+                        for name, parameter in layer.named_parameters():
+                            noisy_param = noisy_params[ctr]
+                            gradient_matrix = torch.unsqueeze(
+                                torch.stack([torch.zeros_like(parameter), noisy_param]), dim=0)
+                            ctr += 1
+                            expended_winners = torch.tensor(final_winners)
+                            for i in range(gradient_matrix.dim() - expended_winners.dim()):
+                                expended_winners = torch.unsqueeze(
+                                    expended_winners, dim=-1)
+                            gradient = torch.mean(
+                                torch.sum(
+                                    expended_winners * gradient_matrix,
+                                    dim=1
+                                ),
+                                dim=0)
+                            if parameter.grad == None:
+                                dummy_loss = 0
+                                dummy_loss += torch.mean(parameter)
+                                dummy_loss.backward()
+                                gradient = gradient.to(dtype=torch.float32)
+                                parameter.grad = gradient
+
+        self.model.to(self.cuda)
+
+    def create_noisy_param(self):
+        noisy_params = []
+        for sequential in self.model.children():
+            if isinstance(sequential, nn.Sequential):
+                for layer in sequential:
+                    if isinstance(layer, nn.Linear):
+                        weight_noise = F.normalize(torch.normal(mean=0.0, std=1.0, size=layer.weight.shape))
+                        bias_noise = F.normalize(input=torch.normal(mean=0.0, std=1.0, size=layer.bias.shape),dim=0)
+                        noisy_params.append(weight_noise)
+                        noisy_params.append(bias_noise)
+        return noisy_params
 
 
 

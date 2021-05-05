@@ -75,7 +75,6 @@ class RegressionEM(BaseAlgorithm):
         self.feature_size = data_set.feature_size
         self.rank_list_size = exp_settings['selection_bias_cutoff']
         self.model = self.create_model(self.feature_size)
-        self.rank_list_size = exp_settings['selection_bias_cutoff']
         self.letor_features_name = "letor_features"
         self.letor_features = None
         self.docid_inputs_name = []  # a list of top documents

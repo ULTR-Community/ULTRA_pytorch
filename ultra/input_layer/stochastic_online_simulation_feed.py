@@ -117,7 +117,7 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
 
         """
         # Compute ranking scores with input_feed
-        rank_scores = self.model.validation(input_feed)[1].cpu()
+        rank_scores = self.model.validation(input_feed)[0]
         # Rerank documents and collect clicks
         letor_features_length = len(input_feed[self.model.letor_features_name])
         local_batch_size = len(input_feed[self.model.docid_inputs_name[0]])
@@ -137,7 +137,7 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
 
             def plackett_luce_sampling(score_list):
                 # Sample document ranking
-                scores = np.array(score_list[:list_len])
+                scores = score_list[:list_len].detach().numpy()
                 scores = scores - max(scores)
                 exp_scores = np.exp(self.hparams.tau * scores)
                 probs = exp_scores / np.sum(exp_scores)
@@ -159,7 +159,7 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
                 # Rerank documents via interleaving
                 rank_lists = []
                 for j in range(len(rank_scores)):
-                    scores = rank_scores[j][i][:list_len]
+                    scores = rank_scores[j][i][:list_len].cpu()
                     rank_list = plackett_luce_sampling(scores)
                     rank_lists.append(rank_list)
 

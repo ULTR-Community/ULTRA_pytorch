@@ -78,9 +78,9 @@ class DNN(nn.Module):
             ctr = 0
             for layer in self.sequential:
                 if isinstance(layer, nn.Linear):
-                    layer.weight += noisy_params[ctr]
+                    layer.weight += noisy_params[ctr]* noise_rate
                     ctr += 1
-                    layer.bias += noisy_params[ctr]
+                    layer.bias += noisy_params[ctr]* noise_rate
                     ctr += 1
             output_data = self.sequential(input_data)
         output_shape = input_list[0].shape[0]
