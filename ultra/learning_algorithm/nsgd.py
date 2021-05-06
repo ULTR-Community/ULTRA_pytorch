@@ -83,11 +83,10 @@ class NSGD(DBGD):
             if isinstance(sequential, nn.Sequential):
                 for name, parameter in sequential.named_parameters():
                     if "linear" in name:
-                        if name not in self.bad_noisy_params:
-                            self.model_params_to_update[name] = parameter
-                            self.bad_noisy_params[name] = []
-                            for i in range(self.ranker_num):
-                                self.bad_noisy_params[name].append(torch.zeros(parameter.shape))
+                        self.model_params_to_update[name] = parameter
+                        self.bad_noisy_params[name] = []
+                        for i in range(self.ranker_num):
+                            self.bad_noisy_params[name].append(torch.zeros(parameter.shape))
 
 
     def train(self, input_feed):
@@ -106,8 +105,6 @@ class NSGD(DBGD):
         self.output = self.ranking_model(self.model, self.max_candidate_num)
         train_output = self.ranking_model(self.model, self.rank_list_size)
         train_labels = self.labels[:self.rank_list_size]
-
-        ranking_model_params = self.model.parameters()
 
         null_space_dict = {}
         for noise in self.bad_noisy_params:
@@ -130,7 +127,7 @@ class NSGD(DBGD):
             for noise in noisy_params:
                 if noise not in param_gradient_from_rankers:
                     param_gradient_from_rankers[noise] = [
-                        torch.zeros_like(ranking_model_params[noise])]
+                        torch.zeros_like(self.model_params_to_update[noise])]
                 param_gradient_from_rankers[noise].append(noisy_params[noise])
 
         # Compute NDCG for the old ranking scores.
@@ -162,7 +159,7 @@ class NSGD(DBGD):
         # Gradients and SGD update operation for training the model.
         if self.hparams.max_gradient_norm > 0:
             self.clipped_gradient = torch.nn.utils.clip_grad_norm_(
-                ranking_model_params, self.hparams.max_gradient_norm)
+                self.model.parameters, self.hparams.max_gradient_norm)
 
         self.optimizer_func.step()
 
@@ -214,7 +211,7 @@ class NSGD(DBGD):
 
             # Apply the noise to get new ranking scores
             new_output_list = self.create_new_output_list(noisy_params)
-            new_output_lists.append(torch.cat(new_output_list, 1))
+            new_output_lists.append(new_output_list)
 
         rankers_output = [self.output] + new_output_lists
         return rankers_output, self.output, self.eval_summary  # no loss, outputs, summary.

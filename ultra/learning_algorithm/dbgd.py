@@ -105,14 +105,13 @@ class DBGD(BaseAlgorithm):
         # Compute NDCG for the old ranking scores and new ranking scores
         # reshape from [rank_list_size, ?] to [?, rank_list_size]
         reshaped_train_labels = torch.transpose(self.labels[:self.rank_list_size], 0 ,1)
-        self.new_output = torch.cat(new_output_list, 1)
+        self.new_output = new_output_list
 
         previous_ndcg = ultra.utils.make_ranking_metric_fn(
             'ndcg', self.rank_list_size)(
             reshaped_train_labels, train_output, None)
         self.loss = torch.sub(1,previous_ndcg)
         self.loss.requires_grad=True
-        print(self.loss)
 
         if self.hparams.need_interleave:
             self.output = (self.output, self.new_output)
@@ -176,8 +175,7 @@ class DBGD(BaseAlgorithm):
         noisy_params = self.create_noisy_param()
         # Apply the noise to get new ranking scores
         new_output_list = self.create_new_output_list(noisy_params)
-        self.new_output = torch.cat(new_output_list, 1)
-        pair_outputs = (self.output, self.new_output)
+        pair_outputs = (self.output, new_output_list)
 
         return pair_outputs, self.output, self.eval_summary  # no loss, outputs, summary.
 
@@ -227,6 +225,7 @@ class DBGD(BaseAlgorithm):
             new_output_list = self.get_ranking_scores(self.model,
                                                       self.docid_inputs[:self.rank_list_size],
                                                       noisy_params=noisy_params, noise_rate=self.hparams.learning_rate)
+        return torch.cat(new_output_list, 1)
 
 
 
