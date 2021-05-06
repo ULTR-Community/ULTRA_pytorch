@@ -13,6 +13,7 @@ from __future__ import print_function
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
+from torch.utils.tensorboard import SummaryWriter
 
 from ultra.learning_algorithm.dbgd import DBGD
 import ultra.utils
@@ -48,12 +49,17 @@ class MGD(DBGD):
             ranker_num=4,
         )
         self.hparams.parse(exp_settings['learning_algorithm_hparams'])
+        self.cuda = torch.device('cuda')
+        self.writer = SummaryWriter()
+        self.train_summary = {}
+        self.eval_summary = {}
         self.exp_settings = exp_settings
         self.feature_size = data_set.feature_size
         self.model = self.create_model(self.feature_size)
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.learning_rate = self.hparams.learning_rate
         self.ranker_num = self.hparams.ranker_num
+        self.winners_name = "winners"
 
         # Feeds for inputs.
         self.rank_list_size = exp_settings['selection_bias_cutoff']
@@ -151,7 +157,7 @@ class MGD(DBGD):
         # Gradients and SGD update operation for training the model.
         if self.hparams.max_gradient_norm > 0:
             self.clipped_gradient = torch.nn.utils.clip_grad_norm_(
-                self.model.parameters, self.hparams.max_gradient_norm)
+                self.model.parameters(), self.hparams.max_gradient_norm)
 
         self.optimizer_func.step()
 
@@ -205,6 +211,8 @@ class MGD(DBGD):
             if isinstance(layer, nn.Sequential):
                 for name, parameter in layer.named_parameters():
                     if "linear" in name:
+                        for i in range(len(noisy_params[name])):
+                            noisy_params[name][i] = noisy_params[name][i].cpu()
                         gradient_matrix = torch.unsqueeze(
                             torch.stack(noisy_params[name]), dim=0)
                         expended_winners = torch.tensor(final_winners)

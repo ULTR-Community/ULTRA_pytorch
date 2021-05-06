@@ -100,7 +100,7 @@ class DBGD(BaseAlgorithm):
         train_output = self.ranking_model(self.model, self.rank_list_size)
 
         noisy_params = self.create_noisy_param()
-        new_output_list = self.create_new_output_list()
+        new_output_list = self.create_new_output_list(noisy_params)
 
         # Compute NDCG for the old ranking scores and new ranking scores
         # reshape from [rank_list_size, ?] to [?, rank_list_size]
@@ -212,7 +212,7 @@ class DBGD(BaseAlgorithm):
             if isinstance(layer, nn.Sequential):
                 for name,param in layer.named_parameters():
                     if "linear" in name:
-                        noisy_params[name]= F.normalize(torch.normal(mean=0.0, std=1.0, size=param.shape))
+                        noisy_params[name]= F.normalize(torch.normal(mean=0.0, std=1.0, size=param.shape), dim=0)
         return noisy_params
 
     def create_new_output_list(self, noisy_params):

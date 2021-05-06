@@ -15,6 +15,8 @@ import torch
 import torch.nn.functional as F
 
 from six.moves import zip
+from torch.utils.tensorboard import SummaryWriter
+
 from ultra.learning_algorithm.dbgd import DBGD
 import ultra.utils
 import ultra
@@ -49,6 +51,10 @@ class NSGD(DBGD):
             ranker_num=4,
         )
         print(exp_settings['learning_algorithm_hparams'])
+        self.cuda = torch.device('cuda')
+        self.writer = SummaryWriter()
+        self.train_summary = {}
+        self.eval_summary = {}
         self.hparams.parse(exp_settings['learning_algorithm_hparams'])
         self.exp_settings = exp_settings
         self.feature_size = data_set.feature_size
@@ -56,6 +62,7 @@ class NSGD(DBGD):
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.learning_rate = self.hparams.learning_rate
         self.ranker_num = self.hparams.ranker_num
+        self.winners_name = "winners"
 
         # Feeds for inputs.
         self.rank_list_size = exp_settings['selection_bias_cutoff']
@@ -122,7 +129,7 @@ class NSGD(DBGD):
 
             # Apply the noise to get new ranking scores
             new_output_list = self.create_new_output_list(noisy_params)
-            new_output_lists.append(torch.cat(new_output_list, 1))
+            new_output_lists.append(new_output_list)
 
             for noise in noisy_params:
                 if noise not in param_gradient_from_rankers:
@@ -159,7 +166,7 @@ class NSGD(DBGD):
         # Gradients and SGD update operation for training the model.
         if self.hparams.max_gradient_norm > 0:
             self.clipped_gradient = torch.nn.utils.clip_grad_norm_(
-                self.model.parameters, self.hparams.max_gradient_norm)
+                self.model.parameters(), self.hparams.max_gradient_norm)
 
         self.optimizer_func.step()
 
@@ -222,9 +229,11 @@ class NSGD(DBGD):
             if isinstance(layer, nn.Sequential):
                 for name, parameter in layer.named_parameters():
                     if "linear" in name:
+                        for i in range(len(noisy_params[name])):
+                            noisy_params[name][i] = noisy_params[name][i].cpu()
                         gradient_matrix = torch.unsqueeze(
                             torch.stack(noisy_params[name]), dim=0)
-                        expended_winners = final_winners
+                        expended_winners =  torch.tensor(final_winners)
                         for i in range(gradient_matrix.dim() - expended_winners.dim()):
                             expended_winners = torch.unsqueeze(expended_winners, dim=-1)
                         gradient = torch.mean(
@@ -249,10 +258,11 @@ class NSGD(DBGD):
                                 torch.squeeze(
                                     expended_losers *
                                     gradient_matrix), dim=0)[1:]
+                            bad_noise_list = list(bad_noise_list)
 
                             for i in range(self.ranker_num):
                                 bad_noise_list[i] = torch.reshape(
-                                    bad_noise_list[i], self.bad_noisy_params[name][i].get_shape())
+                                    bad_noise_list[i], self.bad_noisy_params[name][i].shape)
                                 self.bad_noisy_params[name][i] = bad_noise_list[i]
                                 self.update_ops_list.append(
                                     bad_noise_list
@@ -260,15 +270,15 @@ class NSGD(DBGD):
         self.model.to(self.cuda)
 
     def sample_from_null_space(self,null_space_matrix, original_shape):
-        if sum([original_shape[i].value for i in range(
-                original_shape.rank)]) > 1:
+        if sum([original_shape[i] for i in range(
+                len(original_shape))]) > 1:
             sampled_vector = torch.sum(
-                null_space_matrix * torch.normal(torch.tensor([1, self.ranker_num])), dim=1)
+                null_space_matrix * torch.normal(mean=0.0, std=1.0,size=(1, self.ranker_num)), dim=1)
             return F.normalize(
                 torch.reshape(sampled_vector, original_shape))
         else:
             return F.normalize(
-                torch.normal(original_shape))
+                torch.normal(mean=0.0, std=1.0,size=original_shape), dim=0)
 
     # Compute null space
     def compute_null_space(self, param_list):
@@ -276,7 +286,7 @@ class NSGD(DBGD):
         flatten_list = [torch.reshape(param_list[i], (1, -1))
                         for i in range(len(param_list))]
         matrix = torch.stack(flatten_list, dim=1)
-        s, u, v = torch.linalg.svd(matrix)
+        u, s, v = torch.svd(matrix)
         mask = torch.eq(s, 0).to(dtype=torch.float32)
         return (torch.squeeze(v * mask), original_shape)
 
