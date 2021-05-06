@@ -36,6 +36,7 @@ class DNN(nn.Module):
         self.act_func = None
         self.output_sizes = self.hparams.hidden_layer_sizes + [1]
         self.layer_norm = None
+        self.sequential = nn.Sequential().to(dtype=torch.float32)
 
         if self.hparams.activation_func in BaseRankingModel.ACT_FUNC_DIC:
             self.act_func = BaseRankingModel.ACT_FUNC_DIC[self.hparams.activation_func]
@@ -43,18 +44,20 @@ class DNN(nn.Module):
         if self.hparams.initializer in BaseRankingModel.INITIALIZER_DIC:
             self.initializer = BaseRankingModel.INITIALIZER_DIC[self.hparams.initializer]
 
-        modules = []
         for j in range(len(self.output_sizes)):
             if self.layer_norm is None and self.hparams.norm in BaseRankingModel.NORM_FUNC_DIC:
                 if self.hparams.norm == "layer":
-                    modules.append(nn.LayerNorm(feature_size).to(dtype=torch.float32))
+                    self.sequential.add_module('layer_norm{}'.format(j),
+                                               nn.LayerNorm(feature_size).to(dtype=torch.float32))
                 else:
-                    modules.append(nn.BatchNorm2d(feature_size).to(dtype=torch.float32))
-            modules.append(nn.Linear(feature_size, self.output_sizes[j]))
+                    self.sequential.add_module('batch_norm{}'.format(j),
+                                               nn.BatchNorm2d(feature_size).to(dtype=torch.float32))
+
+            self.sequential.add_module('linear{}'.format(j), nn.Linear(feature_size, self.output_sizes[j]))
             if j != len(self.output_sizes) - 1:
-                modules.append(self.act_func)
+                self.sequential.add_module('act{}'.format(j), self.act_func)
             feature_size = self.output_sizes[j]
-        self.sequential = nn.Sequential(*modules).to(dtype=torch.float32)
+
 
     def build(self, input_list, noisy_params=None,
               noise_rate=0.05, **kwargs):
@@ -75,13 +78,9 @@ class DNN(nn.Module):
         if (noisy_params == None):
             output_data = self.sequential(input_data)
         else:
-            ctr = 0
-            for layer in self.sequential:
-                if isinstance(layer, nn.Linear):
-                    layer.weight += noisy_params[ctr]* noise_rate
-                    ctr += 1
-                    layer.bias += noisy_params[ctr]* noise_rate
-                    ctr += 1
+            for name, parameter in self.sequential.named_parameters():
+                if name in noisy_params:
+                    parameter += noisy_params[name]* noise_rate
             output_data = self.sequential(input_data)
         output_shape = input_list[0].shape[0]
         return torch.split(output_data, output_shape, dim=0)

@@ -30,20 +30,24 @@ class Linear( nn.Module):
         self.initializer = None
         self.layer_norm = None
         self.output_sizes = [1]
+        self.sequential = nn.Sequential().to(dtype=torch.float32)
 
         if self.hparams.initializer in BaseRankingModel.INITIALIZER_DIC:
             self.initializer = BaseRankingModel.INITIALIZER_DIC[self.hparams.initializer]
 
-        modules = []
         for j in range(len(self.output_sizes)):
             if self.layer_norm is None and self.hparams.norm in BaseRankingModel.NORM_FUNC_DIC:
                 if self.hparams.norm == "layer":
-                    modules.append(nn.LayerNorm(feature_size).to(dtype=torch.float32))
+                    self.sequential.add_module('layer_norm{}'.format(j),
+                                               nn.LayerNorm(feature_size).to(dtype=torch.float32))
                 else:
-                    modules.append(nn.BatchNorm2d(feature_size).to(dtype=torch.float32))
-            modules.append(nn.Linear(feature_size, self.output_sizes[j]))
+                    self.sequential.add_module('batch_norm{}'.format(j),
+                                               nn.BatchNorm2d(feature_size).to(dtype=torch.float32))
+
+            self.sequential.add_module('linear{}'.format(j), nn.Linear(feature_size, self.output_sizes[j]))
+            if j != len(self.output_sizes) - 1:
+                self.sequential.add_module('act{}'.format(j), self.act_func)
             feature_size = self.output_sizes[j]
-        self.sequential = nn.Sequential(*modules).to(dtype=torch.float32)
 
     def build(self, input_list, noisy_params=None,
               noise_rate=0.05, is_training=False, **kwargs):
