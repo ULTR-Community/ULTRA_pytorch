@@ -346,27 +346,20 @@ class Raw_data:
                         self.initial_list[i])) + self.initial_list[i]
 
 
-def merge_TFSummary(summary_list, weights):
+def merge_Summary(summary_list, weights):
     merged_values = {}
     weight_sum_map = {}
     for i in range(len(summary_list)):
         summary = summary_list[i]
-        if isinstance(summary, bytes):
-            parse_TFSummary_from_bytes(summary)
-            summ = summary_pb2.Summary()
-            summ.ParseFromString(summary)
-            summary = summ
-        for e in summary.value:
-            if e.tag not in merged_values:
-                merged_values[e.tag] = 0.0
-                weight_sum_map[e.tag] = 0.0
-            merged_values[e.tag] += e.simple_value * weights[i]
-            weight_sum_map[e.tag] += weights[i]
+        for metric in summary.keys():
+            if metric not in merged_values:
+                merged_values[metric] = 0.0
+                weight_sum_map[metric] = 0.0
+            merged_values[metric] += summary[metric] * weights[i]
+            weight_sum_map[metric] += weights[i]
     for k in merged_values:
         merged_values[k] /= max(0.0000001, weight_sum_map[k])
-    return tf.Summary(value=[
-        tf.Summary.Value(tag=k, simple_value=merged_values[k]) for k in merged_values
-    ])
+    return merged_values
 
 
 def parse_TFSummary_from_bytes(summary_bytes):

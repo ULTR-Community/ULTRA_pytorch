@@ -143,6 +143,7 @@ def train(exp_settings):
     current_step = 0
     previous_losses = []
     best_perf = None
+    print("max_train_iter: ", args.max_train_iteration)
     while True:
         # Get a batch and make a step.
         start_time = time.time()
@@ -174,13 +175,13 @@ def train(exp_settings):
                     batch_size_list.append(len(info_map['input_list']))
                     it += batch_size_list[-1]
                     count_batch += 1.0
-                #return ultra.utils.merge_TFSummary(summary_list, batch_size_list)
-                return summary_list
+                return ultra.utils.merge_Summary(summary_list, batch_size_list)
+                # return summary_list
 
             valid_summary = validate_model(valid_set, valid_input_feed)
-            valid_writer.add_scalars('Validation Summary', valid_summary, model.global_step)
+            # valid_writer.add_scalars('Validation Summary', valid_summary, model.global_step)
             for x in valid_summary:
-                for key,value in x.items:
+                for key,value in x.items():
                     print(key, value)
 
             if args.test_while_train:
@@ -205,7 +206,7 @@ def train(exp_settings):
             # Save checkpoint if there is no objective metic
             if best_perf == None and current_step > args.start_saving_iteration:
                 checkpoint_path = os.path.join(args.model_dir, "%s.ckpt" % exp_settings['learning_algorithm'])
-                torch.save(model.state_dict(), checkpoint_path)
+                torch.save(model.model.state_dict(), checkpoint_path)
             if loss == float('inf'):
                 break
 
@@ -213,6 +214,7 @@ def train(exp_settings):
             sys.stdout.flush()
 
             if args.max_train_iteration > 0 and current_step > args.max_train_iteration:
+                print("current_step: ", current_step)
                 break
     train_writer.close()
     valid_writer.close()

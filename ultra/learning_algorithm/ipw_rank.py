@@ -59,6 +59,7 @@ class IPWrank(BaseAlgorithm):
         )
 
         self.writer = SummaryWriter()
+        self.cuda = torch.device('cuda')
         self.train_summary = {}
         self.eval_summary = {}
         self.is_training = "is_train"
@@ -134,7 +135,7 @@ class IPWrank(BaseAlgorithm):
         train_output = self.ranking_model(self.model,
             self.rank_list_size)
         train_labels = torch.transpose(self.labels, 0, 1)
-        train_pw = torch.tensor(self.propensity_weights)
+        train_pw = torch.tensor(self.propensity_weights).to(device=self.cuda)
         print('Loss Function is ' + self.hparams.loss_func)
         self.loss = None
 
@@ -207,7 +208,7 @@ class IPWrank(BaseAlgorithm):
                 metric_value = ultra.utils.make_ranking_metric_fn(
                     metric, topn)(val_labels, pad_removed_output, None)
                 self.create_summary('%s_%d' % (metric, topn),
-                                    '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, False)
+                                    '%s_%d' % (metric, topn), metric_value, False)
 
         input_feed[self.is_training] = False
         print(self.output)
