@@ -10,8 +10,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import math
-import os
 import random
 import sys
 import time
@@ -21,10 +19,6 @@ from ultra.input_layer import BaseInputFeed
 from ultra.utils import click_models as cm
 from ultra.utils.team_draft_interleave import TeamDraftInterleaving
 import ultra
-
-import tensorflow as tf
-# We disable pylint because we need python3 compatibility.
-from six.moves import zip     # pylint: disable=redefined-builtin
 
 
 class StochasticOnlineSimulationFeed(BaseInputFeed):
@@ -137,7 +131,7 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
 
             def plackett_luce_sampling(score_list):
                 # Sample document ranking
-                scores = score_list[:list_len].detach().numpy()
+                scores = score_list[:list_len]
                 scores = scores - max(scores)
                 exp_scores = np.exp(self.hparams.tau * scores)
                 probs = exp_scores / np.sum(exp_scores)

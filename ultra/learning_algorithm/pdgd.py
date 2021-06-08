@@ -54,7 +54,7 @@ class PDGD(BaseAlgorithm):
             grad_strategy='ada',            # Select gradient strategy
         )
         print(exp_settings['learning_algorithm_hparams'])
-
+        self.is_cuda_avail = torch.cuda.is_available()
         self.cuda = torch.device('cuda')
         self.writer = SummaryWriter()
         self.train_summary = {}
@@ -63,6 +63,8 @@ class PDGD(BaseAlgorithm):
         self.exp_settings = exp_settings
         self.feature_size = data_set.feature_size
         self.model = self.create_model(self.feature_size)
+        if self.is_cuda_avail:
+            self.model = self.model.to(device=self.cuda)
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.learning_rate = self.hparams.learning_rate
 
@@ -102,22 +104,15 @@ class PDGD(BaseAlgorithm):
         # Run the model to get ranking scores
 
         self.model.eval()
-        self.create_input_feed(input_feed, self.rank_list_size)
-
-        outputs = self.ranking_model(self.model, self.rank_list_size)
-        # reshape from [rank_list_size, ?] to [?, rank_list_size]
-        reshaped_train_labels = torch.transpose(self.labels,0,1)
-        pad_removed_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, outputs)
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-                    reshaped_train_labels, pad_removed_output, None)
-                self.writer.add_scalar('train_eval %s_%d' %
-                    (metric, topn), metric_value, self.global_step)
+        self.create_input_feed(input_feed, self.max_candidate_num)
+        with torch.no_grad():
+            outputs = self.ranking_model(self.model, self.max_candidate_num)
 
         # reduce value to avoid numerical problems
-        rank_outputs= outputs.cpu().detach().numpy()
+        if self.is_cuda_avail:
+            rank_outputs= outputs.cpu().detach().numpy()
+        else:
+            rank_outputs = outputs.numpy()
         rank_outputs = rank_outputs - \
             np.amax(rank_outputs, axis=1, keepdims=True)
         exp_ranking_scores = np.exp(self.hparams.tau * rank_outputs)
@@ -187,53 +182,56 @@ class PDGD(BaseAlgorithm):
                                       str(np.isnan(sum_log_flipped_denominator)))
                             pair_weights.append(weight)
 
-        self.positive_docid_inputs = torch.tensor(data=positive_docids, dtype=torch.int64)
-        self.negative_docid_inputs = torch.tensor(data=negative_docids, dtype=torch.int64)
-        self.pair_weights = torch.tensor(data=pair_weights, device=self.cuda)
+        self.positive_docid_inputs = torch.as_tensor(data=positive_docids, dtype=torch.int64)
+        self.negative_docid_inputs = torch.as_tensor(data=negative_docids, dtype=torch.int64)
+        if self.is_cuda_avail:
+            self.pair_weights = torch.as_tensor(data=pair_weights, device=self.cuda)
+        else:
+            self.pair_weights = torch.as_tensor(pair_weights)
 
         # Train the model
         pair_scores = self.get_ranking_scores(self.model,
             [self.positive_docid_inputs,
              self.negative_docid_inputs])
-        # print("pair scores: ", pair_scores)
-
+        # print(torch.exp(pair_scores[0]) + torch.exp(pair_scores[1]))
+        sum = torch.sum(-torch.exp(pair_scores[0]) / (
+                        torch.exp(pair_scores[0]) + torch.exp(pair_scores[1])), 1)
         self.loss = torch.sum(
             torch.mul(
                 # self.pairwise_cross_entropy_loss(pair_scores[0], pair_scores[1]),
-                torch.sum(-torch.exp(pair_scores[0]) / (
-                        torch.exp(pair_scores[0]) + torch.exp(pair_scores[1])), 1),
+                sum,
                 self.pair_weights
             )
         )
-        print("first loss: ", self.loss)
         params = self.model.parameters()
         if self.hparams.l2_loss > 0:
             for p in params:
                 self.loss += self.hparams.l2_loss * self.l2_loss(p)
 
         # Gradients and SGD update operation for training the model.
-        self.opt_step(self.optimizer_func, params)
-        self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
-                            True)
-        self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate, True)
+        self.opt_step(self.optimizer_func, self.model.parameters())
+        # self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
+        #                     True)
+        # self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate, True)
         # loss, no outputs, summary.
         self.global_step+=1
+        print(" Loss %f at Global Step %d: " % (self.loss.item(), self.global_step))
         return self.loss, None, self.train_summary
 
     def validation(self, input_feed):
         self.model.eval()
         self.create_input_feed(input_feed, self.max_candidate_num)
-        self.output = self.ranking_model(self.model,
-                                         self.max_candidate_num)
+        with torch.no_grad():
+            self.output = self.ranking_model(self.model,
+                                             self.max_candidate_num)
         pad_removed_output = self.remove_padding_for_metric_eval(
             self.docid_inputs, self.output)
 
         # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
-        reshaped_labels = torch.transpose(self.labels, 0, 1)
         for metric in self.exp_settings['metrics']:
             for topn in self.exp_settings['metrics_topn']:
                 metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(reshaped_labels, pad_removed_output, None)
+                    metric, topn)(self.labels, pad_removed_output, None)
                 self.create_summary('%s_%d' % (metric, topn),
-                                    '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, False)
+                                    '%s_%d' % (metric, topn), metric_value, False)
         return None, self.output, self.eval_summary  # no loss, outputs, summary.

@@ -18,6 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import time
+
 import tensorflow as tf
 import torch.nn.functional as F
 import torch
@@ -37,15 +39,15 @@ def _to_nd_indices(indices):
 
     """
     assert indices.dim() == 2
-    indices = indices.to(device=device)
-    batch_ids = torch.ones_like(indices).to(device=device) * torch.unsqueeze(
-        torch.arange(indices.size()[0]), 1).to(device=device)
+    if torch.cuda.is_available():
+        indices = indices.to(device=device)
+    batch_ids = torch.ones_like(indices) * torch.unsqueeze(
+        torch.arange(indices.size()[0]), 1)
     return torch.stack([batch_ids, indices], dim=-1)
 
 
 def is_label_valid(labels):
     """Returns a boolean `Tensor` for label validity."""
-    labels = torch.tensor(labels)
     return labels >= 0.
 
 
@@ -84,7 +86,8 @@ def sort_by_scores(scores,
     nd_indices = _to_nd_indices(indices)
     if shuffle_ind is not None:
         nd_indices = gather_nd(shuffle_ind, nd_indices)
-    return [gather_nd(f, nd_indices) for f in features_list]
+    result = [gather_nd(f, nd_indices) for f in features_list]
+    return result
 
 
 def sorted_ranks(scores, shuffle_ties=True, seed=None):

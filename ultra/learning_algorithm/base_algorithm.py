@@ -8,6 +8,7 @@ from __future__ import print_function
 
 import torch.nn.functional as F
 import torch
+import numpy as np
 from abc import ABC, abstractmethod
 
 import ultra
@@ -105,7 +106,7 @@ class BaseAlgorithm(ABC):
             raise AssertionError(
                 'Input id list is shorter than output score list when remove padding.')
         # Build mask
-        valid_flags = torch.cat((torch.ones(self.letor_features.size()[0]), torch.zeros([1])), dim=0)
+        valid_flags = torch.cat((torch.ones(self.letor_features.shape[0]), torch.zeros([1])), dim=0)
         valid_flags = valid_flags.type(torch.bool)
         input_flag_list = []
         for i in range(len(output_scores)):
@@ -152,15 +153,11 @@ class BaseAlgorithm(ABC):
 
         """
             # Build feature padding
-        PAD_embed = torch.zeros([1, self.feature_size], dtype = torch.float32)
-        letor_features = torch.cat(
-            dim=0, tensors=(
-                self.letor_features, PAD_embed))
+        PAD_embed = np.zeros((1, self.feature_size), dtype=np.float32)
+        letor_features = np.concatenate((self.letor_features, PAD_embed), axis=0)
         input_feature_list = []
         for i in range(len(input_id_list)):
-            input_feature_list.append(
-                torch.index_select(
-                    letor_features,0, input_id_list[i]))
+            input_feature_list.append(torch.from_numpy(np.take(letor_features, input_id_list[i],0)))
         return model.build(
             input_feature_list, **kwargs)
 
@@ -175,7 +172,6 @@ class BaseAlgorithm(ABC):
             model = utils.find_class(
                 self.exp_settings['ranking_model'])(
                 self.exp_settings['ranking_model_hparams'], feature_size)
-            model.to(self.cuda)
         return model
 
     def create_input_feed(self, input_feed, list_size):
@@ -187,12 +183,15 @@ class BaseAlgorithm(ABC):
         """
         self.labels = []
         self.docid_inputs = []
-        self.letor_features = torch.from_numpy(input_feed["letor_features"])
+        self.letor_features = input_feed["letor_features"]
         for i in range(list_size):
             self.docid_inputs.append(input_feed[self.docid_inputs_name[i]])
             self.labels.append(input_feed[self.labels_name[i]])
-        self.labels = torch.tensor(data=self.labels, device=self.cuda)
-        self.docid_inputs = torch.tensor(data=self.docid_inputs, dtype=torch.int64)
+        self.labels = np.transpose(self.labels)
+        self.labels = torch.from_numpy(self.labels)
+        if self.is_cuda_avail:
+            self.labels = self.labels.to(device=self.cuda)
+        self.docid_inputs = torch.as_tensor(data=self.docid_inputs, dtype=torch.int64)
 
     def create_summary(self, scalar_name, summarize_name, value, is_training):
         """ Summarize the result of an operation
@@ -207,8 +206,8 @@ class BaseAlgorithm(ABC):
             The ranking model that will be used to computer the ranking score.
 
         """
-        self.writer.add_scalar(
-            scalar_name, value, self.global_step)
+        # self.writer.add_scalar(
+        #     scalar_name, value, self.global_step)
         if is_training:
             self.train_summary[summarize_name] = value
         else:
@@ -225,6 +224,8 @@ class BaseAlgorithm(ABC):
             The ranking model that will be used to computer the ranking score.
 
         """
+        # for p in params:
+        #     p.grad = None
         opt.zero_grad()
         self.loss.backward()
         if self.hparams.max_gradient_norm > 0:
@@ -233,19 +234,18 @@ class BaseAlgorithm(ABC):
         opt.step()
 
     def pairwise_cross_entropy_loss(
-            self, pos_scores, neg_scores, propensity_weights=None, name=None):
+            self, pos_scores, neg_scores, propensity_weights=None):
         """Computes pairwise softmax loss without propensity weighting.
 
         Args:
-            pos_scores: (tf.Tensor) A tensor with shape [batch_size, 1]. Each value is
+            pos_scores: (torch.Tensor) A tensor with shape [batch_size, 1]. Each value is
             the ranking score of a positive example.
-            neg_scores: (tf.Tensor) A tensor with shape [batch_size, 1]. Each value is
+            neg_scores: (torch.Tensor) A tensor with shape [batch_size, 1]. Each value is
             the ranking score of a negative example.
-            propensity_weights: (tf.Tensor) A tensor of the same shape as `output` containing the weight of each element.
-            name: A string used as the name for this variable scope.
+            propensity_weights: (torch.Tensor) A tensor of the same shape as `output` containing the weight of each element.
 
         Returns:
-            (tf.Tensor) A single value tensor containing the loss.
+            (torch.Tensor) A single value tensor containing the loss.
         """
         if propensity_weights is None:
             propensity_weights = torch.ones_like(pos_scores)
@@ -259,7 +259,7 @@ class BaseAlgorithm(ABC):
         return loss
 
     def sigmoid_loss_on_list(self, output, labels,
-                             propensity_weights=None, name=None):
+                             propensity_weights=None):
         """Computes pointwise sigmoid loss without propensity weighting.
 
         Args:
@@ -268,7 +268,6 @@ class BaseAlgorithm(ABC):
             labels: (torch.Tensor) A tensor of the same shape as `output`. A value >= 1 means a
             relevant example.
             propensity_weights: (torch.Tensor) A tensor of the same shape as `output` containing the weight of each element.
-            name: A string used as the name for this variable scope.
 
         Returns:
             (torch.Tensor) A single value tensor containing the loss.
@@ -282,19 +281,18 @@ class BaseAlgorithm(ABC):
         return torch.mean(torch.sum(loss, dim=1))
 
     def pairwise_loss_on_list(self, output, labels,
-                              propensity_weights=None, name=None):
+                              propensity_weights=None):
         """Computes pairwise entropy loss.
 
         Args:
-            output: (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is
+            output: (torch.Tensor) A tensor with shape [batch_size, list_size]. Each value is
             the ranking score of the corresponding example.
-            labels: (tf.Tensor) A tensor of the same shape as `output`. A value >= 1 means a
+            labels: (torch.Tensor) A tensor of the same shape as `output`. A value >= 1 means a
                 relevant example.
-            propensity_weights: (tf.Tensor) A tensor of the same shape as `output` containing the weight of each element.
-            name: A string used as the name for this variable scope.
+            propensity_weights: (torch.Tensor) A tensor of the same shape as `output` containing the weight of each element.
 
         Returns:
-            (tf.Tensor) A single value tensor containing the loss.
+            (torch.Tensor) A single value tensor containing the loss.
         """
         if propensity_weights is None:
             propensity_weights = torch.ones_like(labels)

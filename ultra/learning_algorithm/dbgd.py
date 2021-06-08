@@ -10,13 +10,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import numpy as np
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 
-from six.moves import zip
 from ultra.learning_algorithm.base_algorithm import BaseAlgorithm
 import ultra.utils
 import ultra
@@ -50,8 +48,8 @@ class DBGD(BaseAlgorithm):
             grad_strategy='sgd',            # Select gradient strategy
         )
         print(exp_settings['learning_algorithm_hparams'])
-
         self.cuda = torch.device('cuda')
+        self.is_cuda_avail = torch.cuda.is_available()
         self.writer = SummaryWriter()
         self.train_summary = {}
         self.eval_summary = {}
@@ -60,6 +58,8 @@ class DBGD(BaseAlgorithm):
         self.feature_size = data_set.feature_size
         self.rank_list_size = exp_settings['selection_bias_cutoff']
         self.model = self.create_model(self.feature_size)
+        if self.is_cuda_avail:
+            self.model = self.model.to(device=self.cuda)
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.learning_rate = self.hparams.learning_rate
         self.winners_name = "winners"
@@ -95,17 +95,16 @@ class DBGD(BaseAlgorithm):
 
         """
         self.create_input_feed(input_feed, self.max_candidate_num)
-        self.winners = input_feed[self.winners_name]
-        self.output = self.ranking_model(self.model, self.max_candidate_num)
+        with torch.no_grad():
+            self.output = self.ranking_model(self.model, self.max_candidate_num)
         train_output = self.ranking_model(self.model, self.rank_list_size)
 
         noisy_params = self.create_noisy_param()
-        new_output_list = self.create_new_output_list(noisy_params)
 
         # Compute NDCG for the old ranking scores and new ranking scores
         # reshape from [rank_list_size, ?] to [?, rank_list_size]
-        reshaped_train_labels = torch.transpose(self.labels[:self.rank_list_size], 0 ,1)
-        self.new_output = new_output_list
+        reshaped_train_labels = self.labels[:, :self.rank_list_size]
+        self.new_output = self.create_new_output_list(noisy_params)
 
         previous_ndcg = ultra.utils.make_ranking_metric_fn(
             'ndcg', self.rank_list_size)(
@@ -115,6 +114,7 @@ class DBGD(BaseAlgorithm):
 
         if self.hparams.need_interleave:
             self.output = (self.output, self.new_output)
+            self.winners = input_feed[self.winners_name]
             final_winners = self.winners
         else:
             score_lists = [train_output, self.new_output]
@@ -128,59 +128,63 @@ class DBGD(BaseAlgorithm):
             final_winners = ndcg_gains / \
                             (torch.sum(ndcg_gains, dim=0) + 0.000000001)
 
-
-        ranking_model_params = self.model.parameters()
         self.optimizer_func.zero_grad()
         self.loss.backward()
         self.compute_gradient(final_winners, noisy_params)
 
         if self.hparams.max_gradient_norm > 0:
             self.clipped_gradient = torch.nn.utils.clip_grad_norm_(
-                ranking_model_params, self.hparams.max_gradient_norm)
+                self.model.parameters(), self.hparams.max_gradient_norm)
 
         self.optimizer_func.step()
 
-        self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
-                            True)
-        self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate, True)
-        pad_removed_train_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, train_output)
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-                    reshaped_train_labels, pad_removed_train_output, None)
-                self.create_summary('%s_%d' % (metric, topn),
-                                    '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, True)
+        # self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
+        #                     True)
+        # self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate, True)
+        # pad_removed_train_output = self.remove_padding_for_metric_eval(
+        #     self.docid_inputs, train_output)
+        # for metric in self.exp_settings['metrics']:
+        #     for topn in self.exp_settings['metrics_topn']:
+        #         metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
+        #             reshaped_train_labels, pad_removed_train_output, None)
+        #         self.create_summary('%s_%d' % (metric, topn),
+        #                             '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, True)
         # loss, no outputs, summary.
         self.global_step+=1
+        print(" Loss %f at Global Step %d: " % (self.loss.item(), self.global_step))
         return self.loss, self.output, self.train_summary
 
     def validation(self, input_feed):
         self.model.eval()
         self.create_input_feed(input_feed, self.max_candidate_num)
-        self.output = self.ranking_model(self.model,
-                                         self.max_candidate_num)
+        with torch.no_grad():
+            self.output = self.ranking_model(self.model,
+                                             self.max_candidate_num)
         pad_removed_output = self.remove_padding_for_metric_eval(
             self.docid_inputs, self.output)
 
-        # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
         reshaped_labels = torch.transpose(self.labels, 0, 1)
         for metric in self.exp_settings['metrics']:
             for topn in self.exp_settings['metrics_topn']:
                 metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(reshaped_labels, pad_removed_output, None)
+                    metric, topn)(self.labels, pad_removed_output, None)
                 self.create_summary('%s_%d' % (metric, topn),
-                                    '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, False)
+                                    '%s_%d' % (metric, topn), metric_value, False)
 
-        noisy_params = self.create_noisy_param()
-        # Apply the noise to get new ranking scores
-        new_output_list = self.create_new_output_list(noisy_params)
-        pair_outputs = (self.output, new_output_list)
+        if self.hparams.need_interleave:
+            with torch.no_grad():
+                noisy_params = self.create_noisy_param()
+                # Apply the noise to get new ranking scores
+                new_output_list = self.create_new_output_list(noisy_params)
+            simulation_feed_output = (self.output.detach().numpy(), new_output_list.detach().numpy())
+        else:
+            simulation_feed_output = self.output
 
-        return pair_outputs, self.output, self.eval_summary  # no loss, outputs, summary.
+        return simulation_feed_output, self.output, self.eval_summary  # no loss, outputs, summary.
 
     def compute_gradient(self, final_winners, noisy_params):
-        self.model.to('cpu')
+        if self.is_cuda_avail:
+            self.model.to('cpu')
         for layer in self.model.children():
             if isinstance(layer, nn.Sequential):
                 for name, parameter in layer.named_parameters():
@@ -204,7 +208,8 @@ class DBGD(BaseAlgorithm):
                             dummy_loss.backward()
                             gradient = gradient.to(dtype=torch.float32)
                             parameter.grad = gradient
-        self.model.to(self.cuda)
+        if self.is_cuda_avail:
+            self.model.to(self.cuda)
 
     def create_noisy_param(self):
         noisy_params = {}

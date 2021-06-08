@@ -23,7 +23,6 @@ class Linear( nn.Module):
         """
         super(Linear, self).__init__()
         self.hparams = ultra.utils.hparams.HParams(
-            initializer='None',                         # Set parameter initializer
             norm="layer"                                # Set the default normalization
         )
         self.hparams.parse(hparams_str)
@@ -64,17 +63,19 @@ class Linear( nn.Module):
             A list of tf.Tensor containing the ranking scores for each instance in input_list.
         """
         input_data = torch.cat(input_list, dim=0)
-        input_data = input_data.to(dtype=torch.float32, device=device)
+        input_data = input_data.to(dtype=torch.float32)
+        if torch.cuda.is_available():
+            input_data = input_data.to(device=device)
         if (noisy_params==None):
             output_data = self.sequential(input_data)
         else:
-            ctr = 0
-            for layer in self.sequential:
-                if isinstance(layer, nn.Linear):
-                    layer.weight += noisy_params[ctr]* noise_rate
-                    ctr += 1
-                    layer.bias += noisy_params[ctr]* noise_rate
-                    ctr += 1
+            for name, parameter in self.sequential.named_parameters():
+                if name in noisy_params:
+                    with torch.no_grad():
+                        noise = (noisy_params[name]* noise_rate)
+                        if torch.cuda.is_available():
+                            noise = noise.to(device=device)
+                        parameter += noise
             output_data = self.sequential(input_data)
         output_shape = input_list[0].shape[0]
         return torch.split(output_data, output_shape, dim=0)

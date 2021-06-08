@@ -31,8 +31,8 @@ from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from ultra.utils import metric_utils as utils
-import torch.nn.functional as F
 import torch
+import time
 
 device = torch.device("cuda")
 class RankingMetricKey(object):
@@ -184,7 +184,8 @@ def _per_example_weights_to_per_list_weights(weights, relevance):
     Returns:
       The per list `Tensor` of shape [batch_size, 1]
     """
-    relevance = relevance.to(device=device)
+    if torch.cuda.is_available():
+        relevance = relevance.to(device=device)
     per_list_weights = _safe_div(
         torch.sum(weights * relevance, 1, keepdim=True),
         torch.sum(relevance, 1, keepdim=True))
@@ -208,9 +209,12 @@ def _discounted_cumulative_gain(labels, weights=None):
     """
     list_size = labels.shape[1]
     position = torch.arange(1, list_size + 1).to(dtype=torch.float32)
-    denominator = torch.log(position + 1).to(device=device)
+    denominator = torch.log(position + 1)
     numerator = torch.pow(exponent=labels.to(torch.float32), input=torch.tensor(2.0)) - 1.0
-    numerator = numerator.to(device=device)
+    numerator = numerator
+    if torch.cuda.is_available():
+        denominator = denominator.to(device=device)
+        numerator = numerator.to(device=device)
     return torch.sum(
         input=weights * numerator / denominator, dim=1, keepdim=True)
 
@@ -231,7 +235,7 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
       (labels, predictions, weights, topn) ready to be used for metric
       calculation.
     """
-    weights = 1.0 if weights is None else torch.tensor(weights)
+    weights = 1.0 if weights is None else weights
     example_weights = torch.ones_like(labels) * weights
     assert predictions.shape == example_weights.shape
     assert predictions.shape == labels.shape
@@ -241,13 +245,14 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
 
     # All labels should be >= 0. Invalid entries are reset.
     is_label_valid = utils.is_label_valid(labels)
-    is_label_valid.type(torch.bool)
-    is_label_valid = is_label_valid.cpu()
-    labels = labels.cpu()
+    labels = labels
     labels = torch.where(
         is_label_valid,
         labels,
         torch.zeros_like(labels))
+    # is_label_valid = is_label_valid.to(device=device)
+    # if predictions.is_cuda:
+    #     predictions = predictions.cpu()
     predictions = torch.where(
         is_label_valid, predictions,
         -1e-6 * torch.ones_like(predictions) + torch.min(
@@ -275,13 +280,13 @@ def mean_reciprocal_rank(labels, predictions, weights=None, name=None):
         labels, predictions, weights, list_size)
     sorted_labels, = utils.sort_by_scores(predictions, [labels], topn=topn)
     # Relevance = 1.0 when labels >= 1.0 to accommodate graded relevance.
-    relevance = torch.ge(sorted_labels, 1.0).type(torch.float)
-    reciprocal_rank = 1.0 / torch.arange(1, topn+1).type(torch.float)
+    relevance = torch.ge(sorted_labels, 1.0).type(torch.float32)
+    reciprocal_rank = 1.0 / torch.arange(start=1, end=topn+1,dtype=torch.float32)
     # MRR has a shape of [batch_size, 1]
     mrr = torch.max(
         relevance * reciprocal_rank, dim=1, keepdim=True).values
     return torch.mean(
-        mrr.to(device=device) * torch.ones_like(weights).to(device=device) * weights.to(device=device))
+        mrr * torch.ones_like(weights) * weights)
 
 
 def expected_reciprocal_rank(
@@ -301,26 +306,23 @@ def expected_reciprocal_rank(
     Returns:
       A metric for the weighted expected reciprocal rank of the batch.
     """
-    with ops.name_scope(name, 'expected_reciprocal_rank',
-                        (labels, predictions, weights)):
-        labels, predictions, weights, topn = _prepare_and_validate_params(
-            labels, predictions, weights, topn)
-        sorted_labels, sorted_weights = utils.sort_by_scores(
-            predictions, [labels, weights], topn=topn)
-        _, list_size = array_ops.unstack(array_ops.shape(sorted_labels))
+    labels, predictions, weights, topn = _prepare_and_validate_params(
+        labels, predictions, weights, topn)
+    sorted_labels, sorted_weights = utils.sort_by_scores(
+        predictions, [labels, weights], topn=topn)
+    _, list_size = torch.unbind(sorted_labels.shape)
 
-        relevance = (math_ops.pow(2.0, sorted_labels) - 1) / \
-            math_ops.pow(2.0, RankingMetricKey.MAX_LABEL)
-        non_rel = tf.math.cumprod(1.0 - relevance, axis=1) / (1.0 - relevance)
-        reciprocal_rank = 1.0 / \
-            math_ops.to_float(math_ops.range(1, list_size + 1))
-        mask = math_ops.to_float(math_ops.greater_equal(
-            reciprocal_rank, 1.0 / (topn + 1)))
-        reciprocal_rank = reciprocal_rank * mask
-        # ERR has a shape of [batch_size, 1]
-        err = math_ops.reduce_sum(
-            relevance * non_rel * reciprocal_rank * sorted_weights, axis=1, keepdims=True)
-        return math_ops.reduce_mean(err)
+    relevance = (torch.pow(2.0, sorted_labels) - 1) / \
+        torch.pow(2.0, RankingMetricKey.MAX_LABEL)
+    non_rel = torch.cumprod(1.0 - relevance, dim=1) / (1.0 - relevance)
+    reciprocal_rank = 1.0 / \
+        torch.arange(start=1, end=list_size + 1,dtype=torch.float32)
+    mask = torch.ge(reciprocal_rank, 1.0 / (topn + 1)).type(torch.float32)
+    reciprocal_rank = reciprocal_rank * mask
+    # ERR has a shape of [batch_size, 1]
+    err = torch.sum(
+        relevance * non_rel * reciprocal_rank * sorted_weights, dim=1, keepdim=True)
+    return torch.mean(err)
 
 
 def average_relevance_position(labels, predictions, weights=None, name=None):
@@ -441,7 +443,6 @@ def mean_average_precision(labels,
             weights, tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32))
         return tf.compat.v1.metrics.mean(per_list_map, per_list_weights)
 
-
 def normalized_discounted_cumulative_gain(labels,
                                           predictions,
                                           weights=None,
@@ -468,15 +469,18 @@ def normalized_discounted_cumulative_gain(labels,
         predictions, [labels, weights], topn=topn)
     dcg = _discounted_cumulative_gain(sorted_labels, sorted_weights)
     # Sorting over the weighted labels to get ideal ranking.
+    if torch.cuda.is_available():
+        labels = labels.to(device=device)
     ideal_sorted_labels, ideal_sorted_weights = utils.sort_by_scores(
-        weights * labels.to(device=device), [labels, weights], topn=topn)
+        weights * labels, [labels, weights], topn=topn)
     ideal_dcg = _discounted_cumulative_gain(ideal_sorted_labels,
                                             ideal_sorted_weights)
     per_list_ndcg = _safe_div(dcg, ideal_dcg)
     per_list_weights = _per_example_weights_to_per_list_weights(
         weights=weights,
         relevance=torch.pow(torch.tensor(2.0),labels.to(torch.float)) - 1.0)
-    return torch.mean(per_list_ndcg * per_list_weights)
+    ndcg = torch.mean(per_list_ndcg * per_list_weights)
+    return ndcg
 
 
 def discounted_cumulative_gain(labels,

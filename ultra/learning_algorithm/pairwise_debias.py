@@ -10,12 +10,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import torch.nn as nn
 import torch
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 
-from six.moves import zip
 from ultra.learning_algorithm.base_algorithm import BaseAlgorithm
 import ultra.utils
 
@@ -75,6 +73,7 @@ class PairDebias(BaseAlgorithm):
         self.model = self.create_model(self.feature_size)
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.learning_rate =  float(self.hparams.learning_rate)
+        self.is_cuda_avail = torch.cuda.is_available()
 
         # Feeds for inputs.
         self.letor_features_name = "letor_features"
@@ -89,9 +88,13 @@ class PairDebias(BaseAlgorithm):
 
         self.global_step = 0
         self.rank_list_size = exp_settings['selection_bias_cutoff']
-        self.t_plus = torch.ones([1, self.rank_list_size]).to(device=self.cuda)
+        self.t_plus = torch.ones([1, self.rank_list_size])
         self.t_plus.requires_grad = False
-        self.t_minus = torch.ones([1, self.rank_list_size]).to(device=self.cuda)
+        self.t_minus = torch.ones([1, self.rank_list_size])
+        if self.is_cuda_avail:
+            self.t_plus = torch.ones([1, self.rank_list_size], device=self.cuda)
+            self.t_minus = torch.ones([1, self.rank_list_size], device=self.cuda)
+        self.t_plus.requires_grad = False
         self.t_minus.requires_grad = False
 
         # Select optimizer
@@ -110,8 +113,18 @@ class PairDebias(BaseAlgorithm):
             and a tf.summary containing related information about the step.
 
         """
+        self.labels = []
+        self.docid_inputs = []
         self.model.train()
-        self.create_input_feed(input_feed, self.rank_list_size)
+        self.letor_features = input_feed["letor_features"]
+        for i in range(self.rank_list_size):
+            self.docid_inputs.append(input_feed[self.docid_inputs_name[i]])
+            self.labels.append(input_feed[self.labels_name[i]])
+        self.labels = torch.as_tensor(self.labels)
+        if self.is_cuda_avail:
+            self.labels = self.labels.to(device=self.cuda)
+        self.docid_inputs = torch.as_tensor(data=self.docid_inputs, dtype=torch.int64)
+
         train_output = self.ranking_model(self.model,
                                           self.rank_list_size)
 
@@ -119,14 +132,14 @@ class PairDebias(BaseAlgorithm):
             self.t_plus, 1, dim=1)
         self.splitted_t_minus = torch.split(
             self.t_minus, 1, dim=1)
-        for i in range(self.rank_list_size):
-            self.create_summary('t_plus Probability %d' % i,
-                                't_plus Probability %d at global step %d' % (i, self.global_step),
-                                torch.max(self.splitted_t_plus[i]), True)
-
-            self.create_summary('t_minus Probability %d' % i,
-                                't_minus Probability %d at global step %d' % (i, self.global_step),
-                                torch.max(self.splitted_t_plus[i]), True)
+        # for i in range(self.rank_list_size):
+        #     self.create_summary('t_plus Probability %d' % i,
+        #                         't_plus Probability %d at global step %d' % (i, self.global_step),
+        #                         torch.max(self.splitted_t_plus[i]), True)
+        #
+        #     self.create_summary('t_minus Probability %d' % i,
+        #                         't_minus Probability %d at global step %d' % (i, self.global_step),
+        #                         torch.max(self.splitted_t_plus[i]), True)
 
         # Build pairwise loss based on clicks (0 for unclick, 1 for click)
         split_size = int(train_output.shape[1] / self.rank_list_size)
@@ -138,19 +151,20 @@ class PairDebias(BaseAlgorithm):
             for j in range(self.rank_list_size):
                 if i == j:
                     continue
+                minus = self.labels[i] - self.labels[j]
                 valid_pair_mask = torch.minimum(
                     torch.ones_like(
-                        self.labels[i]), F.relu(
-                        self.labels[i] - self.labels[j]))
+                        self.labels[i]), F.relu(self.labels[i] - self.labels[j]))
                 pair_loss = torch.sum(
                     valid_pair_mask *
                     self.pairwise_cross_entropy_loss(
                         output_list[i], output_list[j])
                 )
-                t_plus_loss_list[i] = pair_loss / self.splitted_t_minus[j]
-                t_minus_loss_list[j] = pair_loss / self.splitted_t_plus[i]
+                t_plus_loss_list[i] += pair_loss / self.splitted_t_minus[j]
+                t_minus_loss_list[j] += pair_loss / self.splitted_t_plus[i]
                 self.loss += pair_loss / \
                              self.splitted_t_plus[i] / self.splitted_t_minus[j]
+
         with torch.no_grad():
             self.t_plus = (1 - self.hparams.EM_step_size) * self.t_plus + self.hparams.EM_step_size * torch.pow(
                     torch.cat(t_plus_loss_list, dim=1) / t_plus_loss_list[0], 1 / (self.hparams.regulation_p + 1))
@@ -164,38 +178,38 @@ class PairDebias(BaseAlgorithm):
                 self.loss += self.hparams.l2_loss * self.l2_loss(p)
 
         self.opt_step(self.optimizer_func, params)
-        self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
-                            True)
-        self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate,True)
+        # self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
+        #                     True)
+        # self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate,True)
 
         # reshape from [rank_list_size, ?] to [?, rank_list_size]
-        reshaped_train_labels = torch.transpose(self.labels, 0, 1)
-        pad_removed_train_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, train_output)
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-                    reshaped_train_labels, pad_removed_train_output, None)
-                self.create_summary( '%s_%d' % (metric, topn),
-                                     '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, True)
-
-        return self.loss, None, self.train_summary
+        # reshaped_train_labels = torch.transpose(self.labels, 0, 1)
+        # pad_removed_train_output = self.remove_padding_for_metric_eval(
+        #     self.docid_inputs, train_output)
+        # for metric in self.exp_settings['metrics']:
+        #     for topn in self.exp_settings['metrics_topn']:
+        #         metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
+        #             reshaped_train_labels, pad_removed_train_output, None)
+        #         self.create_summary( '%s_%d' % (metric, topn),
+        #                              '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, True)
+        print(" Loss %f at Global Step %d" % (self.loss.item(), self.global_step))
+        self.global_step+=1
+        return self.loss.item(), None, self.train_summary
 
     def validation(self, input_feed):
         self.model.eval()
-        self.letor_features = torch.from_numpy(input_feed["letor_features"])
         self.create_input_feed(input_feed, self.max_candidate_num)
-        self.output = self.ranking_model(self.model,
-                                         self.max_candidate_num)
+        with torch.no_grad():
+            self.output = self.ranking_model(self.model,
+                                             self.max_candidate_num)
         pad_removed_output = self.remove_padding_for_metric_eval(
             self.docid_inputs, self.output)
 
         # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
-        reshaped_labels = torch.transpose(torch.tensor(self.labels), 0, 1)
         for metric in self.exp_settings['metrics']:
             for topn in self.exp_settings['metrics_topn']:
                 metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(reshaped_labels, pad_removed_output, None)
+                    metric, topn)(self.labels, pad_removed_output, None)
                 self.create_summary('%s_%d' % (metric, topn),
-                                    '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, False)
+                                    '%s_%d' % (metric, topn, self.global_step), metric_value, False)
         return None, self.output, self.eval_summary  # no loss, outputs, summary.

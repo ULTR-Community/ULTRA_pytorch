@@ -53,12 +53,15 @@ class NSGD(DBGD):
         print(exp_settings['learning_algorithm_hparams'])
         self.cuda = torch.device('cuda')
         self.writer = SummaryWriter()
+        self.is_cuda_avail = torch.cuda.is_available()
         self.train_summary = {}
         self.eval_summary = {}
         self.hparams.parse(exp_settings['learning_algorithm_hparams'])
         self.exp_settings = exp_settings
         self.feature_size = data_set.feature_size
         self.model = self.create_model(self.feature_size)
+        if self.is_cuda_avail:
+            self.model = self.model.to(device=self.cuda)
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.learning_rate = self.hparams.learning_rate
         self.ranker_num = self.hparams.ranker_num
@@ -108,10 +111,9 @@ class NSGD(DBGD):
 
         """
         self.create_input_feed(input_feed, self.max_candidate_num)
-        self.winners = input_feed[self.winners_name]
-        self.output = self.ranking_model(self.model, self.max_candidate_num)
+        with torch.no_grad():
+            self.output = self.ranking_model(self.model, self.max_candidate_num)
         train_output = self.ranking_model(self.model, self.rank_list_size)
-        train_labels = self.labels[:self.rank_list_size]
 
         null_space_dict = {}
         for noise in self.bad_noisy_params:
@@ -139,13 +141,14 @@ class NSGD(DBGD):
 
         # Compute NDCG for the old ranking scores.
         # reshape from [rank_list_size, ?] to [?, rank_list_size]
-        reshaped_train_labels = torch.transpose(train_labels, 0, 1)
+        reshaped_train_labels = self.labels[:, :self.rank_list_size]
         previous_ndcg = ultra.utils.make_ranking_metric_fn('ndcg', self.rank_list_size)(
             reshaped_train_labels, train_output, None)
         self.loss = 1.0 - previous_ndcg
 
         if self.hparams.need_interleave:  # Use result interleaving
             self.output = [self.output] + new_output_lists
+            self.winners = input_feed[self.winners_name]
             final_winners = self.winners
         else:  # No result interleaving
             score_lists = [train_output] + new_output_lists
@@ -170,19 +173,19 @@ class NSGD(DBGD):
 
         self.optimizer_func.step()
 
-        self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step,
-                            self.learning_rate,
-                            True)
-        self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate, True)
-        pad_removed_train_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, train_output)
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-                    reshaped_train_labels, pad_removed_train_output, None)
-                self.create_summary('%s_%d' % (metric, topn),
-                                    '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value,
-                                    True)
+        # self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step,
+        #                     self.learning_rate,
+        #                     True)
+        # self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate, True)
+        # pad_removed_train_output = self.remove_padding_for_metric_eval(
+        #     self.docid_inputs, train_output)
+        # for metric in self.exp_settings['metrics']:
+        #     for topn in self.exp_settings['metrics_topn']:
+        #         metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
+        #             reshaped_train_labels, pad_removed_train_output, None)
+        #         self.create_summary('%s_%d' % (metric, topn),
+        #                             '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value,
+        #                             True)
         # loss, no outputs, summary.
         self.global_step += 1
         return self.loss, self.output, self.train_summary
@@ -190,8 +193,9 @@ class NSGD(DBGD):
     def validation(self, input_feed):
         self.model.eval()
         self.create_input_feed(input_feed, self.max_candidate_num)
-        self.output = self.ranking_model(self.model,
-                                         self.max_candidate_num)
+        with torch.no_grad():
+            self.output = self.ranking_model(self.model,
+                                             self.max_candidate_num)
         pad_removed_output = self.remove_padding_for_metric_eval(
             self.docid_inputs, self.output)
 
@@ -204,33 +208,39 @@ class NSGD(DBGD):
                 self.create_summary('%s_%d' % (metric, topn),
                                     '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, False)
 
-        null_space_dict = {}
-        new_output_lists = []
-        for noise in self.bad_noisy_params:
-            null_space_dict[noise] = self.compute_null_space(self.bad_noisy_params[noise])
+        if self.hparams.need_interleave:
+            null_space_dict = {}
+            new_output_lists = []
+            for noise in self.bad_noisy_params:
+                null_space_dict[noise] = self.compute_null_space(self.bad_noisy_params[noise])
 
-        for i in range(self.ranker_num):
-            # Create unit noise from null space
-            noisy_params = {}
-            for layer in self.model_params_to_update:
-                noisy_params[layer] = self.sample_from_null_space(
-                    null_space_dict[layer][0], null_space_dict[layer][1])
+            for i in range(self.ranker_num):
+                # Create unit noise from null space
+                noisy_params = {}
+                for layer in self.model_params_to_update:
+                    noisy_params[layer] = self.sample_from_null_space(
+                        null_space_dict[layer][0], null_space_dict[layer][1])
 
-            # Apply the noise to get new ranking scores
-            new_output_list = self.create_new_output_list(noisy_params)
-            new_output_lists.append(new_output_list)
+                # Apply the noise to get new ranking scores
+                with torch.no_grad():
+                    new_output_list = self.create_new_output_list(noisy_params)
+                new_output_lists.append(new_output_list)
 
-        rankers_output = [self.output] + new_output_lists
+            rankers_output = [self.output] + new_output_lists
+        else:
+            rankers_output = self.output
         return rankers_output, self.output, self.eval_summary  # no loss, outputs, summary.
 
     def compute_gradient(self, final_winners, noisy_params):
-        self.model.to('cpu')
+        if self.is_cuda_avail:
+            self.model.to('cpu')
         for layer in self.model.children():
             if isinstance(layer, nn.Sequential):
                 for name, parameter in layer.named_parameters():
                     if "linear" in name:
-                        for i in range(len(noisy_params[name])):
-                            noisy_params[name][i] = noisy_params[name][i].cpu()
+                        if self.is_cuda_avail:
+                            for i in range(len(noisy_params[name])):
+                                noisy_params[name][i] = noisy_params[name][i].cpu()
                         gradient_matrix = torch.unsqueeze(
                             torch.stack(noisy_params[name]), dim=0)
                         expended_winners =  torch.tensor(final_winners)
@@ -267,7 +277,8 @@ class NSGD(DBGD):
                                 self.update_ops_list.append(
                                     bad_noise_list
                                 )
-        self.model.to(self.cuda)
+        if self.is_cuda_avail:
+            self.model.to(self.cuda)
 
     def sample_from_null_space(self,null_space_matrix, original_shape):
         if sum([original_shape[i] for i in range(
