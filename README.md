@@ -32,7 +32,7 @@ source venv/bin/activate
 ```
 git clone https://github.com/ULTR-Community/ULTRA.git
 cd ULTRA
-make init # Replace 'tensorflow' with 'tensorflow-gpu' in requirements.txt for GPU support
+make init 
 ```
 
 **Run toy example:**
