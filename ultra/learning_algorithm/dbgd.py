@@ -18,6 +18,11 @@ from torch.utils.tensorboard import SummaryWriter
 from ultra.learning_algorithm.base_algorithm import BaseAlgorithm
 import ultra.utils
 import ultra
+from ultra.utils.team_draft_interleave import TeamDraftInterleaving
+from ultra.utils import click_models as cm
+import json
+
+import numpy as np
 
 
 class DBGD(BaseAlgorithm):
@@ -30,17 +35,18 @@ class DBGD(BaseAlgorithm):
 
     """
 
-    def __init__(self, data_set, exp_settings, forward_only=False):
+    def __init__(self, data_set, exp_settings):
         """Create the model.
 
         Args:
             data_set: (Raw_data) The dataset used to build the input layer.
             exp_settings: (dictionary) The dictionary containing the model settings.
-            forward_only: Set true to conduct prediction only, false to conduct training.
         """
         print('Build Dueling Bandit Gradient Descent (DBGD) algorithm.')
 
         self.hparams = ultra.utils.hparams.HParams(
+            # the setting file for the predefined click models.
+            click_model_json='./example/ClickModel/pbm_0.1_1.0_4_1.0.json',
             # The update rate for randomly sampled weights.
             learning_rate=0.5,         # Learning rate.
             max_gradient_norm=5.0,      # Clip gradients to this norm.
@@ -82,6 +88,16 @@ class DBGD(BaseAlgorithm):
         if self.hparams.grad_strategy == 'sgd':
             self.optimizer_func = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
 
+        self.MAX_SAMPLE_ROUND_NUM = None
+        self.interleaving = None
+        self.click_model = None
+
+        if self.hparams.need_interleave:
+            self.MAX_SAMPLE_ROUND_NUM = 100
+            self.interleaving = TeamDraftInterleaving()
+            with open(self.hparams.click_model_json) as fin:
+                model_desc = json.load(fin)
+                self.click_model = cm.loadModelFromJson(model_desc)
 
     def train(self, input_feed):
         """Run a step of the model feeding the given inputs for training process.
@@ -104,8 +120,8 @@ class DBGD(BaseAlgorithm):
         # Compute NDCG for the old ranking scores and new ranking scores
         # reshape from [rank_list_size, ?] to [?, rank_list_size]
         reshaped_train_labels = self.labels[:, :self.rank_list_size]
-        self.new_output = self.create_new_output_list(noisy_params)
-
+        with torch.no_grad():
+            self.new_output = self.create_new_output_list(noisy_params)
         previous_ndcg = ultra.utils.make_ranking_metric_fn(
             'ndcg', self.rank_list_size)(
             reshaped_train_labels, train_output, None)
@@ -114,7 +130,7 @@ class DBGD(BaseAlgorithm):
 
         if self.hparams.need_interleave:
             self.output = (self.output, self.new_output)
-            self.winners = input_feed[self.winners_name]
+            self.winners = self.click_simulation_winners(input_feed, self.output)
             final_winners = self.winners
         else:
             score_lists = [train_output, self.new_output]
@@ -135,7 +151,6 @@ class DBGD(BaseAlgorithm):
         if self.hparams.max_gradient_norm > 0:
             self.clipped_gradient = torch.nn.utils.clip_grad_norm_(
                 self.model.parameters(), self.hparams.max_gradient_norm)
-
         self.optimizer_func.step()
 
         # self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
@@ -150,41 +165,30 @@ class DBGD(BaseAlgorithm):
         #         self.create_summary('%s_%d' % (metric, topn),
         #                             '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, True)
         # loss, no outputs, summary.
-        self.global_step+=1
         print(" Loss %f at Global Step %d: " % (self.loss.item(), self.global_step))
+        self.global_step+=1
         return self.loss, self.output, self.train_summary
 
-    def validation(self, input_feed):
+    def validation(self, input_feed, is_online_simulation=False):
         self.model.eval()
         self.create_input_feed(input_feed, self.max_candidate_num)
         with torch.no_grad():
             self.output = self.ranking_model(self.model,
                                              self.max_candidate_num)
-        pad_removed_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, self.output)
+        if not is_online_simulation:
+            pad_removed_output = self.remove_padding_for_metric_eval(
+                self.docid_inputs, self.output)
 
-        reshaped_labels = torch.transpose(self.labels, 0, 1)
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(self.labels, pad_removed_output, None)
-                self.create_summary('%s_%d' % (metric, topn),
-                                    '%s_%d' % (metric, topn), metric_value, False)
+            for metric in self.exp_settings['metrics']:
+                for topn in self.exp_settings['metrics_topn']:
+                    metric_value = ultra.utils.make_ranking_metric_fn(
+                        metric, topn)(self.labels, pad_removed_output, None)
+                    self.create_summary('%s_%d' % (metric, topn),
+                                        '%s_%d' % (metric, topn), metric_value, False)
 
-        if self.hparams.need_interleave:
-            with torch.no_grad():
-                noisy_params = self.create_noisy_param()
-                # Apply the noise to get new ranking scores
-                new_output_list = self.create_new_output_list(noisy_params)
-            simulation_feed_output = (self.output.detach().numpy(), new_output_list.detach().numpy())
-        else:
-            simulation_feed_output = self.output
-
-        return simulation_feed_output, self.output, self.eval_summary  # no loss, outputs, summary.
+        return None, self.output, self.eval_summary  # no loss, outputs, summary.
 
     def compute_gradient(self, final_winners, noisy_params):
-        if self.is_cuda_avail:
-            self.model.to('cpu')
         for layer in self.model.children():
             if isinstance(layer, nn.Sequential):
                 for name, parameter in layer.named_parameters():
@@ -203,13 +207,14 @@ class DBGD(BaseAlgorithm):
                             ),
                             dim=0)
                         if parameter.grad == None:
-                            dummy_loss = 0
-                            dummy_loss += torch.mean(parameter)
-                            dummy_loss.backward()
-                            gradient = gradient.to(dtype=torch.float32)
-                            parameter.grad = gradient
-        if self.is_cuda_avail:
-            self.model.to(self.cuda)
+                            if self.is_cuda_avail:
+                                self.model.to('cpu')
+                                dummy_loss = 0
+                                dummy_loss += torch.mean(parameter)
+                                dummy_loss.backward()
+                                self.model.to(self.cuda)
+                        gradient = gradient.to(dtype=torch.float32)
+                        parameter.grad = gradient
 
     def create_noisy_param(self):
         noisy_params = {}
@@ -222,15 +227,64 @@ class DBGD(BaseAlgorithm):
 
     def create_new_output_list(self, noisy_params):
         # Apply the noise to get new ranking scores
+        model_prime = ultra.utils.find_class(
+                self.exp_settings['ranking_model'])(
+                self.exp_settings['ranking_model_hparams'], self.feature_size)
         if self.hparams.need_interleave:  # compute scores on whole list if needs interleave
-            new_output_list = self.get_ranking_scores(self.model,
+            new_output_list = self.get_ranking_scores(model_prime,
                                                       self.docid_inputs, noisy_params=noisy_params,
                                                       noise_rate=self.hparams.learning_rate)
         else:
-            new_output_list = self.get_ranking_scores(self.model,
+            new_output_list = self.get_ranking_scores(model_prime,
                                                       self.docid_inputs[:self.rank_list_size],
                                                       noisy_params=noisy_params, noise_rate=self.hparams.learning_rate)
         return torch.cat(new_output_list, 1)
 
+    def click_simulation_winners(self, input_feed, rank_scores):
+        # Rerank documents and collect clicks
+        letor_features_length = len(input_feed[self.letor_features_name])
+        local_batch_size = len(input_feed[self.docid_inputs_name[0]])
+        input_feed[self.winners_name] = [
+            None for _ in range(local_batch_size)]
+        for i in range(local_batch_size):
+            # Get valid doc index
+            valid_idx = self.max_candidate_num - 1
+            while valid_idx > -1:
+                if input_feed[self.docid_inputs_name[valid_idx]][i] < letor_features_length:  # a valid doc
+                    break
+                valid_idx -= 1
+            list_len = valid_idx + 1
+
+            # Rerank documents via interleaving
+            rank_lists = []
+            for j in range(len(rank_scores)):
+                scores = rank_scores[j][i][:list_len]
+                rank_list = sorted(
+                    range(
+                        len(scores)),
+                    key=lambda k: scores[k],
+                    reverse=True)
+                rank_lists.append(rank_list)
+
+            rerank_list = self.interleaving.interleave(
+                np.asarray(rank_lists))
+
+            new_label_list = np.zeros(list_len)
+            for j in range(list_len):
+                new_label_list[j] = input_feed[self.labels_name[rerank_list[j]]][i]
+
+            # Collect clicks online
+            click_list, _, _ = self.click_model.sampleClicksForOneList(
+                new_label_list[:self.rank_list_size])
+            sample_count = 0
+            while sum(click_list) == 0 and sample_count < self.MAX_SAMPLE_ROUND_NUM:
+                click_list, _, _ = self.click_model.sampleClicksForOneList(
+                    new_label_list[:self.rank_list_size])
+                sample_count += 1
+
+            # Infer winner in interleaving
+            input_feed[self.winners_name][i] = self.interleaving.infer_winner(click_list)
+
+        return input_feed[self.winners_name]
 
 

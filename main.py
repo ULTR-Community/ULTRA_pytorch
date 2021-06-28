@@ -14,8 +14,8 @@ import os
 import sys
 import time
 import torch
+from torch.utils.tensorboard import SummaryWriter
 import argparse
-import tensorflow as tf
 import json
 import ultra
 
@@ -146,13 +146,13 @@ def train(exp_settings):
     print("max_train_iter: ", args.max_train_iteration)
     while True:
         # Get a batch and make a step.
-        start_time = time.time()
+        start_time= time.time()
         input_feed, info_map = train_input_feed.get_batch(train_set, check_validation=True)
         step_loss, _, summary = model.train(input_feed)
         step_time += (time.time() - start_time) / args.steps_per_checkpoint
         loss += step_loss / args.steps_per_checkpoint
         current_step += 1
-        train_writer.add_scalars("Training at step %s" % model.global_step, summary)
+        # train_writer.add_scalars("Training at step %s" % model.global_step, summary)
 
         # Once in a while, we save checkpoint, print statistics, and run evals.
         if current_step % args.steps_per_checkpoint == 0:
@@ -180,30 +180,29 @@ def train(exp_settings):
 
             valid_summary = validate_model(valid_set, valid_input_feed)
             # valid_writer.add_scalars('Validation Summary', valid_summary, model.global_step)
-            for x in valid_summary:
-                for key,value in x.items():
-                    print(key, value)
+            for key,value in valid_summary.items():
+                print(key, value)
 
             if args.test_while_train:
                 test_summary = validate_model(test_set, test_input_feed)
                 test_writer.add_scalars('Validation Summary while training', valid_summary, model.global_step)
-                for x in valid_summary:
-                    for key, value in x.items:
-                        print(key, value)
+                for key, value in test_summary.items:
+                    print(key, value)
 
             # Save checkpoint if the objective metric on the validation set is better
-            # if "objective_metric" in exp_settings:
-            #     for x in valid_summary.value:
-            #         if x.tag == exp_settings["objective_metric"]:
-            #             if current_step >= args.start_saving_iteration:
-            #                 if best_perf == None or best_perf < x.simple_value:
-            #                     checkpoint_path = os.path.join(args.model_dir,
-            #                                                    "%s.ckpt" % exp_settings['learning_algorithm'])
-            #                     torch.save(model.state_dict(), checkpoint_path)
-            #                     best_perf = x.simple_value
-            #                     print('Save model, valid %s:%.3f' % (x.tag, best_perf))
-            #                     break
-            # Save checkpoint if there is no objective metic
+            if "objective_metric" in exp_settings:
+                for key,value in valid_summary.items():
+                    if key == exp_settings["objective_metric"]:
+                        if current_step >= args.start_saving_iteration:
+                            if best_perf == None or best_perf < value:
+                                checkpoint_path = os.path.join(args.model_dir,
+                                                               "%s.ckpt" % exp_settings['learning_algorithm'])
+                                torch.save(model.state_dict(), checkpoint_path)
+                                best_perf = value
+                                print('Save model, valid %s:%.3f' % (key, best_perf))
+                                break
+
+            # Save checkpoint if there is no objective metric
             if best_perf == None and current_step > args.start_saving_iteration:
                 checkpoint_path = os.path.join(args.model_dir, "%s.ckpt" % exp_settings['learning_algorithm'])
                 torch.save(model.model.state_dict(), checkpoint_path)
@@ -223,8 +222,6 @@ def train(exp_settings):
 
 
 def test(exp_settings):
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
     # Load test data.
     print("Reading data in %s" % args.data_dir)
     test_set = ultra.utils.read_data(args.data_dir, args.test_data_prefix, args.max_list_cutoff)
@@ -242,7 +239,7 @@ def test(exp_settings):
     test_input_feed = ultra.utils.find_class(exp_settings['test_input_feed'])(model, args.batch_size,
                                                                               exp_settings['test_input_hparams'])
 
-    test_writer = torch.utils.tensorboard.SummaryWriter(log_dir = args.model_dir + '/test_log')
+    test_writer = SummaryWriter(log_dir = args.model_dir + '/test_log')
 
     rerank_scores = []
     summary_list = []
@@ -263,11 +260,10 @@ def test(exp_settings):
         print("Testing {:.0%} finished".format(float(it) / len(test_set.initial_list)), end="\r", flush=True)
 
     print("\n[Done]")
-    # test_summary = ultra.utils.merge_TFSummary(summary_list, batch_size_list)
-    # test_writer.add_summary(test_summary, it)
-    # print("  eval: %s" % (
-    #     ' '.join(['%s:%.3f' % (x.tag, x.simple_value) for x in test_summary.value])
-    # ))
+    test_summary = ultra.utils.merge_Summary(summary_list, batch_size_list)
+    print("  eval: %s" % (
+        ' '.join(['%s:%.3f' % (key, value) for key,value in test_summary.items()])
+    ))
 
     # get rerank indexes with new scores
     rerank_lists = []

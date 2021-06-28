@@ -102,19 +102,6 @@ feed. See the following paper for more information on the algorithm.
 Hyper Parameters
 ****************
 
-NavieAlgorithm
-##############
-
-Description
-***********
-
-The navie algorithm that directly trains ranking models with input labels.
-
-    
-
-Hyper Parameters
-****************
-
 MGD
 ###
 

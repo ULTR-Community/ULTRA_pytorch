@@ -12,7 +12,6 @@ from __future__ import print_function
 
 import torch.nn as nn
 import torch
-import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 
 from ultra.learning_algorithm.dbgd import DBGD
@@ -29,13 +28,12 @@ class MGD(DBGD):
 
     """
 
-    def __init__(self, data_set, exp_settings, forward_only=False):
+    def __init__(self, data_set, exp_settings):
         """Create the model.
 
         Args:
             data_set: (Raw_data) The dataset used to build the input layer.
             exp_settings: (dictionary) The dictionary containing the model settings.
-            forward_only: Set true to conduct prediction only, false to conduct training.
         """
         print('Build Multileave Gradient Descent (DBGD) algorithm.')
 
@@ -56,6 +54,8 @@ class MGD(DBGD):
         self.exp_settings = exp_settings
         self.feature_size = data_set.feature_size
         self.model = self.create_model(self.feature_size)
+        if self.is_cuda_avail:
+            self.model = self.model.to(device=self.cuda)
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.learning_rate = self.hparams.learning_rate
         self.ranker_num = self.hparams.ranker_num
@@ -114,7 +114,8 @@ class MGD(DBGD):
             # Create random unit noise
             noisy_params = self.create_noisy_param()
             # Apply the noise to get new ranking scores
-            new_output_list = self.create_new_output_list(noisy_params)
+            with torch.no_grad():
+                new_output_list = self.create_new_output_list(noisy_params)
             new_output_lists.append(new_output_list)
             for x in noisy_params:
                 if x not in param_gradient_from_rankers:
@@ -136,6 +137,7 @@ class MGD(DBGD):
         final_winners = None
         if self.hparams.need_interleave:  # Use result interleaving
             self.output = [self.output] + new_output_lists
+            self.winners = self.click_simulation_winners(input_feed, self.output)
             final_winners = self.winners
         else:  # No result interleaving
             score_lists = [train_output] + new_output_lists
@@ -161,52 +163,43 @@ class MGD(DBGD):
 
         self.optimizer_func.step()
 
-        self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step,
-                            self.learning_rate,
-                            True)
-        self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate, True)
-        pad_removed_train_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, train_output)
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-                    reshaped_train_labels, pad_removed_train_output, None)
-                self.create_summary('%s_%d' % (metric, topn),
-                                    '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value,
-                                    True)
+        # self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step,
+        #                     self.learning_rate,
+        #                     True)
+        # self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate, True)
+        # pad_removed_train_output = self.remove_padding_for_metric_eval(
+        #     self.docid_inputs, train_output)
+        # for metric in self.exp_settings['metrics']:
+        #     for topn in self.exp_settings['metrics_topn']:
+        #         metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
+        #             reshaped_train_labels, pad_removed_train_output, None)
+        #         self.create_summary('%s_%d' % (metric, topn),
+        #                             '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value,
+        #                             True)
         self.global_step+=1
+        print(" Loss %f at Global Step %d: " % (self.loss.item(), self.global_step))
         return self.loss, self.output, self.train_summary
 
-    def validation(self, input_feed):
+    def validation(self, input_feed, is_online_simulation=False):
         self.model.eval()
         self.create_input_feed(input_feed, self.max_candidate_num)
-        self.output = self.ranking_model(self.model,
-                                         self.max_candidate_num)
-        pad_removed_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, self.output)
+        with torch.no_grad():
+            self.output = self.ranking_model(self.model,
+                                             self.max_candidate_num)
+        if not is_online_simulation:
+            pad_removed_output = self.remove_padding_for_metric_eval(
+                self.docid_inputs, self.output)
 
-        # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
-        reshaped_labels = torch.transpose(self.labels, 0, 1)
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(reshaped_labels, pad_removed_output, None)
-                self.create_summary('%s_%d' % (metric, topn),
-                                    '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, False)
+            for metric in self.exp_settings['metrics']:
+                for topn in self.exp_settings['metrics_topn']:
+                    metric_value = ultra.utils.make_ranking_metric_fn(
+                        metric, topn)(self.labels, pad_removed_output, None)
+                    self.create_summary('%s_%d' % (metric, topn),
+                                        '%s_%d' % (metric, topn), metric_value, False)
 
-        new_output_lists = []
-        for i in range(self.ranker_num):
-            # Create random unit noise
-            noisy_params = self.create_noisy_param()
-            # Apply the noise to get new ranking scores
-            new_output_list = self.create_new_output_list(noisy_params)
-            new_output_lists.append(new_output_list)
-
-        rankers_output = [self.output] + new_output_lists
-        return rankers_output, self.output, self.eval_summary  # no loss, outputs, summary.
+        return None, self.output, self.eval_summary  # no loss, outputs, summary.
 
     def compute_gradient(self, final_winners, noisy_params):
-        self.model.to('cpu')
         for layer in self.model.children():
             if isinstance(layer, nn.Sequential):
                 for name, parameter in layer.named_parameters():
@@ -226,9 +219,11 @@ class MGD(DBGD):
                             ),
                             dim=0)
                         if parameter.grad == None:
-                            dummy_loss = 0
-                            dummy_loss += torch.mean(parameter)
-                            dummy_loss.backward()
-                            gradient = gradient.to(dtype=torch.float32)
-                            parameter.grad = gradient
-        self.model.to(self.cuda)
+                            if self.is_cuda_avail:
+                                self.model.to('cpu')
+                                dummy_loss = 0
+                                dummy_loss += torch.mean(parameter)
+                                dummy_loss.backward()
+                                self.model.to(self.cuda)
+                        gradient = gradient.to(dtype=torch.float32)
+                        parameter.grad = gradient

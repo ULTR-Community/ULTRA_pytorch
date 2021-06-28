@@ -47,13 +47,12 @@ class RegressionEM(BaseAlgorithm):
 
     """
 
-    def __init__(self, data_set, exp_settings, forward_only=False):
+    def __init__(self, data_set, exp_settings):
         """Create the model.
 
         Args:
             data_set: (Raw_data) The dataset used to build the input layer.
             exp_settings: (dictionary) The dictionary containing the model settings.
-            forward_only: Set true to conduct prediction only, false to conduct training.
         """
         print('Build Regression-based EM algorithm.')
 
@@ -213,22 +212,30 @@ class RegressionEM(BaseAlgorithm):
         print('Loss %f at global step %d' % (self.loss, self.global_step))
         return self.loss, None, self.train_summary
 
-    def validation(self, input_feed):
+    def validation(self, input_feed, is_online_simulation= False):
+        """Run a step of the model feeding the given inputs for validating process.
+
+        Args:
+            input_feed: (dictionary) A dictionary containing all the input feed data.
+
+        Returns:
+            A triple consisting of the loss, outputs (None if we do backward),
+            and a tf.summary containing related information about the step.
+
+        """
         self.model.eval()
         self.create_input_feed(input_feed, self.max_candidate_num)
         with torch.no_grad():
             self.output = self.ranking_model(self.model,
-                                             self.max_candidate_num)
-        pad_removed_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, self.output)
-        # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(self.labels, pad_removed_output, None)
-                # self.writer.add_scalar(
-                #     '%s_%d' %
-                #     (metric, topn), metric_value)
-                self.eval_summary['%s_%d' %
-                                  (metric, topn)] = metric_value.item()
-        return None, self.output, self.eval_summary  # no loss, outputs, summary.
+                self.max_candidate_num)
+        if not is_online_simulation:
+            pad_removed_output = self.remove_padding_for_metric_eval(
+                self.docid_inputs, self.output)
+
+            for metric in self.exp_settings['metrics']:
+                for topn in self.exp_settings['metrics_topn']:
+                    metric_value = ultra.utils.make_ranking_metric_fn(
+                        metric, topn)(self.labels, pad_removed_output, None)
+                    self.create_summary('%s_%d' % (metric, topn),
+                                        '%s_%d' % (metric, topn), metric_value, False)
+        return None, self.output, self.eval_summary  # loss, outputs, summary.

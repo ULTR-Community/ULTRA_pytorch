@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>ultra.ranking_model package &mdash; ULTRA 0.2beta documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="ultra.utils package" href="ultra.utils.html" />
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -109,6 +113,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -143,11 +148,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="modules.html">ultra</a> &raquo;</li>
         
@@ -158,7 +165,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/ultra.ranking_model.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -204,60 +211,55 @@
 <div class="section" id="module-ultra.ranking_model.base_ranking_model">
 <span id="ultra-ranking-model-base-ranking-model-module"></span><h2>ultra.ranking_model.base_ranking_model module<a class="headerlink" href="#module-ultra.ranking_model.base_ranking_model" title="Permalink to this headline">¶</a></h2>
 <p>The basic class that contains all the API needed for the implementation of a ranking model.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.ranking_model.base_ranking_model.ActivationFunctions">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.ranking_model.base_ranking_model.</code><code class="sig-name descname">ActivationFunctions</code><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.ranking_model.base_ranking_model.</span></code><code class="sig-name descname"><span class="pre">ActivationFunctions</span></code><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Activation Functions key strings.</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.ActivationFunctions.ELU">
-<code class="sig-name descname">ELU</code><em class="property"> = 'elu'</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions.ELU" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">ELU</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'elu'</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions.ELU" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.ActivationFunctions.RELU">
-<code class="sig-name descname">RELU</code><em class="property"> = 'relu'</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions.RELU" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">RELU</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'relu'</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions.RELU" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.ActivationFunctions.SELU">
-<code class="sig-name descname">SELU</code><em class="property"> = 'selu'</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions.SELU" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">SELU</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'selu'</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions.SELU" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.ActivationFunctions.SIGMOID">
-<code class="sig-name descname">SIGMOID</code><em class="property"> = 'sigmoid'</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions.SIGMOID" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">SIGMOID</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'sigmoid'</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions.SIGMOID" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.ActivationFunctions.TANH">
-<code class="sig-name descname">TANH</code><em class="property"> = 'tanh'</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions.TANH" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">TANH</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'tanh'</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.ActivationFunctions.TANH" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.ranking_model.base_ranking_model.BaseRankingModel">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.ranking_model.base_ranking_model.</code><code class="sig-name descname">BaseRankingModel</code><span class="sig-paren">(</span><em class="sig-param">hparams_str=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
-<dl class="attribute">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.ranking_model.base_ranking_model.</span></code><code class="sig-name descname"><span class="pre">BaseRankingModel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hparams_str</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.BaseRankingModel.ACT_FUNC_DIC">
-<code class="sig-name descname">ACT_FUNC_DIC</code><em class="property"> = {'elu': &lt;function elu&gt;, 'relu': &lt;function relu&gt;, 'selu': &lt;function selu&gt;, 'sigmoid': &lt;function sigmoid&gt;, 'tanh': &lt;function tanh&gt;}</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.ACT_FUNC_DIC" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">ACT_FUNC_DIC</span></code><em class="property"> <span class="pre">=</span> <span class="pre">{'elu':</span> <span class="pre">ELU(alpha=1.0),</span> <span class="pre">'relu':</span> <span class="pre">ReLU(),</span> <span class="pre">'selu':</span> <span class="pre">&lt;function</span> <span class="pre">selu&gt;,</span> <span class="pre">'sigmoid':</span> <span class="pre">Sigmoid(),</span> <span class="pre">'tanh':</span> <span class="pre">Tanh()}</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.ACT_FUNC_DIC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
-<dt id="ultra.ranking_model.base_ranking_model.BaseRankingModel.INITIALIZER_DIC">
-<code class="sig-name descname">INITIALIZER_DIC</code><em class="property"> = {'constant': &lt;tensorflow.python.ops.init_ops.Constant object&gt;}</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.INITIALIZER_DIC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.BaseRankingModel.NORM_FUNC_DIC">
-<code class="sig-name descname">NORM_FUNC_DIC</code><em class="property"> = {'batch': &lt;class 'tensorflow.python.keras.layers.normalization.BatchNormalization'&gt;, 'layer': &lt;class 'tensorflow.python.keras.layers.normalization.LayerNormalization'&gt;}</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.NORM_FUNC_DIC" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">NORM_FUNC_DIC</span></code><em class="property"> <span class="pre">=</span> <span class="pre">{'batch':</span> <span class="pre">&lt;function</span> <span class="pre">batch_norm&gt;,</span> <span class="pre">'layer':</span> <span class="pre">&lt;function</span> <span class="pre">layer_norm&gt;}</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.NORM_FUNC_DIC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.ranking_model.base_ranking_model.BaseRankingModel.__init__">
-<em class="property">abstract </em><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">hparams_str=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.__init__" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span> </em><code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hparams_str</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the network.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -266,9 +268,9 @@
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.ranking_model.base_ranking_model.BaseRankingModel.build">
-<em class="property">abstract </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">input_list</em>, <em class="sig-param">noisy_params=None</em>, <em class="sig-param">noise_rate=0.05</em>, <em class="sig-param">is_training=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.build" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span> </em><code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noisy_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the model</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -286,64 +288,50 @@ for a list of documents.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.ranking_model.base_ranking_model.BaseRankingModel.get_variable">
-<code class="sig-name descname">get_variable</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">shape</em>, <em class="sig-param">noisy_params=None</em>, <em class="sig-param">noise_rate=0.05</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.get_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a tensorflow variable for the model. Add noise if required.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> – The name of the variable.</p></li>
-<li><p><strong>shape</strong> – The shape of the variable.</p></li>
-<li><p><strong>noisy_params</strong> – (dict&lt;parameter_name, tf.variable&gt;) A dictionary of noisy parameters to add.</p></li>
-<li><p><strong>noise_rate</strong> – (float) A value specify how much noise to add.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A tf.Tensor</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.BaseRankingModel.model_parameters">
-<code class="sig-name descname">model_parameters</code><em class="property"> = {}</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.model_parameters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">model_parameters</span></code><em class="property"> <span class="pre">=</span> <span class="pre">{}</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.model_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="ultra.ranking_model.base_ranking_model.BaseRankingModel.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.BaseRankingModel.training" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.ranking_model.base_ranking_model.Initializer">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.ranking_model.base_ranking_model.</code><code class="sig-name descname">Initializer</code><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.Initializer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.ranking_model.base_ranking_model.</span></code><code class="sig-name descname"><span class="pre">Initializer</span></code><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.Initializer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Initializer key strings.</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.Initializer.CONSTANT">
-<code class="sig-name descname">CONSTANT</code><em class="property"> = 'constant'</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.Initializer.CONSTANT" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">CONSTANT</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'constant'</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.Initializer.CONSTANT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.ranking_model.base_ranking_model.NormalizationFunctions">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.ranking_model.base_ranking_model.</code><code class="sig-name descname">NormalizationFunctions</code><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.NormalizationFunctions" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.ranking_model.base_ranking_model.</span></code><code class="sig-name descname"><span class="pre">NormalizationFunctions</span></code><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.NormalizationFunctions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Normalization Functions key strings.</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.NormalizationFunctions.BATCH">
-<code class="sig-name descname">BATCH</code><em class="property"> = 'batch'</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.NormalizationFunctions.BATCH" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">BATCH</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'batch'</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.NormalizationFunctions.BATCH" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.ranking_model.base_ranking_model.NormalizationFunctions.LAYER">
-<code class="sig-name descname">LAYER</code><em class="property"> = 'layer'</em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.NormalizationFunctions.LAYER" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">LAYER</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'layer'</span></em><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.NormalizationFunctions.LAYER" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.ranking_model.base_ranking_model.selu">
-<code class="sig-prename descclassname">ultra.ranking_model.base_ranking_model.</code><code class="sig-name descname">selu</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.selu" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.ranking_model.base_ranking_model.</span></code><code class="sig-name descname"><span class="pre">selu</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.base_ranking_model.selu" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Create the scaled exponential linear unit (SELU) activation function. More information can be found in</dt><dd><p>Klambauer, G., Unterthiner, T., Mayr, A. and Hochreiter, S., 2017. Self-normalizing neural networks. In Advances in neural information processing systems (pp. 971-980).</p>
 </dd>
@@ -362,40 +350,14 @@ for a list of documents.</p></li>
 <div class="section" id="ultra-ranking-model-dnn-module">
 <h2>ultra.ranking_model.dnn module<a class="headerlink" href="#ultra-ranking-model-dnn-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-ultra.ranking_model.linear">
-<span id="ultra-ranking-model-linear-module"></span><h2>ultra.ranking_model.linear module<a class="headerlink" href="#module-ultra.ranking_model.linear" title="Permalink to this headline">¶</a></h2>
-<p>Linear map: sum_i(args[i] * W[i]), where W[i] is a variable.</p>
-<dl class="field-list simple">
-<dt class="field-odd">param args</dt>
-<dd class="field-odd"><p>a 2D Tensor or a list of 2D, batch, n, Tensors.</p>
-</dd>
-<dt class="field-even">param output_size</dt>
-<dd class="field-even"><p>int, second dimension of W[i].</p>
-</dd>
-<dt class="field-odd">param bias</dt>
-<dd class="field-odd"><p>boolean, whether to add a bias term or not.</p>
-</dd>
-<dt class="field-even">param bias_initializer</dt>
-<dd class="field-even"><p>starting value to initialize the bias
-(default is all zeros).</p>
-</dd>
-<dt class="field-odd">param kernel_initializer</dt>
-<dd class="field-odd"><p>starting value to initialize the weight.</p>
-</dd>
-<dt class="field-even">returns</dt>
-<dd class="field-even"><p>A 2D Tensor with shape <cite>[batch, output_size]</cite> equal to
-sum_i(args[i] * W[i]), where W[i]s are newly created matrices.</p>
-</dd>
-<dt class="field-odd">raises ValueError</dt>
-<dd class="field-odd"><p>if some of the arguments has unspecified or wrong shape.</p>
-</dd>
-</dl>
+<div class="section" id="ultra-ranking-model-linear-module">
+<h2>ultra.ranking_model.linear module<a class="headerlink" href="#ultra-ranking-model-linear-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-ultra.ranking_model">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-ultra.ranking_model" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.ranking_model.list_available">
-<code class="sig-prename descclassname">ultra.ranking_model.</code><code class="sig-name descname">list_available</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.list_available" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.ranking_model.</span></code><code class="sig-name descname"><span class="pre">list_available</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.ranking_model.list_available" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
@@ -411,29 +373,29 @@ sum_i(args[i] * W[i]), where W[i]s are newly created matrices.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="ultra.utils.html" class="btn btn-neutral float-right" title="ultra.utils package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="ultra.learning_algorithm.html" class="btn btn-neutral float-left" title="ultra.learning_algorithm package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="ultra.utils.html" class="btn btn-neutral float-right" title="ultra.utils package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ultra.learning_algorithm.html" class="btn btn-neutral float-left" title="ultra.learning_algorithm package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, ULTRA
+        &#169; Copyright 2020, ULTRA.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -441,7 +403,6 @@ sum_i(args[i] * W[i]), where W[i]s are newly created matrices.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

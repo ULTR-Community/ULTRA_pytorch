@@ -26,13 +26,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
-from tensorflow.python.framework import ops
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import math_ops
 from ultra.utils import metric_utils as utils
 import torch
-import time
 
 device = torch.device("cuda")
 class RankingMetricKey(object):
@@ -310,10 +305,10 @@ def expected_reciprocal_rank(
         labels, predictions, weights, topn)
     sorted_labels, sorted_weights = utils.sort_by_scores(
         predictions, [labels, weights], topn=topn)
-    _, list_size = torch.unbind(sorted_labels.shape)
-
-    relevance = (torch.pow(2.0, sorted_labels) - 1) / \
-        torch.pow(2.0, RankingMetricKey.MAX_LABEL)
+    list_size = sorted_labels.size()[-1]
+    pow = torch.as_tensor(2.0)
+    relevance = (torch.pow(pow, sorted_labels) - 1) / \
+        torch.pow(pow, torch.as_tensor(RankingMetricKey.MAX_LABEL))
     non_rel = torch.cumprod(1.0 - relevance, dim=1) / (1.0 - relevance)
     reciprocal_rank = 1.0 / \
         torch.arange(start=1, end=list_size + 1,dtype=torch.float32)
@@ -343,19 +338,17 @@ def average_relevance_position(labels, predictions, weights=None, name=None):
     Returns:
       A metric for the weighted average relevance position.
     """
-    with ops.name_scope(name, 'average_relevance_position',
-                        (labels, predictions, weights)):
-        _, list_size = array_ops.unstack(array_ops.shape(predictions))
-        labels, predictions, weights, topn = _prepare_and_validate_params(
-            labels, predictions, weights, list_size)
-        sorted_labels, sorted_weights = utils.sort_by_scores(
-            predictions, [labels, weights], topn=topn)
-        relevance = sorted_labels * sorted_weights
-        position = math_ops.to_float(math_ops.range(1, topn + 1))
-        # TODO(xuanhui): Consider to add a cap poistion topn + 1 when there is no
-        # relevant examples.
-        return math_ops.reduce_mean(
-            position * array_ops.ones_like(relevance) * relevance)
+    _, list_size = array_ops.unstack(array_ops.shape(predictions))
+    labels, predictions, weights, topn = _prepare_and_validate_params(
+        labels, predictions, weights, list_size)
+    sorted_labels, sorted_weights = utils.sort_by_scores(
+        predictions, [labels, weights], topn=topn)
+    relevance = sorted_labels * sorted_weights
+    position = torch.arange(1, topn + 1, dtype=torch.float)
+    # TODO(xuanhui): Consider to add a cap poistion topn + 1 when there is no
+    # relevant examples.
+    return torch.mean(
+        position * torch.ones_like(relevance) * relevance)
 
 
 def precision(labels, predictions, weights=None, topn=None, name=None):
@@ -374,24 +367,20 @@ def precision(labels, predictions, weights=None, topn=None, name=None):
     Returns:
       A metric for the weighted precision of the batch.
     """
-    with ops.name_scope(name, 'precision', (labels, predictions, weights)):
-        labels, predictions, weights, topn = _prepare_and_validate_params(
-            labels, predictions, weights, topn)
-        sorted_labels, sorted_weights = utils.sort_by_scores(
-            predictions, [labels, weights], topn=topn)
-        # Relevance = 1.0 when labels >= 1.0.
-        relevance = math_ops.to_float(
-            math_ops.greater_equal(
-                sorted_labels, 1.0))
-        per_list_precision = _safe_div(
-            math_ops.reduce_sum(relevance * sorted_weights, 1, keepdims=True),
-            math_ops.reduce_sum(
-                array_ops.ones_like(relevance) * sorted_weights, 1, keepdims=True))
-        # per_list_weights are computed from the whole list to avoid the problem of
-        # 0 when there is no relevant example in topn.
-        per_list_weights = _per_example_weights_to_per_list_weights(
-            weights, math_ops.to_float(math_ops.greater_equal(labels, 1.0)))
-        return math_ops.reduce_mean(per_list_precision * per_list_weights)
+    labels, predictions, weights, topn = _prepare_and_validate_params(
+        labels, predictions, weights, topn)
+    sorted_labels, sorted_weights = utils.sort_by_scores(
+        predictions, [labels, weights], topn=topn)
+    # Relevance = 1.0 when labels >= 1.0.
+    relevance = torch.ge(sorted_labels, 1.0).to(dtype=torch.float)
+    per_list_precision = _safe_div(
+        torch.sum(relevance * sorted_weights, 1, keepdim=True),
+        torch.sum(torch.ones_like(relevance) * sorted_weights, 1, keepdim=True))
+    # per_list_weights are computed from the whole list to avoid the problem of
+    # 0 when there is no relevant example in topn.
+    per_list_weights = _per_example_weights_to_per_list_weights(
+        weights, torch.ge(labels, 1.0).to(dtype=torch.float))
+    return math_ops.reduce_mean(per_list_precision * per_list_weights)
 
 
 def mean_average_precision(labels,
@@ -417,31 +406,28 @@ def mean_average_precision(labels,
     Returns:
       A metric for the mean average precision.
     """
-    with tf.compat.v1.name_scope(metric.name, 'mean_average_precision',
-                                 (labels, predictions, weights)):
-        labels, predictions, weights, topn = _prepare_and_validate_params(
-            labels, predictions, weights, topn)
-        sorted_labels, sorted_weights = utils.sort_by_scores(
-            predictions, [labels, weights], topn=topn)
-        # Relevance = 1.0 when labels >= 1.0.
-        sorted_relevance = tf.cast(
-            tf.greater_equal(sorted_labels, 1.0), dtype=tf.float32)
-        per_list_relevant_counts = tf.cumsum(sorted_relevance, axis=1)
-        per_list_cutoffs = tf.cumsum(tf.ones_like(sorted_relevance), axis=1)
-        per_list_precisions = tf.math.divide_no_nan(per_list_relevant_counts,
-                                                    per_list_cutoffs)
-        total_precision = tf.reduce_sum(
-            input_tensor=per_list_precisions * sorted_weights * sorted_relevance,
-            axis=1,
-            keepdims=True)
-        total_relevance = tf.reduce_sum(
-            input_tensor=sorted_weights * sorted_relevance, axis=1, keepdims=True)
-        per_list_map = tf.math.divide_no_nan(total_precision, total_relevance)
-        # per_list_weights are computed from the whole list to avoid the problem of
-        # 0 when there is no relevant example in topn.
-        per_list_weights = _per_example_weights_to_per_list_weights(
-            weights, tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32))
-        return tf.compat.v1.metrics.mean(per_list_map, per_list_weights)
+    labels, predictions, weights, topn = _prepare_and_validate_params(
+        labels, predictions, weights, topn)
+    sorted_labels, sorted_weights = utils.sort_by_scores(
+        predictions, [labels, weights], topn=topn)
+    # Relevance = 1.0 when labels >= 1.0.
+    sorted_relevance = torch.ge(sorted_labels, 1.0).to(dtype=torch.float32)
+    per_list_relevant_counts = tf.cumsum(sorted_relevance, axis=1)
+    per_list_cutoffs = torch.cumsum(torch.ones_like(sorted_relevance), dim=1)
+    per_list_precisions = torch.nan_to_num(torch.div(per_list_relevant_counts,
+                                                per_list_cutoffs))
+    total_precision = torch.sum(
+        input=per_list_precisions * sorted_weights * sorted_relevance,
+        dim=1,
+        keepdim=True)
+    total_relevance = torch.sum(
+        input=sorted_weights * sorted_relevance, dim=1, keepdim=True)
+    per_list_map = torch.nan_to_num(torch.div(total_precision, total_relevance))
+    # per_list_weights are computed from the whole list to avoid the problem of
+    # 0 when there is no relevant example in topn.
+    per_list_weights = _per_example_weights_to_per_list_weights(
+        weights, torch.ge(labels, 1.0).to(dtype=torch.float32))
+    return torch.mean(per_list_map, per_list_weights)
 
 def normalized_discounted_cumulative_gain(labels,
                                           predictions,
@@ -502,22 +488,20 @@ def discounted_cumulative_gain(labels,
     Returns:
       A metric for the weighted discounted cumulative gain of the batch.
     """
-    with ops.name_scope(name, 'discounted_cumulative_gain',
-                        (labels, predictions, weights)):
-        labels, predictions, weights, topn = _prepare_and_validate_params(
-            labels, predictions, weights, topn)
-        sorted_labels, sorted_weights = utils.sort_by_scores(
-            predictions, [labels, weights], topn=topn)
-        dcg = _discounted_cumulative_gain(sorted_labels,
-                                          sorted_weights) * math_ops.log1p(1.0)
-        per_list_weights = _per_example_weights_to_per_list_weights(
-            weights=weights,
-            relevance=math_ops.pow(2.0, math_ops.to_float(labels)) - 1.0)
-        return math_ops.reduce_mean(
-            _safe_div(dcg, per_list_weights) * per_list_weights)
+    labels, predictions, weights, topn = _prepare_and_validate_params(
+        labels, predictions, weights, topn)
+    sorted_labels, sorted_weights = utils.sort_by_scores(
+        predictions, [labels, weights], topn=topn)
+    dcg = _discounted_cumulative_gain(sorted_labels,
+                                      sorted_weights) * torch.log1p(1.0)
+    per_list_weights = _per_example_weights_to_per_list_weights(
+        weights=weights,
+        relevance=torch.pow(2.0, labels.to(dtype=torch.float)) - 1.0)
+    return torch.mean(
+        _safe_div(dcg, per_list_weights) * per_list_weights)
 
 
-def ordered_pair_accuracy(labels, predictions, weights=None, name=None):
+def ordered_pair_accuracy(labels, predictions, weights=None):
     """Computes the percentage of correctedly ordered pair.
 
     For any pair of examples, we compare their orders determined by `labels` and
@@ -536,23 +520,20 @@ def ordered_pair_accuracy(labels, predictions, weights=None, name=None):
     Returns:
       A metric for the accuracy or ordered pairs.
     """
-    with ops.name_scope(name, 'ordered_pair_accuracy',
-                        (labels, predictions, weights)):
-        clean_labels, predictions, weights, _ = _prepare_and_validate_params(
-            labels, predictions, weights)
-        label_valid = math_ops.equal(clean_labels, labels)
-        valid_pair = math_ops.logical_and(
-            array_ops.expand_dims(label_valid, 2),
-            array_ops.expand_dims(label_valid, 1))
-        pair_label_diff = array_ops.expand_dims(
-            clean_labels, 2) - array_ops.expand_dims(clean_labels, 1)
-        pair_pred_diff = array_ops.expand_dims(
-            predictions, 2) - array_ops.expand_dims(predictions, 1)
-        # Correct pairs are represented twice in the above pair difference tensors.
-        # We only take one copy for each pair.
-        correct_pairs = math_ops.to_float(pair_label_diff > 0) * math_ops.to_float(
-            pair_pred_diff > 0)
-        pair_weights = math_ops.to_float(
-            pair_label_diff > 0) * array_ops.expand_dims(
-                weights, 2) * math_ops.to_float(valid_pair)
-        return math_ops.reduce_mean(correct_pairs * pair_weights)
+    clean_labels, predictions, weights, _ = _prepare_and_validate_params(
+        labels, predictions, weights)
+    label_valid = torch.eq(clean_labels, labels)
+    valid_pair = torch.logical_and(
+        torch.unsqueeze(label_valid, 2),
+        torch.unsqueeze(label_valid, 1))
+    pair_label_diff = torch.unsqueeze(
+        clean_labels, 2) - torch.unsqueeze(clean_labels, 1)
+    pair_pred_diff = torch.unsqueeze(
+        predictions, 2) - torch.unsqueeze(predictions, 1)
+    # Correct pairs are represented twice in the above pair difference tensors.
+    # We only take one copy for each pair.
+    correct_pairs = torch.gt(pair_label_diff, 0).to(dtype=torch.float) * \
+                    torch.gt(pair_pred_diff, 0).to(dtype=torch.float)
+    pair_weights = torch.gt(pair_label_diff, 0).to(dtype=torch.float) * torch.unsqueeze(
+            weights, 2) * valid_pair.to(dtype=torch.float)
+    return torch.mean(correct_pairs * pair_weights)

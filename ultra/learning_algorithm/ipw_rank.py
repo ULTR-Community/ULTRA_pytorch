@@ -44,7 +44,6 @@ class IPWrank(BaseAlgorithm):
         Args:
             data_set: (Raw_data) The dataset used to build the input layer.
             exp_settings: (dictionary) The dictionary containing the model settings.
-            forward_only: Set true to conduct prediction only, false to conduct training.
         """
 
         self.hparams = ultra.utils.hparams.HParams(
@@ -80,9 +79,8 @@ class IPWrank(BaseAlgorithm):
             self.hparams.propensity_estimator_json)
 
         self.max_candidate_num = exp_settings['max_candidate_num']
-        with torch.no_grad():
-            self.learning_rate = float(self.hparams.learning_rate)
-            self.global_step = 0
+        self.learning_rate = float(self.hparams.learning_rate)
+        self.global_step = 0
 
         # Feeds for inputs.
         # self.is_training = tf.placeholder(tf.bool, name="is_train")
@@ -184,7 +182,7 @@ class IPWrank(BaseAlgorithm):
         print(" Loss %f at Global Step %d: " % (self.loss.item(),self.global_step))
         return self.loss.item(), None, self.train_summary
 
-    def validation(self, input_feed):
+    def validation(self, input_feed, is_online_simulation= False):
         """Run a step of the model feeding the given inputs for validating process.
 
         Args:
@@ -200,14 +198,14 @@ class IPWrank(BaseAlgorithm):
         with torch.no_grad():
             self.output = self.ranking_model(self.model,
                 self.max_candidate_num)
+        if not is_online_simulation:
+            pad_removed_output = self.remove_padding_for_metric_eval(
+                self.docid_inputs, self.output)
 
-        pad_removed_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, self.output)
-
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(self.labels, pad_removed_output, None)
-                self.create_summary('%s_%d' % (metric, topn),
-                                    '%s_%d' % (metric, topn), metric_value, False)
+            for metric in self.exp_settings['metrics']:
+                for topn in self.exp_settings['metrics_topn']:
+                    metric_value = ultra.utils.make_ranking_metric_fn(
+                        metric, topn)(self.labels, pad_removed_output, None)
+                    self.create_summary('%s_%d' % (metric, topn),
+                                        '%s_%d' % (metric, topn), metric_value, False)
         return None, self.output, self.eval_summary  # loss, outputs, summary.

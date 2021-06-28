@@ -40,9 +40,6 @@ class DNN(nn.Module):
         if self.hparams.activation_func in BaseRankingModel.ACT_FUNC_DIC:
             self.act_func = BaseRankingModel.ACT_FUNC_DIC[self.hparams.activation_func]
 
-        if self.hparams.initializer in BaseRankingModel.INITIALIZER_DIC:
-            self.initializer = BaseRankingModel.INITIALIZER_DIC[self.hparams.initializer]
-
         for j in range(len(self.output_sizes)):
             if self.layer_norm is None and self.hparams.norm in BaseRankingModel.NORM_FUNC_DIC:
                 if self.hparams.norm == "layer":

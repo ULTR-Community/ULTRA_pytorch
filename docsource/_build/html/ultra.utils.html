@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>ultra.utils package &mdash; ULTRA 0.2beta documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Input Layer Reference" href="input_layer_reference.html" />
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -109,6 +113,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -143,11 +148,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="modules.html">ultra</a> &raquo;</li>
         
@@ -158,7 +165,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/ultra.utils.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -203,13 +210,13 @@
 </div>
 <div class="section" id="module-ultra.utils.data_utils">
 <span id="ultra-utils-data-utils-module"></span><h2>ultra.utils.data_utils module<a class="headerlink" href="#module-ultra.utils.data_utils" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.utils.data_utils.Raw_data">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.utils.data_utils.</code><code class="sig-name descname">Raw_data</code><span class="sig-paren">(</span><em class="sig-param">data_path=None</em>, <em class="sig-param">file_prefix=None</em>, <em class="sig-param">rank_cut=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">Raw_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.data_utils.Raw_data.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">data_path=None</em>, <em class="sig-param">file_prefix=None</em>, <em class="sig-param">rank_cut=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a dataset</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -225,9 +232,9 @@
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.data_utils.Raw_data.load_basic_data_information">
-<code class="sig-name descname">load_basic_data_information</code><span class="sig-paren">(</span><em class="sig-param">data_path=None</em>, <em class="sig-param">file_prefix=None</em>, <em class="sig-param">rank_cut=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.load_basic_data_information" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">load_basic_data_information</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.load_basic_data_information" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Load basic dataset information from data_path including:</dt><dd><p>feature_size: the number of features for each query-document pair.
 removed_feature_ids: the idxs of the features to ignore.</p>
@@ -243,9 +250,9 @@ removed_feature_ids: the idxs of the features to ignore.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.data_utils.Raw_data.load_data_in_ULTRA_format">
-<code class="sig-name descname">load_data_in_ULTRA_format</code><span class="sig-paren">(</span><em class="sig-param">data_path=None</em>, <em class="sig-param">file_prefix=None</em>, <em class="sig-param">rank_cut=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.load_data_in_ULTRA_format" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">load_data_in_ULTRA_format</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.load_data_in_ULTRA_format" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Read dataset in ULTRA format including:</dt><dd><p>rank_list_size: the maximum number of documents for a query in the data.
 features: the feature vectors of each query-document pair.
@@ -271,9 +278,9 @@ initial_list_lengths: the length of the initial list for each query.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.data_utils.Raw_data.load_data_in_libsvm_format">
-<code class="sig-name descname">load_data_in_libsvm_format</code><span class="sig-paren">(</span><em class="sig-param">data_path=None</em>, <em class="sig-param">file_prefix=None</em>, <em class="sig-param">rank_cut=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.load_data_in_libsvm_format" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">load_data_in_libsvm_format</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.load_data_in_libsvm_format" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Read dataset in libsvm format including:</dt><dd><p>rank_list_size: the maximum number of documents for a query in the data.
 features: the feature vectors of each query-document pair.
@@ -298,9 +305,9 @@ initial_list_lengths: the number of candidate documents for each query.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.data_utils.Raw_data.pad">
-<code class="sig-name descname">pad</code><span class="sig-paren">(</span><em class="sig-param">rank_list_size</em>, <em class="sig-param">pad_tails=True</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.pad" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">pad</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rank_list_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_tails</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.pad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pad a rank list with zero feature vectors when it is shorter than the required rank list size.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -315,9 +322,9 @@ initial_list_lengths: the number of candidate documents for each query.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.data_utils.Raw_data.remove_invalid_data">
-<code class="sig-name descname">remove_invalid_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.remove_invalid_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">remove_invalid_data</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.Raw_data.remove_invalid_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove query lists with no relevant items or less than 2 items</p>
 <p>self.feature_size = -1
 self.rank_list_size = -1
@@ -338,9 +345,9 @@ self.initial_list_lengths = []</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.data_utils.generate_ranklist">
-<code class="sig-prename descclassname">ultra.utils.data_utils.</code><code class="sig-name descname">generate_ranklist</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">rerank_lists</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.generate_ranklist" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">generate_ranklist</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rerank_lists</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.generate_ranklist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a reranked lists based on the data and rerank documents ids.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -360,9 +367,9 @@ in the initial list.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.data_utils.generate_ranklist_by_scores">
-<code class="sig-prename descclassname">ultra.utils.data_utils.</code><code class="sig-name descname">generate_ranklist_by_scores</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">rerank_scores</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.generate_ranklist_by_scores" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">generate_ranklist_by_scores</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rerank_scores</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.generate_ranklist_by_scores" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a reranked lists based on the data and rerank scores.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -382,14 +389,14 @@ on that position in the initial list.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="ultra.utils.data_utils.merge_TFSummary">
-<code class="sig-prename descclassname">ultra.utils.data_utils.</code><code class="sig-name descname">merge_TFSummary</code><span class="sig-paren">(</span><em class="sig-param">summary_list</em>, <em class="sig-param">weights</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.merge_TFSummary" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt id="ultra.utils.data_utils.merge_Summary">
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">merge_Summary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">summary_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.merge_Summary" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.data_utils.output_ranklist">
-<code class="sig-prename descclassname">ultra.utils.data_utils.</code><code class="sig-name descname">output_ranklist</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">rerank_scores</em>, <em class="sig-param">output_path</em>, <em class="sig-param">file_name='test'</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.output_ranklist" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">output_ranklist</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rerank_scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'test'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.output_ranklist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a trec format rank list by reranking the initial list with reranking scores.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -408,23 +415,18 @@ on that position in the initial list.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="ultra.utils.data_utils.parse_TFSummary_from_bytes">
-<code class="sig-prename descclassname">ultra.utils.data_utils.</code><code class="sig-name descname">parse_TFSummary_from_bytes</code><span class="sig-paren">(</span><em class="sig-param">summary_bytes</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.parse_TFSummary_from_bytes" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.data_utils.read_data">
-<code class="sig-prename descclassname">ultra.utils.data_utils.</code><code class="sig-name descname">read_data</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">file_prefix</em>, <em class="sig-param">rank_cut=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.read_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">read_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.data_utils.read_data" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
 <div class="section" id="module-ultra.utils.hparams">
 <span id="ultra-utils-hparams-module"></span><h2>ultra.utils.hparams module<a class="headerlink" href="#module-ultra.utils.hparams" title="Permalink to this headline">¶</a></h2>
 <p>Hyperparameter values.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.utils.hparams.HParams">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.utils.hparams.</code><code class="sig-name descname">HParams</code><span class="sig-paren">(</span><em class="sig-param">hparam_def=None</em>, <em class="sig-param">model_structure=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.utils.hparams.</span></code><code class="sig-name descname"><span class="pre">HParams</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hparam_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class to hold a set of hyperparameters as name-value pairs.
 A <cite>HParams</cite> object holds hyperparameters used to build and train a model,
@@ -484,9 +486,9 @@ hparams.activations ==&gt; [‘relu’, ‘tanh’]
 hparams.parse_json(‘{“learning_rate”: 0.3, “activations”: “relu”}’)</p>
 </div></blockquote>
 <p><a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">hparam_def=None</em>, <em class="sig-param">model_structure=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hparam_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an instance of <cite>HParams</cite> from keyword arguments.
 The keyword arguments specify name-values pairs for the hyperparameters.
 The parameter types are inferred from the type of the values passed.
@@ -527,9 +529,9 @@ the value is the value for the parameter.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.add_hparam">
-<code class="sig-name descname">add_hparam</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.add_hparam" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">add_hparam</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.add_hparam" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds {name, value} pair to hyperparameters.
 :param name: Name of the hyperparameter.
 :param value: Value of the hyperparameter. Can be one of the following types:</p>
@@ -543,25 +545,25 @@ the value is the value for the parameter.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.from_proto">
-<em class="property">static </em><code class="sig-name descname">from_proto</code><span class="sig-paren">(</span><em class="sig-param">hparam_def</em>, <em class="sig-param">import_scope=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.from_proto" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">from_proto</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hparam_def</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">import_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.from_proto" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.get" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the value of <cite>key</cite> if it exists, else <cite>default</cite>.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.get_model_structure">
-<code class="sig-name descname">get_model_structure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.get_model_structure" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_model_structure</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.get_model_structure" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.override_from_dict">
-<code class="sig-name descname">override_from_dict</code><span class="sig-paren">(</span><em class="sig-param">values_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.override_from_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">override_from_dict</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.override_from_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override hyperparameter values, parsing new values from a dictionary.
 :param values_dict: Dictionary of name:value pairs.</p>
 <dl class="field-list simple">
@@ -574,9 +576,9 @@ the value is the value for the parameter.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.parse">
-<code class="sig-name descname">parse</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">ignore_unknown_hyperparameters=True</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.parse" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">parse</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_unknown_hyperparameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.parse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override hyperparameter values, parsing new values from a string.
 See parse_values for more detail on the allowed format for values.
 :param values: String.    Comma separated list of <cite>name=value</cite> pairs where</p>
@@ -597,9 +599,9 @@ hyper-parameter is unknown.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.parse_json">
-<code class="sig-name descname">parse_json</code><span class="sig-paren">(</span><em class="sig-param">values_json</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.parse_json" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">parse_json</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values_json</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.parse_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override hyperparameter values, parsing new values from a json object.
 :param values_json: String containing a json object of name:value pairs.</p>
 <dl class="field-list simple">
@@ -612,15 +614,15 @@ hyper-parameter is unknown.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.set_from_map">
-<code class="sig-name descname">set_from_map</code><span class="sig-paren">(</span><em class="sig-param">values_map</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.set_from_map" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">set_from_map</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values_map</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.set_from_map" title="Permalink to this definition">¶</a></dt>
 <dd><p>DEPRECATED. Use override_from_dict.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.set_hparam">
-<code class="sig-name descname">set_hparam</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.set_hparam" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">set_hparam</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.set_hparam" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the value of an existing hyperparameter.
 This function verifies that the type of the value matches the type of the
 existing hyperparameter.
@@ -633,14 +635,14 @@ existing hyperparameter.
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.set_model_structure">
-<code class="sig-name descname">set_model_structure</code><span class="sig-paren">(</span><em class="sig-param">model_structure</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.set_model_structure" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">set_model_structure</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_structure</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.set_model_structure" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.to_json">
-<code class="sig-name descname">to_json</code><span class="sig-paren">(</span><em class="sig-param">indent=None</em>, <em class="sig-param">separators=None</em>, <em class="sig-param">sort_keys=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.to_json" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">to_json</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.to_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Serializes the hyperparameters into JSON.
 :param indent: If a non-negative integer, JSON array elements and object members</p>
 <blockquote>
@@ -662,9 +664,9 @@ most compact representation.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.hparams.HParams.values">
-<code class="sig-name descname">values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.values" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">values</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.HParams.values" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the hyperparameter values as a Python dictionary.
 :returns: A dictionary with hyperparameter names as keys.    The values are the</p>
 <blockquote>
@@ -674,9 +676,9 @@ most compact representation.</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.hparams.parse_values">
-<code class="sig-prename descclassname">ultra.utils.hparams.</code><code class="sig-name descname">parse_values</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">type_map</em>, <em class="sig-param">ignore_unknown_hyperparameters</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.parse_values" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.hparams.</span></code><code class="sig-name descname"><span class="pre">parse_values</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_unknown_hyperparameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.hparams.parse_values" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses hyperparameter values from a string into a python map.
 <cite>values</cite> is a string containing comma-separated <cite>name=value</cite> pairs.
 For each pair, the value of the hyperparameter named <cite>name</cite> is set to
@@ -750,61 +752,61 @@ hyper-parameter is unknown.</p></li>
 <p>The metrics here are meant to be used during the TF training. That is, a batch
 of instances in the Tensor format are evaluated by ops. It works with listwise
 Tensors only.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.utils.metrics.RankingMetricKey">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.utils.metrics.</code><code class="sig-name descname">RankingMetricKey</code><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.utils.metrics.</span></code><code class="sig-name descname"><span class="pre">RankingMetricKey</span></code><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Ranking metric key strings.</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.utils.metrics.RankingMetricKey.ARP">
-<code class="sig-name descname">ARP</code><em class="property"> = 'arp'</em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.ARP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">ARP</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'arp'</span></em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.ARP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.utils.metrics.RankingMetricKey.DCG">
-<code class="sig-name descname">DCG</code><em class="property"> = 'dcg'</em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.DCG" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">DCG</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'dcg'</span></em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.DCG" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.utils.metrics.RankingMetricKey.ERR">
-<code class="sig-name descname">ERR</code><em class="property"> = 'err'</em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.ERR" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">ERR</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'err'</span></em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.ERR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.utils.metrics.RankingMetricKey.MAP">
-<code class="sig-name descname">MAP</code><em class="property"> = 'map'</em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.MAP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">MAP</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'map'</span></em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.MAP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.utils.metrics.RankingMetricKey.MAX_LABEL">
-<code class="sig-name descname">MAX_LABEL</code><em class="property"> = None</em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.MAX_LABEL" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">MAX_LABEL</span></code><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.MAX_LABEL" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.utils.metrics.RankingMetricKey.MRR">
-<code class="sig-name descname">MRR</code><em class="property"> = 'mrr'</em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.MRR" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">MRR</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'mrr'</span></em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.MRR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.utils.metrics.RankingMetricKey.NDCG">
-<code class="sig-name descname">NDCG</code><em class="property"> = 'ndcg'</em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.NDCG" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">NDCG</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'ndcg'</span></em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.NDCG" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.utils.metrics.RankingMetricKey.ORDERED_PAIR_ACCURACY">
-<code class="sig-name descname">ORDERED_PAIR_ACCURACY</code><em class="property"> = 'ordered_pair_accuracy'</em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.ORDERED_PAIR_ACCURACY" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">ORDERED_PAIR_ACCURACY</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'ordered_pair_accuracy'</span></em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.ORDERED_PAIR_ACCURACY" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.utils.metrics.RankingMetricKey.PRECISION">
-<code class="sig-name descname">PRECISION</code><em class="property"> = 'precision'</em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.PRECISION" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">PRECISION</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'precision'</span></em><a class="headerlink" href="#ultra.utils.metrics.RankingMetricKey.PRECISION" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.metrics.average_relevance_position">
-<code class="sig-prename descclassname">ultra.utils.metrics.</code><code class="sig-name descname">average_relevance_position</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">predictions</em>, <em class="sig-param">weights=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.average_relevance_position" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.metrics.</span></code><code class="sig-name descname"><span class="pre">average_relevance_position</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.average_relevance_position" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes average relevance position (ARP).</p>
 <p>This can also be named as average_relevance_rank, but this can be confusing
 with mean_reciprocal_rank in acronyms. This name is more distinguishing and
@@ -826,9 +828,9 @@ former case is per-example and the latter case is per-list.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.metrics.discounted_cumulative_gain">
-<code class="sig-prename descclassname">ultra.utils.metrics.</code><code class="sig-name descname">discounted_cumulative_gain</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">predictions</em>, <em class="sig-param">weights=None</em>, <em class="sig-param">topn=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.discounted_cumulative_gain" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.metrics.</span></code><code class="sig-name descname"><span class="pre">discounted_cumulative_gain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.discounted_cumulative_gain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes discounted cumulative gain (DCG).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -848,9 +850,9 @@ former case is per-example and the latter case is per-list.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.metrics.expected_reciprocal_rank">
-<code class="sig-prename descclassname">ultra.utils.metrics.</code><code class="sig-name descname">expected_reciprocal_rank</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">predictions</em>, <em class="sig-param">weights=None</em>, <em class="sig-param">topn=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.expected_reciprocal_rank" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.metrics.</span></code><code class="sig-name descname"><span class="pre">expected_reciprocal_rank</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.expected_reciprocal_rank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes expected reciprocal rank (ERR).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -871,9 +873,9 @@ former case is per-example and the latter case is per-list.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.metrics.make_ranking_metric_fn">
-<code class="sig-prename descclassname">ultra.utils.metrics.</code><code class="sig-name descname">make_ranking_metric_fn</code><span class="sig-paren">(</span><em class="sig-param">metric_key</em>, <em class="sig-param">topn=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.make_ranking_metric_fn" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.metrics.</span></code><code class="sig-name descname"><span class="pre">make_ranking_metric_fn</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.make_ranking_metric_fn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method to create a ranking metric function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -910,9 +912,9 @@ the metric.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.metrics.mean_average_precision">
-<code class="sig-prename descclassname">ultra.utils.metrics.</code><code class="sig-name descname">mean_average_precision</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">predictions</em>, <em class="sig-param">weights=None</em>, <em class="sig-param">topn=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.mean_average_precision" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.metrics.</span></code><code class="sig-name descname"><span class="pre">mean_average_precision</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.mean_average_precision" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes mean average precision (MAP).
 The implementation of MAP is based on Equation (1.7) in the following:
 Liu, T-Y “Learning to Rank for Information Retrieval” found at
@@ -936,9 +938,9 @@ former case is per-example and the latter case is per-list.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.metrics.mean_reciprocal_rank">
-<code class="sig-prename descclassname">ultra.utils.metrics.</code><code class="sig-name descname">mean_reciprocal_rank</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">predictions</em>, <em class="sig-param">weights=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.mean_reciprocal_rank" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.metrics.</span></code><code class="sig-name descname"><span class="pre">mean_reciprocal_rank</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.mean_reciprocal_rank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes mean reciprocal rank (MRR).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -958,9 +960,9 @@ former case is per-example and the latter case is per-list.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.metrics.normalized_discounted_cumulative_gain">
-<code class="sig-prename descclassname">ultra.utils.metrics.</code><code class="sig-name descname">normalized_discounted_cumulative_gain</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">predictions</em>, <em class="sig-param">weights=None</em>, <em class="sig-param">topn=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.normalized_discounted_cumulative_gain" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.metrics.</span></code><code class="sig-name descname"><span class="pre">normalized_discounted_cumulative_gain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.normalized_discounted_cumulative_gain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes normalized discounted cumulative gain (NDCG).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -981,9 +983,9 @@ batch.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.metrics.ordered_pair_accuracy">
-<code class="sig-prename descclassname">ultra.utils.metrics.</code><code class="sig-name descname">ordered_pair_accuracy</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">predictions</em>, <em class="sig-param">weights=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.ordered_pair_accuracy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.metrics.</span></code><code class="sig-name descname"><span class="pre">ordered_pair_accuracy</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.ordered_pair_accuracy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the percentage of correctedly ordered pair.</p>
 <p>For any pair of examples, we compare their orders determined by <cite>labels</cite> and
 <cite>predictions</cite>. They are correctly ordered if the two orders are compatible.
@@ -1006,9 +1008,9 @@ former case is per-example and the latter case is per-list.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.metrics.precision">
-<code class="sig-prename descclassname">ultra.utils.metrics.</code><code class="sig-name descname">precision</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">predictions</em>, <em class="sig-param">weights=None</em>, <em class="sig-param">topn=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.precision" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.metrics.</span></code><code class="sig-name descname"><span class="pre">precision</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.metrics.precision" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes precision as weighted average of relevant examples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1032,13 +1034,13 @@ former case is per-example and the latter case is per-list.</p></li>
 </div>
 <div class="section" id="module-ultra.utils.propensity_estimator">
 <span id="ultra-utils-propensity-estimator-module"></span><h2>ultra.utils.propensity_estimator module<a class="headerlink" href="#module-ultra.utils.propensity_estimator" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.utils.propensity_estimator.BasicPropensityEstimator">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.utils.propensity_estimator.</code><code class="sig-name descname">BasicPropensityEstimator</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.utils.propensity_estimator.</span></code><code class="sig-name descname"><span class="pre">BasicPropensityEstimator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.BasicPropensityEstimator.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a propensity estimator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1048,9 +1050,9 @@ former case is per-example and the latter case is per-list.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.BasicPropensityEstimator.getPropensityForOneList">
-<code class="sig-name descname">getPropensityForOneList</code><span class="sig-paren">(</span><em class="sig-param">click_list</em>, <em class="sig-param">use_non_clicked_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator.getPropensityForOneList" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getPropensityForOneList</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">click_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_non_clicked_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator.getPropensityForOneList" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computing the propensity weights for each result in a list with clicks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1069,9 +1071,9 @@ would have 0 weights.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.BasicPropensityEstimator.loadEstimatorFromFile">
-<code class="sig-name descname">loadEstimatorFromFile</code><span class="sig-paren">(</span><em class="sig-param">file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator.loadEstimatorFromFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">loadEstimatorFromFile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator.loadEstimatorFromFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a propensity estimator from a json file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1080,9 +1082,9 @@ would have 0 weights.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.BasicPropensityEstimator.outputEstimatorToFile">
-<code class="sig-name descname">outputEstimatorToFile</code><span class="sig-paren">(</span><em class="sig-param">file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator.outputEstimatorToFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">outputEstimatorToFile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator.outputEstimatorToFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Export a propensity estimator to a json file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1093,13 +1095,13 @@ would have 0 weights.</p></li>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.utils.propensity_estimator.OraclePropensityEstimator">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.utils.propensity_estimator.</code><code class="sig-name descname">OraclePropensityEstimator</code><span class="sig-paren">(</span><em class="sig-param">click_model</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.OraclePropensityEstimator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.utils.propensity_estimator.</span></code><code class="sig-name descname"><span class="pre">OraclePropensityEstimator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">click_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.OraclePropensityEstimator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator" title="ultra.utils.propensity_estimator.BasicPropensityEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ultra.utils.propensity_estimator.BasicPropensityEstimator</span></code></a></p>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.OraclePropensityEstimator.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">click_model</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.OraclePropensityEstimator.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">click_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.OraclePropensityEstimator.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a propensity estimator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1109,9 +1111,9 @@ would have 0 weights.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.OraclePropensityEstimator.getPropensityForOneList">
-<code class="sig-name descname">getPropensityForOneList</code><span class="sig-paren">(</span><em class="sig-param">click_list</em>, <em class="sig-param">use_non_clicked_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.OraclePropensityEstimator.getPropensityForOneList" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getPropensityForOneList</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">click_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_non_clicked_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.OraclePropensityEstimator.getPropensityForOneList" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computing the propensity weights for each result in a list with clicks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1130,9 +1132,9 @@ would have 0 weights.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.OraclePropensityEstimator.loadEstimatorFromFile">
-<code class="sig-name descname">loadEstimatorFromFile</code><span class="sig-paren">(</span><em class="sig-param">file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.OraclePropensityEstimator.loadEstimatorFromFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">loadEstimatorFromFile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.OraclePropensityEstimator.loadEstimatorFromFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a propensity estimator from a json file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1141,9 +1143,9 @@ would have 0 weights.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.OraclePropensityEstimator.outputEstimatorToFile">
-<code class="sig-name descname">outputEstimatorToFile</code><span class="sig-paren">(</span><em class="sig-param">file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.OraclePropensityEstimator.outputEstimatorToFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">outputEstimatorToFile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.OraclePropensityEstimator.outputEstimatorToFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Export a propensity estimator to a json file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1154,13 +1156,13 @@ would have 0 weights.</p></li>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.utils.propensity_estimator.RandomizedPropensityEstimator">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.utils.propensity_estimator.</code><code class="sig-name descname">RandomizedPropensityEstimator</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.RandomizedPropensityEstimator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.utils.propensity_estimator.</span></code><code class="sig-name descname"><span class="pre">RandomizedPropensityEstimator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.RandomizedPropensityEstimator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#ultra.utils.propensity_estimator.BasicPropensityEstimator" title="ultra.utils.propensity_estimator.BasicPropensityEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ultra.utils.propensity_estimator.BasicPropensityEstimator</span></code></a></p>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.RandomizedPropensityEstimator.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.RandomizedPropensityEstimator.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.RandomizedPropensityEstimator.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a propensity estimator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1170,9 +1172,9 @@ would have 0 weights.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.RandomizedPropensityEstimator.estimateParametersFromModel">
-<code class="sig-name descname">estimateParametersFromModel</code><span class="sig-paren">(</span><em class="sig-param">click_model</em>, <em class="sig-param">data_set</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.RandomizedPropensityEstimator.estimateParametersFromModel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">estimateParametersFromModel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">click_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.RandomizedPropensityEstimator.estimateParametersFromModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate propensity weights based on clicks simulated with a click model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1184,9 +1186,9 @@ would have 0 weights.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.RandomizedPropensityEstimator.loadEstimatorFromFile">
-<code class="sig-name descname">loadEstimatorFromFile</code><span class="sig-paren">(</span><em class="sig-param">file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.RandomizedPropensityEstimator.loadEstimatorFromFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">loadEstimatorFromFile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.RandomizedPropensityEstimator.loadEstimatorFromFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a propensity estimator from a json file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1195,9 +1197,9 @@ would have 0 weights.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.propensity_estimator.RandomizedPropensityEstimator.outputEstimatorToFile">
-<code class="sig-name descname">outputEstimatorToFile</code><span class="sig-paren">(</span><em class="sig-param">file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.RandomizedPropensityEstimator.outputEstimatorToFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">outputEstimatorToFile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.RandomizedPropensityEstimator.outputEstimatorToFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Export a propensity estimator to a json file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1208,17 +1210,17 @@ would have 0 weights.</p></li>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.propensity_estimator.main">
-<code class="sig-prename descclassname">ultra.utils.propensity_estimator.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.main" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.propensity_estimator.</span></code><code class="sig-name descname"><span class="pre">main</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.propensity_estimator.main" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
 <div class="section" id="module-ultra.utils.sys_tools">
 <span id="ultra-utils-sys-tools-module"></span><h2>ultra.utils.sys_tools module<a class="headerlink" href="#module-ultra.utils.sys_tools" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.sys_tools.create_object">
-<code class="sig-prename descclassname">ultra.utils.sys_tools.</code><code class="sig-name descname">create_object</code><span class="sig-paren">(</span><em class="sig-param">class_str</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.sys_tools.create_object" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.sys_tools.</span></code><code class="sig-name descname"><span class="pre">create_object</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.sys_tools.create_object" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the corresponding class based on a string of class name and create an object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1230,9 +1232,9 @@ would have 0 weights.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.sys_tools.find_class">
-<code class="sig-prename descclassname">ultra.utils.sys_tools.</code><code class="sig-name descname">find_class</code><span class="sig-paren">(</span><em class="sig-param">class_str</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.sys_tools.find_class" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.sys_tools.</span></code><code class="sig-name descname"><span class="pre">find_class</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.sys_tools.find_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the corresponding class based on a string of class name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1244,9 +1246,9 @@ would have 0 weights.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.utils.sys_tools.list_recursive_concrete_subclasses">
-<code class="sig-prename descclassname">ultra.utils.sys_tools.</code><code class="sig-name descname">list_recursive_concrete_subclasses</code><span class="sig-paren">(</span><em class="sig-param">base</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.sys_tools.list_recursive_concrete_subclasses" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.utils.sys_tools.</span></code><code class="sig-name descname"><span class="pre">list_recursive_concrete_subclasses</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.sys_tools.list_recursive_concrete_subclasses" title="Permalink to this definition">¶</a></dt>
 <dd><p>List all concrete subclasses of <cite>base</cite> recursively.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1258,29 +1260,29 @@ would have 0 weights.</p></li>
 </div>
 <div class="section" id="module-ultra.utils.team_draft_interleave">
 <span id="ultra-utils-team-draft-interleave-module"></span><h2>ultra.utils.team_draft_interleave module<a class="headerlink" href="#module-ultra.utils.team_draft_interleave" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.utils.team_draft_interleave.TeamDraftInterleaving">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.utils.team_draft_interleave.</code><code class="sig-name descname">TeamDraftInterleaving</code><a class="headerlink" href="#ultra.utils.team_draft_interleave.TeamDraftInterleaving" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.utils.team_draft_interleave.</span></code><code class="sig-name descname"><span class="pre">TeamDraftInterleaving</span></code><a class="headerlink" href="#ultra.utils.team_draft_interleave.TeamDraftInterleaving" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.team_draft_interleave.TeamDraftInterleaving.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.team_draft_interleave.TeamDraftInterleaving.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.team_draft_interleave.TeamDraftInterleaving.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.team_draft_interleave.TeamDraftInterleaving.infer_winner">
-<code class="sig-name descname">infer_winner</code><span class="sig-paren">(</span><em class="sig-param">clicks</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.team_draft_interleave.TeamDraftInterleaving.infer_winner" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">infer_winner</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clicks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.team_draft_interleave.TeamDraftInterleaving.infer_winner" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.team_draft_interleave.TeamDraftInterleaving.interleave">
-<code class="sig-name descname">interleave</code><span class="sig-paren">(</span><em class="sig-param">rankings</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.team_draft_interleave.TeamDraftInterleaving.interleave" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">interleave</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rankings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.team_draft_interleave.TeamDraftInterleaving.interleave" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.utils.team_draft_interleave.TeamDraftInterleaving.next_index_to_add">
-<code class="sig-name descname">next_index_to_add</code><span class="sig-paren">(</span><em class="sig-param">inter_result</em>, <em class="sig-param">inter_n</em>, <em class="sig-param">ranking</em>, <em class="sig-param">index</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.team_draft_interleave.TeamDraftInterleaving.next_index_to_add" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">next_index_to_add</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inter_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inter_n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranking</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.utils.team_draft_interleave.TeamDraftInterleaving.next_index_to_add" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1296,29 +1298,29 @@ would have 0 weights.</p></li>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="input_layer_reference.html" class="btn btn-neutral float-right" title="Input Layer Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="ultra.ranking_model.html" class="btn btn-neutral float-left" title="ultra.ranking_model package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="input_layer_reference.html" class="btn btn-neutral float-right" title="Input Layer Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ultra.ranking_model.html" class="btn btn-neutral float-left" title="ultra.ranking_model package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, ULTRA
+        &#169; Copyright 2020, ULTRA.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1326,7 +1328,6 @@ would have 0 weights.</p></li>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -60,13 +60,12 @@ class DLA(BaseAlgorithm):
 
     """
 
-    def __init__(self, data_set, exp_settings, forward_only=False):
+    def __init__(self, data_set, exp_settings):
         """Create the model.
 
         Args:
             data_set: (Raw_data) The dataset used to build the input layer.
             exp_settings: (dictionary) The dictionary containing the model settings.
-            forward_only: Set true to conduct prediction only, false to conduct training.
         """
         print('Build DLA')
 
@@ -122,7 +121,7 @@ class DLA(BaseAlgorithm):
         self.global_step = 0
 
         # Select logits to prob function
-        self.logits_to_prob = nn.Softmax(dim=1)
+        self.logits_to_prob = nn.Softmax(dim=-1)
         if self.hparams.logits_to_prob == 'sigmoid':
             self.logits_to_prob = sigmoid_prob
 
@@ -152,17 +151,17 @@ class DLA(BaseAlgorithm):
                 self.rank_loss += self.hparams.l2_loss * self.l2_loss(p)
         self.loss = self.exam_loss + self.hparams.ranker_loss_weight * self.rank_loss
 
-        opt_denoise = self.optimizer_func(denoise_params, self.propensity_learning_rate)
-        opt_ranker = self.optimizer_func(ranking_model_params, self.learning_rate)
+        opt_denoise = self.optimizer_func(self.propensity_model.parameters(), self.propensity_learning_rate)
+        opt_ranker = self.optimizer_func(self.model.parameters(), self.learning_rate)
 
-        opt_denoise.zero_grad(set_to_none=True)
-        opt_ranker.zero_grad(set_to_none=True)
+        opt_denoise.zero_grad()
+        opt_ranker.zero_grad()
 
         self.loss.backward()
 
         if self.hparams.max_gradient_norm > 0:
-            nn.utils.clip_grad_norm_(denoise_params, self.hparams.max_gradient_norm)
-            nn.utils.clip_grad_norm_(ranking_model_params, self.hparams.max_gradient_norm)
+            nn.utils.clip_grad_norm_(self.propensity_model.parameters(), self.hparams.max_gradient_norm)
+            nn.utils.clip_grad_norm_(self.model.parameters(), self.hparams.max_gradient_norm)
 
         opt_denoise.step()
         opt_ranker.step()
@@ -198,14 +197,14 @@ class DLA(BaseAlgorithm):
         propensity_labels = torch.transpose(self.labels,0,1)
         self.propensity = self.propensity_model(
             propensity_labels)
-
-        self.propensity_weights = self.get_normalized_weights(
-            self.logits_to_prob(self.propensity))
+        with torch.no_grad():
+            self.propensity_weights = self.get_normalized_weights(
+                self.logits_to_prob(self.propensity))
         self.rank_loss = self.loss_func(
             train_output, self.labels, self.propensity_weights)
-        pw_list = torch.unbind(
-            self.propensity_weights,
-            dim=1)  # Compute propensity weights
+        # pw_list = torch.unbind(
+        #     self.propensity_weights,
+        #     dim=1)  # Compute propensity weights
         # for i in range(len(pw_list)):
         #     self.create_summary('Inverse Propensity weights %d' % i,
         #                         'Inverse Propensity weights %d at global step %d' % (i, self.global_step),
@@ -215,22 +214,23 @@ class DLA(BaseAlgorithm):
         #                     True)
 
         # Compute examination loss
-        self.relevance_weights = self.get_normalized_weights(
-            self.logits_to_prob(train_output))
+        with torch.no_grad():
+            self.relevance_weights = self.get_normalized_weights(
+                self.logits_to_prob(train_output))
         self.exam_loss = self.loss_func(
             self.propensity,
             self.labels,
             self.relevance_weights)
-        rw_list = torch.unbind(
-            self.relevance_weights,
-            dim=1)  # Compute propensity weights
-        for i in range(len(rw_list)):
-            self.create_summary('Relevance weights %d' % i,
-                                'Relevance weights %d at global step %d' %(i, self.global_step),
-                                torch.mean(rw_list[i]), True)
-
-        self.create_summary('Exam Loss', 'Exam Loss at global step %d' % self.global_step, torch.mean(self.exam_loss),
-                            True)
+        # rw_list = torch.unbind(
+        #     self.relevance_weights,
+        #     dim=1)  # Compute propensity weights
+        # for i in range(len(rw_list)):
+        #     self.create_summary('Relevance weights %d' % i,
+        #                         'Relevance weights %d at global step %d' %(i, self.global_step),
+        #                         torch.mean(rw_list[i]), True)
+        #
+        # self.create_summary('Exam Loss', 'Exam Loss at global step %d' % self.global_step, torch.mean(self.exam_loss),
+        #                     True)
 
         # Gradients and SGD update operation for training the model.
         self.loss = self.exam_loss + self.hparams.ranker_loss_weight * self.rank_loss
@@ -259,28 +259,30 @@ class DLA(BaseAlgorithm):
         #                             'Weighted_%s_%d at global step %d' % (metric, topn, self.global_step),
         #                             weighted_metric_value, True)
         # loss, no outputs, summary.
-        print(" Loss %f at Global Step %d: " % (self.loss.item(),self.global_step))
+        # print(" Loss %f at Global Step %d: " % (self.loss.item(),self.global_step))
+        print(" Loss %f at Global Step %d: " % (self.loss.item(), self.global_step))
         self.global_step+=1
         return self.loss, None, self.train_summary
 
-    def validation(self, input_feed):
+    def validation(self, input_feed, is_online_simulation=False):
         self.model.eval()
         self.create_input_feed(input_feed, self.max_candidate_num)
         with torch.no_grad():
             self.output = self.ranking_model(self.model,
                                              self.max_candidate_num)
-        pad_removed_output = self.remove_padding_for_metric_eval(
-            self.docid_inputs, self.output)
-        # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
-        for metric in self.exp_settings['metrics']:
-            for topn in self.exp_settings['metrics_topn']:
-                metric_value = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(self.labels, pad_removed_output, None)
-                # self.writer.add_scalar(
-                #     '%s_%d' %
-                #     (metric, topn), metric_value)
-                self.eval_summary['%s_%d' %
-                    (metric, topn)] = metric_value
+        if not is_online_simulation:
+            pad_removed_output = self.remove_padding_for_metric_eval(
+                self.docid_inputs, self.output)
+            # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
+            for metric in self.exp_settings['metrics']:
+                for topn in self.exp_settings['metrics_topn']:
+                    metric_value = ultra.utils.make_ranking_metric_fn(
+                        metric, topn)(self.labels, pad_removed_output, None)
+                    # self.writer.add_scalar(
+                    #     '%s_%d' %
+                    #     (metric, topn), metric_value)
+                    self.eval_summary['%s_%d' %
+                        (metric, topn)] = metric_value
         return None, self.output, self.eval_summary # no loss, outputs, summary.
 
     def get_normalized_weights(self, propensity):

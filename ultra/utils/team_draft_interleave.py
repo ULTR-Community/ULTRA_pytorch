@@ -51,3 +51,4 @@ class TeamDraftInterleaving():
         # print (click_matrix)
         ranker_clicks = np.sum(click_matrix, axis=1)
         return ranker_clicks / (np.sum(ranker_clicks) + 0.0000001)
+

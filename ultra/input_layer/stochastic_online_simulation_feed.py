@@ -11,8 +11,6 @@ from __future__ import division
 from __future__ import print_function
 
 import random
-import sys
-import time
 import json
 import numpy as np
 from ultra.input_layer import BaseInputFeed
@@ -111,15 +109,10 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
 
         """
         # Compute ranking scores with input_feed
-        rank_scores = self.model.validation(input_feed)[0]
+        rank_scores = self.model.validation(input_feed, True)[1]
         # Rerank documents and collect clicks
         letor_features_length = len(input_feed[self.model.letor_features_name])
         local_batch_size = len(input_feed[self.model.docid_inputs_name[0]])
-
-        if self.need_interleave:
-            input_feed[self.model.winners_name] = [
-                None for _ in range(local_batch_size)]
-
         for i in range(local_batch_size):
             # Get valid doc index
             valid_idx = self.max_candidate_num - 1
@@ -134,6 +127,7 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
                 scores = score_list[:list_len]
                 scores = scores - max(scores)
                 exp_scores = np.exp(self.hparams.tau * scores)
+                exp_scores = exp_scores.numpy()
                 probs = exp_scores / np.sum(exp_scores)
                 re_list = np.random.choice(np.arange(list_len),
                                            replace=False,
@@ -148,19 +142,7 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
                 re_list = np.append(re_list, unused_indexs).astype(int)
                 return re_list
 
-            rerank_list = None
-            if self.need_interleave:
-                # Rerank documents via interleaving
-                rank_lists = []
-                for j in range(len(rank_scores)):
-                    scores = rank_scores[j][i][:list_len].cpu()
-                    rank_list = plackett_luce_sampling(scores)
-                    rank_lists.append(rank_list)
-
-                rerank_list = self.interleaving.interleave(
-                    np.asarray(rank_lists))
-            else:
-                rerank_list = plackett_luce_sampling(rank_scores[i])
+            rerank_list = plackett_luce_sampling(rank_scores[i])
 
             # Rerank documents
             new_docid_list = np.zeros(list_len)
@@ -188,12 +170,6 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
                     input_feed[self.model.labels_name[j]][i] = click_list[j]
                 else:
                     input_feed[self.model.labels_name[j]][i] = 0
-
-            if self.need_interleave:
-                # Infer winner in interleaving
-                input_feed[self.model.winners_name][i] = self.interleaving.infer_winner(
-                    click_list)
-
         return input_feed
 
     def get_batch(self, data_set, check_validation=False):

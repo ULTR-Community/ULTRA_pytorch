@@ -28,7 +28,7 @@ setup(
     ],
     install_requires=[
         #'keras >= 2.0.5',
-        'tensorflow-gpu >= 1.1.0,<2',
+        'torch==1.9.0+cu102',
         'numpy >= 1.12.1',
         'six >= 1.10.0',
         'scipy >= 1.0.0',

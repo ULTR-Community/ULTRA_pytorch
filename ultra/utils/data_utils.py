@@ -18,8 +18,7 @@ import json
 import random
 import os
 from . import metrics
-import tensorflow as tf
-from tensorflow.core.framework import summary_pb2
+
 
 
 class Raw_data:
@@ -360,12 +359,6 @@ def merge_Summary(summary_list, weights):
     for k in merged_values:
         merged_values[k] /= max(0.0000001, weight_sum_map[k])
     return merged_values
-
-
-def parse_TFSummary_from_bytes(summary_bytes):
-    summary = summary_pb2.Summary()
-    summary.ParseFromString(summary_bytes)
-    return {x.tag: x.simple_value for x in summary.value}
 
 
 def read_data(data_path, file_prefix, rank_cut=None):

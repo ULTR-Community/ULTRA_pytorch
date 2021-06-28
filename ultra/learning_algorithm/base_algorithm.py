@@ -57,20 +57,6 @@ class BaseAlgorithm(ABC):
         pass
 
 
-    # def step(self, session, input_feed, forward_only):
-    #     """Run a step of the model feeding the given inputs.
-    #
-    #     Args:
-    #         session: (tf.Session) tensorflow session to use.
-    #         input_feed: (dictionary) A dictionary containing all the input feed data.
-    #         forward_only: whether to do the backward step (False) or only forward (True).
-    #
-    #     Returns:
-    #         A triple consisting of the loss, outputs (None if we do backward),
-    #         and a tf.summary containing related information about the step.
-    #
-    #     """
-    #     pass
     @abstractmethod
     def train(self, input_feed):
         """Run a step of the model feeding the given inputs for training.
@@ -80,7 +66,7 @@ class BaseAlgorithm(ABC):
 
         Returns:
             A triple consisting of the loss, outputs (None if we do backward),
-            and a tf.summary containing related information about the step.
+            and a summary containing related information about the step.
 
         """
         pass
@@ -94,7 +80,7 @@ class BaseAlgorithm(ABC):
 
         Returns:
             A triple consisting of the loss, outputs (None if we do backward),
-            and a tf.summary containing related information about the step.
+            and a summary containing related information about the step.
 
         """
         pass
@@ -251,9 +237,6 @@ class BaseAlgorithm(ABC):
             propensity_weights = torch.ones_like(pos_scores)
         label_dis = torch.cat(
             [torch.ones_like(pos_scores), torch.zeros_like(neg_scores)], dim=1)
-        # loss = tf.nn.softmax_cross_entropy_with_logits(
-        #     logits=torch.cat([pos_scores, neg_scores], axis=1), labels=label_dis
-        # ) * propensity_weights
         loss = softmax_cross_entropy_with_logits(
             logits = torch.cat([pos_scores, neg_scores], dim=1), labels = label_dis)* propensity_weights
         return loss
@@ -315,28 +298,27 @@ class BaseAlgorithm(ABC):
                     loss = cur_label_weight * cur_pair_loss
                 loss += cur_label_weight * cur_pair_loss * cur_propensity
         batch_size = labels.size()[0]
-        # / (tf.reduce_sum(propensity_weights)+1)
         return torch.sum(loss) / batch_size.type(torch.float32)
 
     def softmax_loss(self, output, labels, propensity_weights=None):
         """Computes listwise softmax loss without propensity weighting.
 
         Args:
-            output: (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is
+            output: (torch.Tensor) A tensor with shape [batch_size, list_size]. Each value is
             the ranking score of the corresponding example.
-            labels: (tf.Tensor) A tensor of the same shape as `output`. A value >= 1 means a
+            labels: (torch.Tensor) A tensor of the same shape as `output`. A value >= 1 means a
             relevant example.
-            propensity_weights: (tf.Tensor) A tensor of the same shape as `output` containing the weight of each element.
+            propensity_weights: (torch.Tensor) A tensor of the same shape as `output` containing the weight of each element.
 
         Returns:
-            (tf.Tensor) A single value tensor containing the loss.
+            (torch.Tensor) A single value tensor containing the loss.
         """
         if propensity_weights is None:
             propensity_weights = torch.ones_like(labels)
         weighted_labels = (labels + 0.0000001) * propensity_weights
         label_dis = weighted_labels / \
             torch.sum(weighted_labels, 1, keepdim=True)
-        label_dis[label_dis!=label_dis] = 0
+        label_dis = torch.nan_to_num(label_dis)
         loss = softmax_cross_entropy_with_logits(
             logits = output, labels = label_dis)* torch.sum(weighted_labels, 1)
         return torch.sum(loss) / torch.sum(weighted_labels)

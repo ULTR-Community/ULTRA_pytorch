@@ -61,18 +61,3 @@ each query-document pair and a predefined click model.
 Hyper Parameters
 ****************
 
-InterleavingDeterministicOnlineSimulationFeed
-#############################################
-
-Description
-***********
-
-Simulate online learning to rank and click data based on human annotations.
-
-This class implements a input layer for online learning to rank experiments
-by simulating click data based on both the human relevance annotation of
-each query-document pair and a predefined click model.
-
-Hyper Parameters
-****************
-

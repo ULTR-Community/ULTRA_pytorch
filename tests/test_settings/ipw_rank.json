@@ -1,5 +1,5 @@
 {
-    "train_input_feed":"ultra.input_layer.ClickSimulationFeed",
+    "train_input_feed":"ultra.input_layer.DeterministicOnlineSimulationFeed",
     "train_input_hparams":"",
     "valid_input_feed":"ultra.input_layer.DirectLabelFeed",
     "valid_input_hparams":"",
@@ -13,8 +13,8 @@
     "learning_algorithm_hparams":"",
 
     "metrics": [
-        "mrr", "ndcg"
+        "err", "ndcg"
     ],
-    "metrics_topn" : [3,5,10],
+    "metrics_topn" : [1,3,5,10],
     "objective_metric": "ndcg_10"
 }

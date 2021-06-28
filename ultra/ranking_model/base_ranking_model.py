@@ -73,14 +73,6 @@ class BaseRankingModel(ABC, nn.Module):
         NormalizationFunctions.LAYER: F.layer_norm
     }
 
-    # INITIALIZER_DIC = {
-    #     Initializer.CONSTANT: tf.constant_initializer(0.001)
-    # }
-
-    INITIALIZER_DIC = {
-        Initializer.CONSTANT: 0.001
-    }
-
     model_parameters = {}
 
     @abstractmethod

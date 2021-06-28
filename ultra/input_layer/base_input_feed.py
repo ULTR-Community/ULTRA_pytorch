@@ -7,19 +7,6 @@ from __future__ import division
 from __future__ import print_function
 from abc import ABC, abstractmethod
 
-import math
-import os
-import random
-import sys
-import time
-import json
-import numpy as np
-import ultra.utils.click_models as cm
-import tensorflow as tf
-# We disable pylint because we need python3 compatibility.
-from six.moves import zip     # pylint: disable=redefined-builtin
-
-
 class BaseInputFeed(ABC):
     """
 

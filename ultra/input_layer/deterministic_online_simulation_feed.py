@@ -10,10 +10,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import math
-import os
 import random
-import sys
 import time
 import json
 import numpy as np
@@ -113,14 +110,11 @@ class DeterministicOnlineSimulationFeed(BaseInputFeed):
 
         """
         # Compute ranking scores with input_feed
-        rank_scores = self.model.validation(input_feed)[0]
+        rank_scores = self.model.validation(input_feed, True)[1]
         # Rerank documents and collect clicks
         letor_features_length = len(input_feed[self.model.letor_features_name])
         local_batch_size = len(input_feed[self.model.docid_inputs_name[0]])
 
-        if self.need_interleave:
-            input_feed[self.model.winners_name] = [
-                None for _ in range(local_batch_size)]
 
         for i in range(local_batch_size):
             # Get valid doc index
@@ -132,27 +126,12 @@ class DeterministicOnlineSimulationFeed(BaseInputFeed):
             list_len = valid_idx + 1
 
             # Rerank documents
-            if self.need_interleave:
-                # Rerank documents via interleaving
-                rank_lists = []
-                for j in range(len(rank_scores)):
-                    scores = rank_scores[j][i][:list_len]
-                    rank_list = sorted(
-                        range(
-                            len(scores)),
-                        key=lambda k: scores[k],
-                        reverse=True)
-                    rank_lists.append(rank_list)
-
-                rerank_list = self.interleaving.interleave(
-                    np.asarray(rank_lists))
-            else:
-                scores = rank_scores[i][:list_len]
-                rerank_list = sorted(
-                    range(
-                        len(scores)),
-                    key=lambda k: scores[k],
-                    reverse=True)
+            scores = rank_scores[i][:list_len]
+            rerank_list = sorted(
+                range(
+                    len(scores)),
+                key=lambda k: scores[k],
+                reverse=True)
 
             new_docid_list = np.zeros(list_len)
             new_label_list = np.zeros(list_len)
@@ -171,6 +150,7 @@ class DeterministicOnlineSimulationFeed(BaseInputFeed):
                     click_list, _, _ = self.click_model.sampleClicksForOneList(
                         new_label_list[:self.rank_list_size])
                     sample_count += 1
+
             # update input_feed
             for j in range(list_len):
                 input_feed[self.model.docid_inputs_name[j]][i] = new_docid_list[j]
@@ -178,11 +158,6 @@ class DeterministicOnlineSimulationFeed(BaseInputFeed):
                     input_feed[self.model.labels_name[j]][i] = click_list[j]
                 else:
                     input_feed[self.model.labels_name[j]][i] = 0
-
-            if self.need_interleave:
-                # Infer winner in interleaving
-                input_feed[self.model.winners_name][i] = self.interleaving.infer_winner(
-                    click_list)
 
         return input_feed
 

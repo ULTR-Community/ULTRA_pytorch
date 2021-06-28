@@ -31,9 +31,6 @@ class Linear( nn.Module):
         self.output_sizes = [1]
         self.sequential = nn.Sequential().to(dtype=torch.float32)
 
-        if self.hparams.initializer in BaseRankingModel.INITIALIZER_DIC:
-            self.initializer = BaseRankingModel.INITIALIZER_DIC[self.hparams.initializer]
-
         for j in range(len(self.output_sizes)):
             if self.layer_norm is None and self.hparams.norm in BaseRankingModel.NORM_FUNC_DIC:
                 if self.hparams.norm == "layer":

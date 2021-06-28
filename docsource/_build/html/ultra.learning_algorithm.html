@@ -1,39 +1,44 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>ultra.learning_algorithm package &mdash; ULTRA 0.2beta documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="ultra.ranking_model package" href="ultra.ranking_model.html" />
@@ -78,6 +83,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -109,6 +115,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -143,11 +150,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="modules.html">ultra</a> &raquo;</li>
         
@@ -158,7 +167,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/ultra.learning_algorithm.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -204,43 +213,86 @@
 <div class="section" id="module-ultra.learning_algorithm.base_algorithm">
 <span id="ultra-learning-algorithm-base-algorithm-module"></span><h2>ultra.learning_algorithm.base_algorithm module<a class="headerlink" href="#module-ultra.learning_algorithm.base_algorithm" title="Permalink to this headline">¶</a></h2>
 <p>The basic class that contains all the API needed for the implementation of an unbiased learning to rank algorithm.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.learning_algorithm.base_algorithm.</code><code class="sig-name descname">BaseAlgorithm</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.base_algorithm.</span></code><code class="sig-name descname"><span class="pre">BaseAlgorithm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>The basic class that contains all the API needed for the
 implementation of an unbiased learning to rank algorithm.</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.PADDING_SCORE">
-<code class="sig-name descname">PADDING_SCORE</code><em class="property"> = -100000</em><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.PADDING_SCORE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">PADDING_SCORE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">-100000</span></em><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.PADDING_SCORE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.__init__">
-<em class="property">abstract </em><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.__init__" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span> </em><code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_set</strong> – (Raw_data) The dataset used to build the input layer.</p></li>
 <li><p><strong>exp_settings</strong> – (dictionary) The dictionary containing the model settings.</p></li>
-<li><p><strong>forward_only</strong> – Set true to conduct prediction only, false to conduct training.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.create_input_feed">
+<code class="sig-name descname"><span class="pre">create_input_feed</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.create_input_feed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the input from input_feed to run the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p></li>
+<li><p><strong>list_size</strong> – (int) The top number of documents to consider in the input docids.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.create_model">
+<code class="sig-name descname"><span class="pre">create_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.create_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the ranking model.</p>
+<dl class="simple">
+<dt>Returns</dt><dd><p>The ranking model that will be used to computer the ranking score.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.create_summary">
+<code class="sig-name descname"><span class="pre">create_summary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scalar_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summarize_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_training</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.create_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summarize the result of an operation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scalar_name</strong> – (str) A string used as the name for the result of the operation to add to Tensorboard.</p></li>
+<li><p><strong>summarize_name</strong> – (str) A string used as the name for the summarization of the operation.</p></li>
+<li><p><strong>value</strong> – The value of the result of the operation.</p></li>
+<li><p><strong>is_training</strong> – (Boolean) if the model is in training mode or eval mode.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Returns</dt><dd><p>The ranking model that will be used to computer the ranking score.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.get_ranking_scores">
-<code class="sig-name descname">get_ranking_scores</code><span class="sig-paren">(</span><em class="sig-param">input_id_list</em>, <em class="sig-param">is_training=False</em>, <em class="sig-param">scope=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.get_ranking_scores" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_ranking_scores</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_id_list</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.get_ranking_scores" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute ranking scores with the given inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_id_list</strong> – (list&lt;tf.Tensor&gt;) A list of tensors containing document ids.
+<li><p><strong>model</strong> – (BaseRankingModel) The model that is used to compute the ranking score.</p></li>
+<li><p><strong>input_id_list</strong> – (list&lt;torch.Tensor&gt;) A list of tensors containing document ids.
 Each tensor must have a shape of [None].</p></li>
 <li><p><strong>is_training</strong> – (bool) A flag indicating whether the model is running in training mode.</p></li>
-<li><p><strong>scope</strong> – (string) The name of the variable scope.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -249,33 +301,77 @@ Each tensor must have a shape of [None].</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.pairwise_cross_entropy_loss">
-<code class="sig-name descname">pairwise_cross_entropy_loss</code><span class="sig-paren">(</span><em class="sig-param">pos_scores</em>, <em class="sig-param">neg_scores</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.pairwise_cross_entropy_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes pairwise softmax loss without propensity weighting.</p>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.l2_loss">
+<code class="sig-name descname"><span class="pre">l2_loss</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.l2_loss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.opt_step">
+<code class="sig-name descname"><span class="pre">opt_step</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.opt_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform an optimization step</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pos_scores</strong> – (tf.Tensor) A tensor with shape [batch_size, 1]. Each value is</p></li>
-<li><p><strong>ranking score of a positive example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>neg_scores</strong> – (tf.Tensor) A tensor with shape [batch_size, 1]. Each value is</p></li>
-<li><p><strong>ranking score of a negative example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
+<li><p><strong>opt</strong> – Optimization Function to use</p></li>
+<li><p><strong>params</strong> – Model’s parameters</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
+</dl>
+<dl class="simple">
+<dt>Returns</dt><dd><p>The ranking model that will be used to computer the ranking score.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.pairwise_cross_entropy_loss">
+<code class="sig-name descname"><span class="pre">pairwise_cross_entropy_loss</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neg_scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propensity_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.pairwise_cross_entropy_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes pairwise softmax loss without propensity weighting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_scores</strong> – (torch.Tensor) A tensor with shape [batch_size, 1]. Each value is</p></li>
+<li><p><strong>ranking score of a positive example.</strong> (<em>the</em>) – </p></li>
+<li><p><strong>neg_scores</strong> – (torch.Tensor) A tensor with shape [batch_size, 1]. Each value is</p></li>
+<li><p><strong>ranking score of a negative example.</strong> (<em>the</em>) – </p></li>
+<li><p><strong>propensity_weights</strong> – (torch.Tensor) A tensor of the same shape as <cite>output</cite> containing the weight of each element.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(torch.Tensor) A single value tensor containing the loss.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.pairwise_loss_on_list">
+<code class="sig-name descname"><span class="pre">pairwise_loss_on_list</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propensity_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.pairwise_loss_on_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes pairwise entropy loss.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – (torch.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
+<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
+<li><p><strong>labels</strong> – (torch.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a
+relevant example.</p></li>
+<li><p><strong>propensity_weights</strong> – (torch.Tensor) A tensor of the same shape as <cite>output</cite> containing the weight of each element.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(torch.Tensor) A single value tensor containing the loss.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.ranking_model">
-<code class="sig-name descname">ranking_model</code><span class="sig-paren">(</span><em class="sig-param">list_size</em>, <em class="sig-param">scope=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.ranking_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">ranking_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.ranking_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct ranking model with the given list size.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – (BaseRankingModel) The model that is used to compute the ranking score.</p></li>
 <li><p><strong>list_size</strong> – (int) The top number of documents to consider in the input docids.</p></li>
 <li><p><strong>scope</strong> – (string) The name of the variable scope.</p></li>
 </ul>
@@ -286,30 +382,100 @@ Each tensor must have a shape of [None].</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.remove_padding_for_metric_eval">
-<code class="sig-name descname">remove_padding_for_metric_eval</code><span class="sig-paren">(</span><em class="sig-param">input_id_list</em>, <em class="sig-param">model_output</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.remove_padding_for_metric_eval" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">remove_padding_for_metric_eval</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_id_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.remove_padding_for_metric_eval" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.step">
-<em class="property">abstract </em><code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">session</em>, <em class="sig-param">input_feed</em>, <em class="sig-param">forward_only</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.step" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a step of the model feeding the given inputs.</p>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.sigmoid_loss_on_list">
+<code class="sig-name descname"><span class="pre">sigmoid_loss_on_list</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propensity_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.sigmoid_loss_on_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes pointwise sigmoid loss without propensity weighting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>session</strong> – (tf.Session) tensorflow session to use.</p></li>
-<li><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p></li>
-<li><p><strong>forward_only</strong> – whether to do the backward step (False) or only forward (True).</p></li>
+<li><p><strong>output</strong> – (torch.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
+<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
+<li><p><strong>labels</strong> – (torch.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a</p></li>
+<li><p><strong>example.</strong> (<em>relevant</em>) – </p></li>
+<li><p><strong>propensity_weights</strong> – (torch.Tensor) A tensor of the same shape as <cite>output</cite> containing the weight of each element.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
-and a tf.summary containing related information about the step.</p>
+<dd class="field-even"><p>(torch.Tensor) A single value tensor containing the loss.</p>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.softmax_loss">
+<code class="sig-name descname"><span class="pre">softmax_loss</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propensity_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.softmax_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes listwise softmax loss without propensity weighting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – (torch.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
+<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
+<li><p><strong>labels</strong> – (torch.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a</p></li>
+<li><p><strong>example.</strong> (<em>relevant</em>) – </p></li>
+<li><p><strong>propensity_weights</strong> – (torch.Tensor) A tensor of the same shape as <cite>output</cite> containing the weight of each element.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(torch.Tensor) A single value tensor containing the loss.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.train">
+<em class="property"><span class="pre">abstract</span> </em><code class="sig-name descname"><span class="pre">train</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
+and a summary containing related information about the step.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.base_algorithm.BaseAlgorithm.validation">
+<em class="property"><span class="pre">abstract</span> </em><code class="sig-name descname"><span class="pre">validation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm.validation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for validating process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
+and a summary containing related information about the step.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="ultra.learning_algorithm.base_algorithm.softmax_cross_entropy_with_logits">
+<code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.base_algorithm.</span></code><code class="sig-name descname"><span class="pre">softmax_cross_entropy_with_logits</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.base_algorithm.softmax_cross_entropy_with_logits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes softmax cross entropy between logits and labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – A tensor with shape [batch_size, list_size]. Each value is</p></li>
+<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
+<li><p><strong>labels</strong> – A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a</p></li>
+<li><p><strong>example.</strong> (<em>relevant</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A single value tensor containing the loss.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -322,9 +488,9 @@ and a tf.summary containing related information about the step.</p>
 <li><p>Yisong Yue and Thorsten Joachims. 2009. Interactively optimizing information retrieval systems as a dueling bandits problem. In ICML. 1201–1208.</p></li>
 </ul>
 </div></blockquote>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.learning_algorithm.dbgd.DBGD">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.learning_algorithm.dbgd.</code><code class="sig-name descname">DBGD</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.dbgd.</span></code><code class="sig-name descname"><span class="pre">DBGD</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm" title="ultra.learning_algorithm.base_algorithm.BaseAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ultra.learning_algorithm.base_algorithm.BaseAlgorithm</span></code></a></p>
 <p>The Dueling Bandit Gradient Descent (DBGD) algorithm for unbiased learning to rank.</p>
 <p>This class implements the Dueling Bandit Gradient Descent (DBGD) algorithm based on the input layer
@@ -332,36 +498,66 @@ feed. See the following paper for more information on the algorithm.</p>
 <ul class="simple">
 <li><p>Yisong Yue and Thorsten Joachims. 2009. Interactively optimizing information retrieval systems as a dueling bandits problem. In ICML. 1201–1208.</p></li>
 </ul>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.dbgd.DBGD.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_set</strong> – (Raw_data) The dataset used to build the input layer.</p></li>
 <li><p><strong>exp_settings</strong> – (dictionary) The dictionary containing the model settings.</p></li>
-<li><p><strong>forward_only</strong> – Set true to conduct prediction only, false to conduct training.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.dbgd.DBGD.step">
-<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">session</em>, <em class="sig-param">input_feed</em>, <em class="sig-param">forward_only</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD.step" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a step of the model feeding the given inputs.</p>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dbgd.DBGD.click_simulation_winners">
+<code class="sig-name descname"><span class="pre">click_simulation_winners</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_scores</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD.click_simulation_winners" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dbgd.DBGD.compute_gradient">
+<code class="sig-name descname"><span class="pre">compute_gradient</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">final_winners</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noisy_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD.compute_gradient" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dbgd.DBGD.create_new_output_list">
+<code class="sig-name descname"><span class="pre">create_new_output_list</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noisy_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD.create_new_output_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dbgd.DBGD.create_noisy_param">
+<code class="sig-name descname"><span class="pre">create_noisy_param</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD.create_noisy_param" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dbgd.DBGD.train">
+<code class="sig-name descname"><span class="pre">train</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for training process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>session</strong> – (tf.Session) tensorflow session to use.</p></li>
-<li><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p></li>
-<li><p><strong>forward_only</strong> – whether to do the backward step (False) or only forward (True).</p></li>
-</ul>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
 and a tf.summary containing related information about the step.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dbgd.DBGD.validation">
+<code class="sig-name descname"><span class="pre">validation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_online_simulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dbgd.DBGD.validation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for validating process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
+and a summary containing related information about the step.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -381,9 +577,9 @@ and a tf.summary containing related information about the step.</p>
 <li><p>Qingyao Ai, Keping Bi, Cheng Luo, Jiafeng Guo, W. Bruce Croft. 2018. Unbiased Learning to Rank with Unbiased Propensity Estimation. In Proceedings of SIGIR ‘18</p></li>
 </ul>
 </div></blockquote>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.learning_algorithm.dla.DLA">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.learning_algorithm.dla.</code><code class="sig-name descname">DLA</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.dla.</span></code><code class="sig-name descname"><span class="pre">DLA</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm" title="ultra.learning_algorithm.base_algorithm.BaseAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ultra.learning_algorithm.base_algorithm.BaseAlgorithm</span></code></a></p>
 <p>The Dual Learning Algorithm for unbiased learning to rank.</p>
 <p>This class implements the Dual Learning Algorithm (DLA) based on the input layer
@@ -391,93 +587,44 @@ feed. See the following paper for more information on the algorithm.</p>
 <ul class="simple">
 <li><p>Qingyao Ai, Keping Bi, Cheng Luo, Jiafeng Guo, W. Bruce Croft. 2018. Unbiased Learning to Rank with Unbiased Propensity Estimation. In Proceedings of SIGIR ‘18</p></li>
 </ul>
-<dl class="method">
-<dt id="ultra.learning_algorithm.dla.DLA.DenoisingNet">
-<code class="sig-name descname">DenoisingNet</code><span class="sig-paren">(</span><em class="sig-param">list_size</em>, <em class="sig-param">forward_only=False</em>, <em class="sig-param">scope=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.DenoisingNet" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.dla.DLA.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_set</strong> – (Raw_data) The dataset used to build the input layer.</p></li>
 <li><p><strong>exp_settings</strong> – (dictionary) The dictionary containing the model settings.</p></li>
-<li><p><strong>forward_only</strong> – Set true to conduct prediction only, false to conduct training.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.dla.DLA.click_weighted_log_loss">
-<code class="sig-name descname">click_weighted_log_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">propensity_weights</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.click_weighted_log_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes pointwise sigmoid loss with propensity weighting.</p>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dla.DLA.clip_grad_value">
+<code class="sig-name descname"><span class="pre">clip_grad_value</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_value_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_value_max</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.clip_grad_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clips gradient of an iterable of parameters at specified value.</p>
+<p>Gradients are modified in-place.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a</p></li>
-<li><p><strong>example.</strong> (<em>relevant</em>) – </p></li>
-<li><p><strong>propensity_weights</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite> containing the weight of each element.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
+<li><p><strong>parameters</strong> (<em>Iterable</em><em>[</em><em>Tensor</em><em>] or </em><em>Tensor</em>) – an iterable of Tensors or a
+single Tensor that will have gradients normalized</p></li>
+<li><p><strong>clip_value</strong> (<em>float</em><em> or </em><em>int</em>) – maximum allowed value of the gradients.
+The gradients are clipped in the range
+<span class="math notranslate nohighlight">\(\left[\text{-clip\_value}, \text{clip\_value}\right]\)</span></p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.dla.DLA.click_weighted_pairwise_loss">
-<code class="sig-name descname">click_weighted_pairwise_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">propensity_weights</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.click_weighted_pairwise_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes pairwise entropy loss with propensity weighting.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a
-relevant example.</p></li>
-<li><p><strong>propensity_weights</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite> containing the weight of each element.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.
-(tf.Tensor) A tensor containing the propensity weights.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="ultra.learning_algorithm.dla.DLA.click_weighted_softmax_cross_entropy_loss">
-<code class="sig-name descname">click_weighted_softmax_cross_entropy_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">propensity_weights</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.click_weighted_softmax_cross_entropy_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes listwise softmax loss with propensity weighting.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a</p></li>
-<li><p><strong>example.</strong> (<em>relevant</em>) – </p></li>
-<li><p><strong>propensity_weights</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite> containing the weight of each element.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.dla.DLA.get_normalized_weights">
-<code class="sig-name descname">get_normalized_weights</code><span class="sig-paren">(</span><em class="sig-param">propensity</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.get_normalized_weights" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_normalized_weights</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">propensity</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.get_normalized_weights" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes listwise softmax loss with propensity weighting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -489,43 +636,18 @@ relevant example.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.dla.DLA.separate_gradient_update">
-<code class="sig-name descname">separate_gradient_update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.separate_gradient_update" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">separate_gradient_update</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.separate_gradient_update" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.dla.DLA.softmax_loss">
-<code class="sig-name descname">softmax_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">propensity=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.softmax_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes listwise softmax loss without propensity weighting.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a</p></li>
-<li><p><strong>example.</strong> (<em>relevant</em>) – </p></li>
-<li><p><strong>propensity</strong> – No use.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="ultra.learning_algorithm.dla.DLA.step">
-<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">session</em>, <em class="sig-param">input_feed</em>, <em class="sig-param">forward_only</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.step" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dla.DLA.train">
+<code class="sig-name descname"><span class="pre">train</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.train" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a step of the model feeding the given inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>session</strong> – (tf.Session) tensorflow session to use.</p></li>
-<li><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p></li>
-<li><p><strong>forward_only</strong> – whether to do the backward step (False) or only forward (True).</p></li>
-</ul>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
@@ -534,11 +656,57 @@ and a tf.summary containing related information about the step.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dla.DLA.validation">
+<code class="sig-name descname"><span class="pre">validation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_online_simulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DLA.validation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for validating process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
+and a summary containing related information about the step.</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="function">
+</dd></dl>
+
+<dl class="py class">
+<dt id="ultra.learning_algorithm.dla.DenoisingNet">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.dla.</span></code><code class="sig-name descname"><span class="pre">DenoisingNet</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_vec_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DenoisingNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dla.DenoisingNet.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_vec_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DenoisingNet.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.dla.DenoisingNet.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.DenoisingNet.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ultra.learning_algorithm.dla.DenoisingNet.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#ultra.learning_algorithm.dla.DenoisingNet.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
 <dt id="ultra.learning_algorithm.dla.sigmoid_prob">
-<code class="sig-prename descclassname">ultra.learning_algorithm.dla.</code><code class="sig-name descname">sigmoid_prob</code><span class="sig-paren">(</span><em class="sig-param">logits</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.sigmoid_prob" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.dla.</span></code><code class="sig-name descname"><span class="pre">sigmoid_prob</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.dla.sigmoid_prob" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -552,9 +720,9 @@ and a tf.summary containing related information about the step.</p>
 <li><p>Thorsten Joachims, Adith Swaminathan, Tobias Schnahel. 2017. Unbiased Learning-to-Rank with Biased Feedback. In Proceedings of WSDM ‘17</p></li>
 </ul>
 </div></blockquote>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.learning_algorithm.ipw_rank.IPWrank">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.learning_algorithm.ipw_rank.</code><code class="sig-name descname">IPWrank</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.ipw_rank.</span></code><code class="sig-name descname"><span class="pre">IPWrank</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm" title="ultra.learning_algorithm.base_algorithm.BaseAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ultra.learning_algorithm.base_algorithm.BaseAlgorithm</span></code></a></p>
 <p>The Inverse Propensity Weighting algorithm for unbiased learning to rank.</p>
 <p>This class implements the training and testing of the Inverse Propensity Weighting algorithm for unbiased learning to rank. See the following paper for more information on the algorithm.</p>
@@ -562,116 +730,42 @@ and a tf.summary containing related information about the step.</p>
 <li><p>Xuanhui Wang, Michael Bendersky, Donald Metzler, Marc Najork. 2016. Learning to Rank with Selection Bias in Personal Search. In Proceedings of SIGIR ‘16</p></li>
 <li><p>Thorsten Joachims, Adith Swaminathan, Tobias Schnahel. 2017. Unbiased Learning-to-Rank with Biased Feedback. In Proceedings of WSDM ‘17</p></li>
 </ul>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.ipw_rank.IPWrank.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_set</strong> – (Raw_data) The dataset used to build the input layer.</p></li>
 <li><p><strong>exp_settings</strong> – (dictionary) The dictionary containing the model settings.</p></li>
-<li><p><strong>forward_only</strong> – Set true to conduct prediction only, false to conduct training.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.ipw_rank.IPWrank.click_weighted_pairwise_loss">
-<code class="sig-name descname">click_weighted_pairwise_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">propensity</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank.click_weighted_pairwise_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes pairwise entropy loss with propensity weighting.</p>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.ipw_rank.IPWrank.train">
+<code class="sig-name descname"><span class="pre">train</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for training process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a
-relevant example.</p></li>
-<li><p><strong>propensity</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite> containing the weight of each element.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
+<dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
+and a tf.summary containing related information about the step.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.ipw_rank.IPWrank.click_weighted_softmax_loss">
-<code class="sig-name descname">click_weighted_softmax_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">propensity</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank.click_weighted_softmax_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes listwise softmax loss with propensity weighting.</p>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.ipw_rank.IPWrank.validation">
+<code class="sig-name descname"><span class="pre">validation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_online_simulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank.validation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for validating process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a</p></li>
-<li><p><strong>example.</strong> (<em>relevant</em>) – </p></li>
-<li><p><strong>propensity</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite> containing the weight of each element.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="ultra.learning_algorithm.ipw_rank.IPWrank.sigmoid_loss">
-<code class="sig-name descname">sigmoid_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">propensity</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank.sigmoid_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes pointwise sigmoid loss without propensity weighting.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a
-relevant example.</p></li>
-<li><p><strong>propensity</strong> – No use.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="ultra.learning_algorithm.ipw_rank.IPWrank.softmax_loss">
-<code class="sig-name descname">softmax_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">propensity</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank.softmax_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes listwise softmax loss without propensity weighting.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a
-relevant example.</p></li>
-<li><p><strong>propensity</strong> – No use.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="ultra.learning_algorithm.ipw_rank.IPWrank.step">
-<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">session</em>, <em class="sig-param">input_feed</em>, <em class="sig-param">forward_only</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.IPWrank.step" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a step of the model feeding the given inputs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>session</strong> – (tf.Session) tensorflow session to use.</p></li>
-<li><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p></li>
-<li><p><strong>forward_only</strong> – whether to do the backward step (False) or only forward (True).</p></li>
-</ul>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
@@ -682,23 +776,23 @@ and a tf.summary containing related information about the step.</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.learning_algorithm.ipw_rank.selu">
-<code class="sig-prename descclassname">ultra.learning_algorithm.ipw_rank.</code><code class="sig-name descname">selu</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.selu" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.ipw_rank.</span></code><code class="sig-name descname"><span class="pre">selu</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.ipw_rank.selu" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
 <div class="section" id="module-ultra.learning_algorithm.navie_algorithm">
 <span id="ultra-learning-algorithm-navie-algorithm-module"></span><h2>ultra.learning_algorithm.navie_algorithm module<a class="headerlink" href="#module-ultra.learning_algorithm.navie_algorithm" title="Permalink to this headline">¶</a></h2>
 <p>The navie algorithm that directly trains ranking models with clicks.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.learning_algorithm.navie_algorithm.NavieAlgorithm">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.learning_algorithm.navie_algorithm.</code><code class="sig-name descname">NavieAlgorithm</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.navie_algorithm.NavieAlgorithm" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.navie_algorithm.</span></code><code class="sig-name descname"><span class="pre">NavieAlgorithm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.navie_algorithm.NavieAlgorithm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm" title="ultra.learning_algorithm.base_algorithm.BaseAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ultra.learning_algorithm.base_algorithm.BaseAlgorithm</span></code></a></p>
 <p>The navie algorithm that directly trains ranking models with input labels.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -711,71 +805,9 @@ and a tf.summary containing related information about the step.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.pairwise_loss">
-<code class="sig-name descname">pairwise_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.pairwise_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes pairwise entropy loss.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a
-relevant example.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.sigmoid_loss">
-<code class="sig-name descname">sigmoid_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.sigmoid_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes pointwise sigmoid loss without propensity weighting.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a</p></li>
-<li><p><strong>example.</strong> (<em>relevant</em>) – </p></li>
-<li><p><strong>propensity</strong> – No use.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.softmax_loss">
-<code class="sig-name descname">softmax_loss</code><span class="sig-paren">(</span><em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.softmax_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes listwise softmax loss without propensity weighting.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> – (tf.Tensor) A tensor with shape [batch_size, list_size]. Each value is</p></li>
-<li><p><strong>ranking score of the corresponding example.</strong> (<em>the</em>) – </p></li>
-<li><p><strong>labels</strong> – (tf.Tensor) A tensor of the same shape as <cite>output</cite>. A value &gt;= 1 means a</p></li>
-<li><p><strong>example.</strong> (<em>relevant</em>) – </p></li>
-<li><p><strong>propensity</strong> – No use.</p></li>
-<li><p><strong>name</strong> – A string used as the name for this variable scope.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(tf.Tensor) A single value tensor containing the loss.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.step">
-<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">session</em>, <em class="sig-param">input_feed</em>, <em class="sig-param">forward_only</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.step" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">step</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward_only</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.navie_algorithm.NavieAlgorithm.step" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a step of the model feeding the given inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -804,9 +836,9 @@ and a tf.summary containing related information about the step.</p>
 <li><p>Hu, Ziniu, Yang Wang, Qu Peng, and Hang Li. “Unbiased LambdaMART: An Unbiased Pairwise Learning-to-Rank Algorithm.” In The World Wide Web Conference, pp. 2830-2836. ACM, 2019.</p></li>
 </ul>
 </div></blockquote>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.learning_algorithm.pairwise_debias.PairDebias">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.learning_algorithm.pairwise_debias.</code><code class="sig-name descname">PairDebias</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pairwise_debias.PairDebias" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.pairwise_debias.</span></code><code class="sig-name descname"><span class="pre">PairDebias</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pairwise_debias.PairDebias" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm" title="ultra.learning_algorithm.base_algorithm.BaseAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ultra.learning_algorithm.base_algorithm.BaseAlgorithm</span></code></a></p>
 <p>The Pairwise Debiasing algorithm for unbiased learning to rank.</p>
 <p>This class implements the Pairwise Debiasing algorithm based on the input layer
@@ -814,32 +846,42 @@ feed. See the following paper for more information on the algorithm.</p>
 <ul class="simple">
 <li><p>Hu, Ziniu, Yang Wang, Qu Peng, and Hang Li. “Unbiased LambdaMART: An Unbiased Pairwise Learning-to-Rank Algorithm.” In The World Wide Web Conference, pp. 2830-2836. ACM, 2019.</p></li>
 </ul>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.pairwise_debias.PairDebias.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pairwise_debias.PairDebias.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pairwise_debias.PairDebias.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_set</strong> – (Raw_data) The dataset used to build the input layer.</p></li>
 <li><p><strong>exp_settings</strong> – (dictionary) The dictionary containing the model settings.</p></li>
-<li><p><strong>forward_only</strong> – Set true to conduct prediction only, false to conduct training.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.pairwise_debias.PairDebias.step">
-<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">session</em>, <em class="sig-param">input_feed</em>, <em class="sig-param">forward_only</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pairwise_debias.PairDebias.step" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a step of the model feeding the given inputs.</p>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.pairwise_debias.PairDebias.train">
+<code class="sig-name descname"><span class="pre">train</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pairwise_debias.PairDebias.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for training process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>session</strong> – (tf.Session) tensorflow session to use.</p></li>
-<li><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p></li>
-<li><p><strong>forward_only</strong> – whether to do the backward step (False) or only forward (True).</p></li>
-</ul>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
+and a tf.summary containing related information about the step.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.pairwise_debias.PairDebias.validation">
+<code class="sig-name descname"><span class="pre">validation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_online_simulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pairwise_debias.PairDebias.validation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for validating process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
@@ -850,9 +892,9 @@ and a tf.summary containing related information about the step.</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.learning_algorithm.pairwise_debias.get_bernoulli_sample">
-<code class="sig-prename descclassname">ultra.learning_algorithm.pairwise_debias.</code><code class="sig-name descname">get_bernoulli_sample</code><span class="sig-paren">(</span><em class="sig-param">probs</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pairwise_debias.get_bernoulli_sample" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.pairwise_debias.</span></code><code class="sig-name descname"><span class="pre">get_bernoulli_sample</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pairwise_debias.get_bernoulli_sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conduct Bernoulli sampling according to a specific probability distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -874,9 +916,9 @@ and a tf.summary containing related information about the step.</p>
 <li><p>Oosterhuis, Harrie, and Maarten de Rijke. “Differentiable unbiased online learning to rank.” In Proceedings of the 27th ACM International Conference on Information and Knowledge Management, pp. 1293-1302. ACM, 2018.</p></li>
 </ul>
 </div></blockquote>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.learning_algorithm.pdgd.PDGD">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.learning_algorithm.pdgd.</code><code class="sig-name descname">PDGD</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pdgd.PDGD" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.pdgd.</span></code><code class="sig-name descname"><span class="pre">PDGD</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pdgd.PDGD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm" title="ultra.learning_algorithm.base_algorithm.BaseAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ultra.learning_algorithm.base_algorithm.BaseAlgorithm</span></code></a></p>
 <p>The Pairwise Differentiable Gradient Descent (PDGD) algorithm for unbiased learning to rank.</p>
 <p>This class implements the Pairwise Differentiable Gradient Descent (PDGD) algorithm based on the input layer
@@ -884,36 +926,46 @@ feed. See the following paper for more information on the algorithm.</p>
 <ul class="simple">
 <li><p>Oosterhuis, Harrie, and Maarten de Rijke. “Differentiable unbiased online learning to rank.” In Proceedings of the 27th ACM International Conference on Information and Knowledge Management, pp. 1293-1302. ACM, 2018.</p></li>
 </ul>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.pdgd.PDGD.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pdgd.PDGD.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pdgd.PDGD.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_set</strong> – (Raw_data) The dataset used to build the input layer.</p></li>
 <li><p><strong>exp_settings</strong> – (dictionary) The dictionary containing the model settings.</p></li>
-<li><p><strong>forward_only</strong> – Set true to conduct prediction only, false to conduct training.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.pdgd.PDGD.step">
-<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">session</em>, <em class="sig-param">input_feed</em>, <em class="sig-param">forward_only</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pdgd.PDGD.step" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a step of the model feeding the given inputs.</p>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.pdgd.PDGD.train">
+<code class="sig-name descname"><span class="pre">train</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pdgd.PDGD.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for training process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>session</strong> – (tf.Session) tensorflow session to use.</p></li>
-<li><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p></li>
-<li><p><strong>forward_only</strong> – whether to do the backward step (False) or only forward (True).</p></li>
-</ul>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
 and a tf.summary containing related information about the step.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.pdgd.PDGD.validation">
+<code class="sig-name descname"><span class="pre">validation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_online_simulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.pdgd.PDGD.validation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for validating process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
+and a summary containing related information about the step.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -930,9 +982,9 @@ and a tf.summary containing related information about the step.</p>
 <li><p>Wang, Xuanhui, Nadav Golbandi, Michael Bendersky, Donald Metzler, and Marc Najork. “Position bias estimation for unbiased learning to rank in personal search.” In Proceedings of the Eleventh ACM International Conference on Web Search and Data Mining, pp. 610-618. ACM, 2018.</p></li>
 </ul>
 </div></blockquote>
-<dl class="class">
+<dl class="py class">
 <dt id="ultra.learning_algorithm.regression_EM.RegressionEM">
-<em class="property">class </em><code class="sig-prename descclassname">ultra.learning_algorithm.regression_EM.</code><code class="sig-name descname">RegressionEM</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.regression_EM.RegressionEM" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.regression_EM.</span></code><code class="sig-name descname"><span class="pre">RegressionEM</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.regression_EM.RegressionEM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#ultra.learning_algorithm.base_algorithm.BaseAlgorithm" title="ultra.learning_algorithm.base_algorithm.BaseAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ultra.learning_algorithm.base_algorithm.BaseAlgorithm</span></code></a></p>
 <p>The regression-based EM algorithm for unbiased learning to rank.</p>
 <p>This class implements the regression-based EM algorithm based on the input layer
@@ -944,32 +996,42 @@ feed. See the following paper for more information.</p>
 <ul class="simple">
 <li><p>Cappé, Olivier, and Eric Moulines. “Online expectation–maximization algorithm for latent data models.” Journal of the Royal Statistical Society: Series B (Statistical Methodology) 71.3 (2009): 593-613.</p></li>
 </ul>
-<dl class="method">
+<dl class="py method">
 <dt id="ultra.learning_algorithm.regression_EM.RegressionEM.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">data_set</em>, <em class="sig-param">exp_settings</em>, <em class="sig-param">forward_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.regression_EM.RegressionEM.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.regression_EM.RegressionEM.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_set</strong> – (Raw_data) The dataset used to build the input layer.</p></li>
 <li><p><strong>exp_settings</strong> – (dictionary) The dictionary containing the model settings.</p></li>
-<li><p><strong>forward_only</strong> – Set true to conduct prediction only, false to conduct training.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="ultra.learning_algorithm.regression_EM.RegressionEM.step">
-<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">session</em>, <em class="sig-param">input_feed</em>, <em class="sig-param">forward_only</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.regression_EM.RegressionEM.step" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a step of the model feeding the given inputs.</p>
+<dl class="py method">
+<dt id="ultra.learning_algorithm.regression_EM.RegressionEM.train">
+<code class="sig-name descname"><span class="pre">train</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.regression_EM.RegressionEM.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for training process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>session</strong> – (tf.Session) tensorflow session to use.</p></li>
-<li><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p></li>
-<li><p><strong>forward_only</strong> – whether to do the backward step (False) or only forward (True).</p></li>
-</ul>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
+and a tf.summary containing related information about the step.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ultra.learning_algorithm.regression_EM.RegressionEM.validation">
+<code class="sig-name descname"><span class="pre">validation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_feed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_online_simulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.regression_EM.RegressionEM.validation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a step of the model feeding the given inputs for validating process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_feed</strong> – (dictionary) A dictionary containing all the input feed data.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A triple consisting of the loss, outputs (None if we do backward),
@@ -980,13 +1042,13 @@ and a tf.summary containing related information about the step.</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.learning_algorithm.regression_EM.get_bernoulli_sample">
-<code class="sig-prename descclassname">ultra.learning_algorithm.regression_EM.</code><code class="sig-name descname">get_bernoulli_sample</code><span class="sig-paren">(</span><em class="sig-param">probs</em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.regression_EM.get_bernoulli_sample" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.regression_EM.</span></code><code class="sig-name descname"><span class="pre">get_bernoulli_sample</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.regression_EM.get_bernoulli_sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conduct Bernoulli sampling according to a specific probability distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>prob</strong> – (tf.Tensor) A tensor in which each element denotes a probability of 1 in a Bernoulli distribution.</p>
+<dd class="field-odd"><p><strong>prob</strong> – (torch.Tensor) A tensor in which each element denotes a probability of 1 in a Bernoulli distribution.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A Tensor of binary samples (0 or 1) with the same shape of probs.</p>
@@ -997,9 +1059,9 @@ and a tf.summary containing related information about the step.</p>
 </div>
 <div class="section" id="module-ultra.learning_algorithm">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-ultra.learning_algorithm" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="ultra.learning_algorithm.list_available">
-<code class="sig-prename descclassname">ultra.learning_algorithm.</code><code class="sig-name descname">list_available</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.list_available" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">ultra.learning_algorithm.</span></code><code class="sig-name descname"><span class="pre">list_available</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ultra.learning_algorithm.list_available" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
@@ -1015,29 +1077,29 @@ and a tf.summary containing related information about the step.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="ultra.ranking_model.html" class="btn btn-neutral float-right" title="ultra.ranking_model package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="ultra.input_layer.html" class="btn btn-neutral float-left" title="ultra.input_layer package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="ultra.ranking_model.html" class="btn btn-neutral float-right" title="ultra.ranking_model package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ultra.input_layer.html" class="btn btn-neutral float-left" title="ultra.input_layer package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, ULTRA
+        &#169; Copyright 2020, ULTRA.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1045,7 +1107,6 @@ and a tf.summary containing related information about the step.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

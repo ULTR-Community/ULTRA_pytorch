@@ -17,7 +17,7 @@
 <!---[![Requirements Status](https://requires.io/github/NTMC-Community/MatchZoo/requirements.svg?branch=master)](https://requires.io/github/NTMC-Community/MatchZoo/requirements/?branch=master)---> 
 
 
-This is an Unbiased Learning To Rank Algorithms (ULTRA) toolbox, which provides a codebase for experiments and research on learning to rank with human annotated or noisy labels. With the unified data processing pipeline, ULTRA supports multiple unbiased learning-to-rank algorithms, online learning-to-rank algorithms, neural learning-to-rank models, as well as different methods to use and simulate noisy labels (e.g., clicks) to train and test different algorithms/ranking models. A user-friendly documentation can be found [here](https://ultr-community.github.io/ULTRA/).
+This is an Unbiased Learning To Rank Algorithms (ULTRA) toolbox, which provides a codebase for experiments and research on learning to rank with human annotated or noisy labels. With the unified data processing pipeline, ULTRA supports multiple unbiased learning-to-rank algorithms, online learning-to-rank algorithms, neural learning-to-rank models, as well as different methods to use and simulate noisy labels (e.g., clicks) to train and test different algorithms/ranking models. A user-friendly documentation can be found [here](https://ultr-community.github.io/ULTRA_pytorch/).
 
 ## Get Started
 
@@ -32,7 +32,7 @@ source venv/bin/activate
 ```
 https://github.com/ULTR-Community/ULTRA_pytorch.git
 cd ULTRA
-make init 
+make init # Replace 'torch' with 'torch==1.9.0+cu102' in requirements.txt for GPU support
 ```
 
 **Run toy example:**
@@ -82,29 +82,29 @@ bash example/toy/offline_exp_pipeline.sh
 
 2. [DNN](https://github.com/ULTR-Community/ULTRA/blob/master/learning_algorithm/ranking_model/DNN.py): this is neural ranking algorithm that compute ranking scores with a multi-layer perceptron network (with non-linear activation functions).
 
-3. [DLCM](https://github.com/ULTR-Community/ULTRA/blob/master/learning_algorithm/DLCM.py): this is an implementation of the Deep Listwise Context Model in <a href="https://arxiv.org/pdf/1804.05936.pdf">*Learning a Deep Listwise Context Model for Ranking Refinement*</a>.
+3. [DLCM](https://github.com/ULTR-Community/ULTRA/blob/master/learning_algorithm/DLCM.py): this is an implementation of the Deep Listwise Context Model in <a href="https://arxiv.org/pdf/1804.05936.pdf">*Learning a Deep Listwise Context Model for Ranking Refinement*</a> (<span style="color:yellow">_TODO_</span>).
 
-4. [GSF](https://github.com/ULTR-Community/ULTRA/blob/master/learning_algorithm/GSF.py): this is an implementation of the Groupwise Scoring Function in <a href="https://arxiv.org/pdf/1811.04415.pdf">*Learning Groupwise Multivariate Scoring Functions Using Deep Neural Networks*</a>.
+4. [GSF](https://github.com/ULTR-Community/ULTRA/blob/master/learning_algorithm/GSF.py): this is an implementation of the Groupwise Scoring Function in <a href="https://arxiv.org/pdf/1811.04415.pdf">*Learning Groupwise Multivariate Scoring Functions Using Deep Neural Networks*</a> (<span style="color:yellow">_TODO_</span>).
 
-5. [SetRank](https://github.com/ULTR-Community/ULTRA/blob/master/learning_algorithm/SetRank.py): this is an implementation of the SetRank model in <a href="https://arxiv.org/abs/1912.05891">*SetRank: Learning a Permutation-Invariant Ranking Model for Information Retrieval*</a>.
+5. [SetRank](https://github.com/ULTR-Community/ULTRA/blob/master/learning_algorithm/SetRank.py): this is an implementation of the SetRank model in <a href="https://arxiv.org/abs/1912.05891">*SetRank: Learning a Permutation-Invariant Ranking Model for Information Retrieval*</a> (<span style="color:yellow">_TODO_</span>).
 
 ## Supported Evaluation Metrics
 
-1. [MRR](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the <a href="https://en.wikipedia.org/wiki/Mean_reciprocal_rank">Mean Reciprocal Rank</a> (inherited from [TF-Ranking](https://github.com/tensorflow/ranking)).
+1. [MRR](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the <a href="https://en.wikipedia.org/wiki/Mean_reciprocal_rank">Mean Reciprocal Rank</a>.
 
 2. [ERR](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the Expected Reciprocal Rank from <a href="http://olivier.chapelle.cc/pub/err.pdf">*Expected reciprocal rank for graded relevance*</a>.
 
-3. [ARP](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the Average Relevance Position (inherited from [TF-Ranking](https://github.com/tensorflow/ranking)).
+3. [ARP](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the Average Relevance Position.
 
-4. [NDCG](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the <a href="https://en.wikipedia.org/wiki/Discounted_cumulative_gain">Normalized Discounted Cumulative Gain</a> (inherited from [TF-Ranking](https://github.com/tensorflow/ranking)).
+4. [NDCG](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the <a href="https://en.wikipedia.org/wiki/Discounted_cumulative_gain">Normalized Discounted Cumulative Gain</a>.
 
-5. [DCG](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the <a href="https://en.wikipedia.org/wiki/Discounted_cumulative_gain">Discounted Cumulative Gain</a> (inherited from [TF-Ranking](https://github.com/tensorflow/ranking)).
+5. [DCG](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the <a href="https://en.wikipedia.org/wiki/Discounted_cumulative_gain">Discounted Cumulative Gain</a>.
 
-6. [Precision](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the Precision (inherited from [TF-Ranking](https://github.com/tensorflow/ranking)).
+6. [Precision](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the Precision.
 
-7. [MAP](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the <a href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision">Mean Average Precision</a> (inherited from [TF-Ranking](https://github.com/tensorflow/ranking)).
+7. [MAP](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the <a href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision">Mean Average Precision</a>.
 
-8. [Ordered_Pair_Accuracy](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the percentage of correctedly ordered pair (inherited from [TF-Ranking](https://github.com/tensorflow/ranking)).
+8. [Ordered_Pair_Accuracy](https://github.com/ULTR-Community/ULTRA/blob/master/utils/metrics.py): the percentage of correctedly ordered pair.
 
 ## Click Simulation Example
 
