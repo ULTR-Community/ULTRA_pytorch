@@ -32,7 +32,7 @@ source venv/bin/activate
 ```
 https://github.com/ULTR-Community/ULTRA_pytorch.git
 cd ULTRA
-make init # Replace 'torch' with 'torch==1.9.0+cu102' in requirements.txt for GPU support
+make init
 ```
 
 **Run toy example:**
