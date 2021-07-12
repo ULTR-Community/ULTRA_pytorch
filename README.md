@@ -167,6 +167,12 @@ If you use ULTRA in your research, please use the following BibTex entry.
         ASST PROF, Univ. of Utah</p>​
       </td>
       <td>
+        ​ <a href="https://github.com/anhtran1010"><img width="50" height="50" src="https://github.com/anhtran1010.png?s=50" alt="anhtran1010"></a><br>
+        ​ <a href="https://github.com/anhtran1010">Anh Tran</a> ​
+        <p>Core Dev<br>
+        ASST PROF, Univ. of Utah</p>​
+      </td>
+      <td>
          <a href="https://github.com/Taosheng-ty"><img width="50" height="50" src="https://github.com/Taosheng-ty.png?s=50" alt="Taosheng-ty"></a><br>
          <a href="https://github.com/Taosheng-ty">Tao Yang</a> ​
         <p>Core Dev<br> Ph.D., Univ. of Utah</p>​
