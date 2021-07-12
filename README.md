@@ -5,9 +5,9 @@
 # Unbiased Learning to Rank Algorithms (ULTRA)
 
 [![Python 3.6](https://img.shields.io/badge/python-3.6%20%7C%203.7-blue.svg)](https://www.python.org/downloads/release/python-360/)
-[![Documentation Status](https://readthedocs.org/projects/ultra/badge/?version=latest)](https://ultr-community.github.io/ULTRA/)
-[![Build Status](https://travis-ci.org/ULTR-Community/ULTRA.svg?branch=master)](https://travis-ci.org/ULTR-Community/ULTRA/)
-[![codecov](https://codecov.io/gh/ULTR-Community/ULTRA/branch/master/graph/badge.svg)](https://codecov.io/gh/ULTR-Community/ULTRA)
+[![Documentation Status](https://readthedocs.org/projects/ultra/badge/?version=latest)](https://ultr-community.github.io/ULTRA_pytorch/)
+[![Build Status](https://travis-ci.org/ULTR-Community/ULTRA.svg?branch=master)](https://travis-ci.org/ULTR-Community/ULTRA_pytorch/)
+[![codecov](https://codecov.io/gh/ULTR-Community/ULTRA/branch/master/graph/badge.svg)](https://codecov.io/gh/ULTR-Community/ULTRA_pytorch)
 [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 <a href="https://twitter.com/intent/follow?screen_name=CommunityUltr">
         <img src="https://img.shields.io/twitter/follow/CommunityUltr?style=social&logo=twitter"
