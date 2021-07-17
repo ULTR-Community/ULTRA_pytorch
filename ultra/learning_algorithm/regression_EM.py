@@ -27,9 +27,10 @@ def get_bernoulli_sample(probs):
             A Tensor of binary samples (0 or 1) with the same shape of probs.
 
         """
-    bernoulli_sample = torch.ceil(probs - torch.rand(probs.shape))
     if torch.cuda.is_available():
-        bernoulli_sample = bernoulli_sample.to(device=torch.device('cuda'))
+        bernoulli_sample = torch.ceil(probs - torch.rand(probs.shape, device=torch.device('cuda')))
+    else:
+        bernoulli_sample = torch.ceil(probs - torch.rand(probs.shape))
     return bernoulli_sample
 
 
@@ -147,11 +148,7 @@ class RegressionEM(BaseAlgorithm):
             self.ranker_labels = self.ranker_labels.to(device=self.cuda)
         # criterion = torch.nn.BCEWithLogitsLoss(reduction="none")
         criterion = torch.nn.BCEWithLogitsLoss()
-        # self.loss = torch.mean(
-        #   torch.sum(
-        #     loss, dim =1
-        #   )
-        # )
+
         self.loss = criterion(train_output,self.ranker_labels)
         # record additional positive instance from sampling
         # labels_split_size = int(self.ranker_labels.shape[1] / self.rank_list_size)
@@ -180,9 +177,6 @@ class RegressionEM(BaseAlgorithm):
             self.clipped_gradient = nn.utils.clip_grad_norm_(
                 params, self.hparams.max_gradient_norm)
         opt.step()
-        # self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
-        #                     True)
-        # self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate,True)
         nn.utils.clip_grad_value_(reshaped_train_labels, 1)
 
         # Conduct maximization step
@@ -192,21 +186,6 @@ class RegressionEM(BaseAlgorithm):
         self.update_propensity_op = self.propensity
         self.propensity_weights = 1.0 / self.propensity
 
-        # pad_removed_train_output = self.remove_padding_for_metric_eval(
-        #     self.docid_inputs, train_output)
-        # for metric in self.exp_settings['metrics']:
-        #     for topn in self.exp_settings['metrics_topn']:
-        #         list_weights = torch.mean(
-        #             self.propensity_weights * reshaped_train_labels, dim=1, keepdim=True)
-        #         metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-        #             reshaped_train_labels, pad_removed_train_output, None)
-        #         self.create_summary('%s_%d' % (metric, topn),
-        #                             '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, True)
-        #         weighted_metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-        #             reshaped_train_labels, pad_removed_train_output, list_weights)
-        #         self.create_summary('Weighted_%s_%d' % (metric, topn),
-        #                             'Weighted_%s_%d at global step %d' % (metric, topn, self.global_step),
-        #                             weighted_metric_value, True)
 
         self.global_step += 1
         print('Loss %f at global step %d' % (self.loss, self.global_step))

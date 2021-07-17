@@ -36,8 +36,11 @@ def _to_nd_indices(indices):
     """
     assert indices.dim() == 2
     if torch.cuda.is_available():
-        indices = indices.to(device=device)
-    batch_ids = torch.ones_like(indices) * torch.unsqueeze(
+      indices = indices.to(device=device)
+      batch_ids = torch.ones_like(indices) * torch.unsqueeze(
+        torch.arange(indices.size()[0],device=device), 1)
+    else:
+      batch_ids = torch.ones_like(indices) * torch.unsqueeze(
         torch.arange(indices.size()[0]), 1)
     return torch.stack([batch_ids, indices], dim=-1)
 

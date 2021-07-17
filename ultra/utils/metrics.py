@@ -203,13 +203,14 @@ def _discounted_cumulative_gain(labels, weights=None):
       tensor shape is [batch_size, 1].
     """
     list_size = labels.shape[1]
-    position = torch.arange(1, list_size + 1).to(dtype=torch.float32)
-    denominator = torch.log(position + 1)
-    numerator = torch.pow(exponent=labels.to(torch.float32), input=torch.tensor(2.0)) - 1.0
-    numerator = numerator
     if torch.cuda.is_available():
-        denominator = denominator.to(device=device)
-        numerator = numerator.to(device=device)
+        position = torch.arange(1, list_size + 1, device=device, dtype=torch.float32)
+        denominator = torch.log(position + 1)
+        numerator = torch.pow(torch.tensor(2.0, device=device), labels.to(torch.float32)) - 1.0
+    else:
+        position = torch.arange(1, list_size + 1, dtype=torch.float32)
+        denominator = torch.log(position + 1)
+        numerator = torch.pow(exponent=labels.to(torch.float32), input=torch.tensor(2.0)) - 1.0
     return torch.sum(
         input=weights * numerator / denominator, dim=1, keepdim=True)
 
@@ -276,7 +277,11 @@ def mean_reciprocal_rank(labels, predictions, weights=None, name=None):
     sorted_labels, = utils.sort_by_scores(predictions, [labels], topn=topn)
     # Relevance = 1.0 when labels >= 1.0 to accommodate graded relevance.
     relevance = torch.ge(sorted_labels, 1.0).type(torch.float32)
-    reciprocal_rank = 1.0 / torch.arange(start=1, end=topn+1,dtype=torch.float32)
+    if torch.cuda.is_available():
+        reciprocal_rank = 1.0 / torch.arange(start=1, end=topn + 1, device=device,
+                                             dtype=torch.float32)
+    else:
+        reciprocal_rank = 1.0 / torch.arange(start=1, end=topn + 1, dtype=torch.float32)
     # MRR has a shape of [batch_size, 1]
     mrr = torch.max(
         relevance * reciprocal_rank, dim=1, keepdim=True).values
@@ -306,12 +311,20 @@ def expected_reciprocal_rank(
     sorted_labels, sorted_weights = utils.sort_by_scores(
         predictions, [labels, weights], topn=topn)
     list_size = sorted_labels.size()[-1]
-    pow = torch.as_tensor(2.0)
-    relevance = (torch.pow(pow, sorted_labels) - 1) / \
-        torch.pow(pow, torch.as_tensor(RankingMetricKey.MAX_LABEL))
-    non_rel = torch.cumprod(1.0 - relevance, dim=1) / (1.0 - relevance)
-    reciprocal_rank = 1.0 / \
-        torch.arange(start=1, end=list_size + 1,dtype=torch.float32)
+    if torch.cuda.is_available():
+      pow = torch.as_tensor(2.0, device=device)
+      relevance = (torch.pow(pow, sorted_labels) - 1) / \
+          torch.pow(pow, torch.as_tensor(RankingMetricKey.MAX_LABEL,device=device))
+      non_rel = torch.cumprod(1.0 - relevance, dim=1) / (1.0 - relevance)
+      reciprocal_rank = 1.0 / \
+          torch.arange(start=1, end=list_size + 1,device=device,dtype=torch.float32)
+    else:
+      pow = torch.as_tensor(2.0)
+      relevance = (torch.pow(pow, sorted_labels) - 1) / \
+          torch.pow(pow, torch.as_tensor(RankingMetricKey.MAX_LABEL))
+      non_rel = torch.cumprod(1.0 - relevance, dim=1) / (1.0 - relevance)
+      reciprocal_rank = 1.0 / \
+          torch.arange(start=1, end=list_size + 1,dtype=torch.float32)
     mask = torch.ge(reciprocal_rank, 1.0 / (topn + 1)).type(torch.float32)
     reciprocal_rank = reciprocal_rank * mask
     # ERR has a shape of [batch_size, 1]

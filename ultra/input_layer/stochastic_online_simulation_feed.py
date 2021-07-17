@@ -13,6 +13,7 @@ from __future__ import print_function
 import random
 import json
 import numpy as np
+import torch
 from ultra.input_layer import BaseInputFeed
 from ultra.utils import click_models as cm
 from ultra.utils.team_draft_interleave import TeamDraftInterleaving
@@ -110,6 +111,9 @@ class StochasticOnlineSimulationFeed(BaseInputFeed):
         """
         # Compute ranking scores with input_feed
         rank_scores = self.model.validation(input_feed, True)[1]
+        if self.model.is_cuda_avail:
+            rank_scores = rank_scores.cpu()
+
         # Rerank documents and collect clicks
         letor_features_length = len(input_feed[self.model.letor_features_name])
         local_batch_size = len(input_feed[self.model.docid_inputs_name[0]])

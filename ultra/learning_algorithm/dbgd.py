@@ -51,6 +51,7 @@ class DBGD(BaseAlgorithm):
             learning_rate=0.5,         # Learning rate.
             max_gradient_norm=5.0,      # Clip gradients to this norm.
             need_interleave=True,       # Set True to use result interleaving
+            interleave_strategy='Stochastic', # Choose interleave strategy
             grad_strategy='sgd',            # Select gradient strategy
         )
         print(exp_settings['learning_algorithm_hparams'])
@@ -70,6 +71,7 @@ class DBGD(BaseAlgorithm):
         self.learning_rate = self.hparams.learning_rate
         self.winners_name = "winners"
         self.winners = None
+        self.interleaving_strategy = self.hparams.interleave_strategy
 
         # Feeds for inputs.
         self.is_training = True
@@ -130,7 +132,7 @@ class DBGD(BaseAlgorithm):
 
         if self.hparams.need_interleave:
             self.output = (self.output, self.new_output)
-            self.winners = self.click_simulation_winners(input_feed, self.output)
+            self.winners = self.click_simulation_winners(input_feed, self.output, self.interleaving_strategy)
             final_winners = self.winners
         else:
             score_lists = [train_output, self.new_output]
@@ -240,7 +242,7 @@ class DBGD(BaseAlgorithm):
                                                       noisy_params=noisy_params, noise_rate=self.hparams.learning_rate)
         return torch.cat(new_output_list, 1)
 
-    def click_simulation_winners(self, input_feed, rank_scores):
+    def click_simulation_winners(self, input_feed, rank_scores, interleave_strategy):
         # Rerank documents and collect clicks
         letor_features_length = len(input_feed[self.letor_features_name])
         local_batch_size = len(input_feed[self.docid_inputs_name[0]])
@@ -255,19 +257,50 @@ class DBGD(BaseAlgorithm):
                 valid_idx -= 1
             list_len = valid_idx + 1
 
-            # Rerank documents via interleaving
-            rank_lists = []
-            for j in range(len(rank_scores)):
-                scores = rank_scores[j][i][:list_len]
-                rank_list = sorted(
-                    range(
-                        len(scores)),
-                    key=lambda k: scores[k],
-                    reverse=True)
-                rank_lists.append(rank_list)
+            if interleave_strategy == 'Stochastic':
+                def plackett_luce_sampling(score_list):
+                    # Sample document ranking
+                    scores = score_list[:list_len]
+                    scores = scores - max(scores)
+                    exp_scores = np.exp(self.hparams.tau * scores)
+                    exp_scores = exp_scores.numpy()
+                    probs = exp_scores / np.sum(exp_scores)
+                    re_list = np.random.choice(np.arange(list_len),
+                                               replace=False,
+                                               p=probs,
+                                               size=np.count_nonzero(probs))
+                    # Append unselected documents to the end
+                    used_indexs = set(re_list)
+                    unused_indexs = []
+                    for tmp_index in range(list_len):
+                        if tmp_index not in used_indexs:
+                            unused_indexs.append(tmp_index)
+                    re_list = np.append(re_list, unused_indexs).astype(int)
+                    return re_list
 
-            rerank_list = self.interleaving.interleave(
-                np.asarray(rank_lists))
+                rank_lists = []
+
+                for j in range(len(rank_scores)):
+                    scores = rank_scores[j][i][:list_len]
+                    rank_list = plackett_luce_sampling(scores)
+                    rank_lists.append(rank_list)
+
+                rerank_list = self.interleaving.interleave(
+                    np.asarray(rank_lists))
+            else:
+                # Rerank documents via interleaving
+                rank_lists = []
+                for j in range(len(rank_scores)):
+                    scores = rank_scores[j][i][:list_len]
+                    rank_list = sorted(
+                        range(
+                            len(scores)),
+                        key=lambda k: scores[k],
+                        reverse=True)
+                    rank_lists.append(rank_list)
+
+                rerank_list = self.interleaving.interleave(
+                    np.asarray(rank_lists))
 
             new_label_list = np.zeros(list_len)
             for j in range(list_len):

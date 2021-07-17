@@ -14,7 +14,6 @@ import torch.nn as nn
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from six.moves import zip
 from ultra.learning_algorithm.base_algorithm import BaseAlgorithm
 import ultra.utils
 

@@ -86,7 +86,6 @@ class BaseAlgorithm(ABC):
         pass
 
     def remove_padding_for_metric_eval(self, input_id_list, model_output):
-        model_output = model_output.cpu()
         output_scores = torch.unbind(model_output, dim=1)
         if len(output_scores) > len(input_id_list):
             raise AssertionError(
@@ -96,18 +95,25 @@ class BaseAlgorithm(ABC):
         valid_flags = valid_flags.type(torch.bool)
         input_flag_list = []
         for i in range(len(output_scores)):
-            input_flag_list.append(
-                torch.index_select(
-                    valid_flags, 0, input_id_list[i]))
+          index_to_remove = torch.index_select(
+                    input=valid_flags, dim=0, index=input_id_list[i])
+          input_flag_list.append(index_to_remove)
         # Mask padding documents
         output_scores = list(output_scores)
         for i in range(len(output_scores)):
-            output_scores[i] = torch.where(
-                input_flag_list[i],
-                output_scores[i],
-                torch.ones_like(output_scores[i]) * self.PADDING_SCORE
-            )
-        return torch.stack(output_scores, axis=1)
+            if self.is_cuda_avail:
+                output_scores[i] = torch.where(
+                    input_flag_list[i].to(device=self.cuda),
+                    output_scores[i],
+                    torch.ones_like(output_scores[i],device=self.cuda) * self.PADDING_SCORE
+                )
+            else:
+                output_scores[i] = torch.where(
+                    input_flag_list[i],
+                    output_scores[i],
+                    torch.ones_like(output_scores[i]) * self.PADDING_SCORE
+                )
+        return torch.stack(output_scores, dim=1)
 
     def ranking_model(self,model, list_size):
         """Construct ranking model with the given list size.
