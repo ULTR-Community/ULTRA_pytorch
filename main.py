@@ -197,7 +197,7 @@ def train(exp_settings):
                             if best_perf == None or best_perf < value:
                                 checkpoint_path = os.path.join(args.model_dir,
                                                                "%s.ckpt" % exp_settings['learning_algorithm'])
-                                torch.save(model.state_dict(), checkpoint_path)
+                                torch.save(model.model.state_dict(), checkpoint_path)
                                 best_perf = value
                                 print('Save model, valid %s:%.3f' % (key, best_perf))
                                 break
