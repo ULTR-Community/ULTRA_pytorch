@@ -133,6 +133,26 @@ If you use ULTRA in your research, please use the following BibTex entry.
       archivePrefix={arXiv},
       primaryClass={cs.IR}
 }
+
+@article{10.1145/3439861,
+author = {Ai, Qingyao and Yang, Tao and Wang, Huazheng and Mao, Jiaxin},
+title = {Unbiased Learning to Rank: Online or Offline?},
+year = {2021},
+issue_date = {February 2021},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {39},
+number = {2},
+issn = {1046-8188},
+url = {https://doi.org/10.1145/3439861},
+doi = {10.1145/3439861},
+journal = {ACM Trans. Inf. Syst.},
+month = feb,
+articleno = {21},
+numpages = {29},
+keywords = {unbiased learning, online learning, Learning to rank}
+}
+
 ```
 
 
