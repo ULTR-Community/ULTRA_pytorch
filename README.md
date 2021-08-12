@@ -125,31 +125,13 @@ python ultra/utils/propensity_estimator.py example/ClickModel/pbm_0.1_1.0_4_1.0.
 If you use ULTRA in your research, please use the following BibTex entry.
 
 ```
-@misc{ai2020unbiased,
-    title={Unbiased Learning to Rank: Online or Offline?},
-    author={Qingyao Ai and Tao Yang and Huazheng Wang and Jiaxin Mao},
-    year={2020},
-    eprint={2004.13574},
-    archivePrefix={arXiv},
-    primaryClass={cs.IR}
-}
-
-@inproceedings{Ai:2018:ULR:3269206.3274274,
- author = {Ai, Qingyao and Mao, Jiaxin and Liu, Yiqun and Croft, W. Bruce},
- title = {Unbiased Learning to Rank: Theory and Practice},
- booktitle = {Proceedings of the 27th ACM International Conference on Information and Knowledge Management},
- series = {CIKM '18},
- year = {2018},
- isbn = {978-1-4503-6014-2},
- location = {Torino, Italy},
- pages = {2305--2306},
- numpages = {2},
- url = {http://doi.acm.org/10.1145/3269206.3274274},
- doi = {10.1145/3269206.3274274},
- acmid = {3274274},
- publisher = {ACM},
- address = {New York, NY, USA},
- keywords = {click model, counterfactual learning, unbiased learning to rank, user bias},
+@misc{tran2021ultra,
+      title={ULTRA: An Unbiased Learning To Rank Algorithm Toolbox}, 
+      author={Anh Tran and Tao Yang and Qingyao Ai},
+      year={2021},
+      eprint={2108.05073},
+      archivePrefix={arXiv},
+      primaryClass={cs.IR}
 }
 ```
 
