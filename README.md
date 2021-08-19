@@ -30,7 +30,7 @@ source venv/bin/activate
 
 **Install ULTRA from the source:**
 ```
-https://github.com/ULTR-Community/ULTRA_pytorch.git
+git clone https://github.com/ULTR-Community/ULTRA_pytorch.git
 cd ULTRA
 make init
 ```
