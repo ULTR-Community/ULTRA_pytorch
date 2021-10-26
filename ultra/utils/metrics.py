@@ -28,8 +28,9 @@ from __future__ import print_function
 
 from ultra.utils import metric_utils as utils
 import torch
+import numpy as np
 
-device = torch.device("cuda")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class RankingMetricKey(object):
     """Ranking metric key strings."""
     # Mean Receiprocal Rank. For binary relevance.
@@ -187,7 +188,7 @@ def _per_example_weights_to_per_list_weights(weights, relevance):
     return per_list_weights
 
 
-def _discounted_cumulative_gain(labels, weights=None):
+def _discounted_cumulative_gain(prediction, labels, weights=None, topn=None):
     """Computes discounted cumulative gain (DCG).
 
     DCG =  SUM((2^label -1) / (log(1+rank))).
@@ -197,22 +198,27 @@ def _discounted_cumulative_gain(labels, weights=None):
        ideal ranking, the examples are sorted by relevance in reverse order.
       weights: A `Tensor` of the same shape as labels or [batch_size, 1]. The
         former case is per-example and the latter case is per-list.
+    topn: A list of cutoff for how many examples to consider for this metric.
 
     Returns:
       A `Tensor` as the weighted discounted cumulative gain per-list. The
       tensor shape is [batch_size, 1].
     """
     list_size = labels.shape[1]
-    if torch.cuda.is_available():
-        position = torch.arange(1, list_size + 1, device=device, dtype=torch.float32)
-        denominator = torch.log(position + 1)
-        numerator = torch.pow(torch.tensor(2.0, device=device), labels.to(torch.float32)) - 1.0
-    else:
-        position = torch.arange(1, list_size + 1, dtype=torch.float32)
-        denominator = torch.log(position + 1)
-        numerator = torch.pow(exponent=labels.to(torch.float32), input=torch.tensor(2.0)) - 1.0
-    return torch.sum(
-        input=weights * numerator / denominator, dim=1, keepdim=True)
+    _, indices = prediction.sort(descending=True, dim=-1)
+    sorted_labels = torch.gather(labels, dim=1, index=indices)
+    sorted_weights = torch.gather(weights, dim =1, index=indices)
+    discounts = (torch.tensor(1) / torch.log2(torch.arange(list_size, dtype=torch.float) + 2.0)).to(
+        device=device)
+    gains = sorted_weights*torch.pow(torch.tensor(2.0, device=device), sorted_labels.to(torch.float32)) - 1.0
+    discounted_gains = (gains * discounts)[:, :np.max(topn)]
+
+    cum_dcg = torch.cumsum(discounted_gains, dim=1)
+
+    topn_tensor = torch.tensor(topn, dtype=torch.long) - torch.tensor(1)
+
+    dcg = cum_dcg[:, topn_tensor]
+    return dcg
 
 
 def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
@@ -225,7 +231,7 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
         the ranking score of the corresponding example.
       weights: A `Tensor` of the same shape of predictions or [batch_size, 1]. The
         former case is per-example and the latter case is per-list.
-      topn: A cutoff for how many examples to consider for this metric.
+      topn: A list of cutoff for how many examples to consider for this metric.
 
     Returns:
       (labels, predictions, weights, topn) ready to be used for metric
@@ -236,8 +242,11 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
     assert predictions.shape == example_weights.shape
     assert predictions.shape == labels.shape
     assert predictions.dim() == 2
+    list_size = predictions.shape[1]
     if topn is None:
-        topn = predictions.shape[1]
+        topn = [list_size]
+
+    topn = [min(n, list_size) for n in topn]
 
     # All labels should be >= 0. Invalid entries are reset.
     is_label_valid = utils.is_label_valid(labels)
@@ -274,14 +283,12 @@ def mean_reciprocal_rank(labels, predictions, weights=None, name=None):
     list_size = predictions.size()[-1]
     labels, predictions, weights, topn = _prepare_and_validate_params(
         labels, predictions, weights, list_size)
-    sorted_labels, = utils.sort_by_scores(predictions, [labels], topn=topn)
+    _, indices = predictions.sort(descending=True, dim=-1)
+    sorted_labels = torch.gather(labels, dim=1, index=indices)
     # Relevance = 1.0 when labels >= 1.0 to accommodate graded relevance.
     relevance = torch.ge(sorted_labels, 1.0).type(torch.float32)
-    if torch.cuda.is_available():
-        reciprocal_rank = 1.0 / torch.arange(start=1, end=topn + 1, device=device,
-                                             dtype=torch.float32)
-    else:
-        reciprocal_rank = 1.0 / torch.arange(start=1, end=topn + 1, dtype=torch.float32)
+    reciprocal_rank = 1.0 / torch.arange(start=1, end=topn + 1, device=device,
+                                         dtype=torch.float32)
     # MRR has a shape of [batch_size, 1]
     mrr = torch.max(
         relevance * reciprocal_rank, dim=1, keepdim=True).values
@@ -300,7 +307,7 @@ def expected_reciprocal_rank(
         the ranking score of the corresponding example.
       weights: A `Tensor` of the same shape of predictions or [batch_size, 1]. The
         former case is per-example and the latter case is per-list.
-      topn: A cutoff for how many examples to consider for this metric.
+      topn: A list of cutoff for how many examples to consider for this metric.
       name: A string used as the name for this metric.
 
     Returns:
@@ -308,29 +315,23 @@ def expected_reciprocal_rank(
     """
     labels, predictions, weights, topn = _prepare_and_validate_params(
         labels, predictions, weights, topn)
-    sorted_labels, sorted_weights = utils.sort_by_scores(
-        predictions, [labels, weights], topn=topn)
+    _, indices = predictions.sort(descending=True, dim=-1)
+    sorted_labels = torch.gather(labels, dim=1, index=indices)
+    sorted_weights = torch.gather(weights, dim=1, index=indices)
     list_size = sorted_labels.size()[-1]
-    if torch.cuda.is_available():
-      pow = torch.as_tensor(2.0, device=device)
-      relevance = (torch.pow(pow, sorted_labels) - 1) / \
-          torch.pow(pow, torch.as_tensor(RankingMetricKey.MAX_LABEL,device=device))
-      non_rel = torch.cumprod(1.0 - relevance, dim=1) / (1.0 - relevance)
-      reciprocal_rank = 1.0 / \
-          torch.arange(start=1, end=list_size + 1,device=device,dtype=torch.float32)
-    else:
-      pow = torch.as_tensor(2.0)
-      relevance = (torch.pow(pow, sorted_labels) - 1) / \
-          torch.pow(pow, torch.as_tensor(RankingMetricKey.MAX_LABEL))
-      non_rel = torch.cumprod(1.0 - relevance, dim=1) / (1.0 - relevance)
-      reciprocal_rank = 1.0 / \
-          torch.arange(start=1, end=list_size + 1,dtype=torch.float32)
-    mask = torch.ge(reciprocal_rank, 1.0 / (topn + 1)).type(torch.float32)
-    reciprocal_rank = reciprocal_rank * mask
+    pow = torch.as_tensor(2.0, device=device)
+    relevance = (torch.pow(pow, sorted_labels) - 1) / \
+      torch.pow(pow, torch.as_tensor(RankingMetricKey.MAX_LABEL,device=device))
+    non_rel = torch.cumprod(1.0 - relevance, dim=1) / (1.0 - relevance)
+    reciprocal_rank = 1.0 / \
+      torch.arange(start=1, end=list_size + 1,device=device,dtype=torch.float32)
+    mask = [torch.ge(reciprocal_rank, 1.0 / (n + 1)).type(torch.float32) for n in topn]
+    reciprocal_rank_topn = [reciprocal_rank * top_n_mask for top_n_mask in mask]
     # ERR has a shape of [batch_size, 1]
-    err = torch.sum(
-        relevance * non_rel * reciprocal_rank * sorted_weights, dim=1, keepdim=True)
-    return torch.mean(err)
+    err = [torch.sum(
+        relevance * non_rel * reciprocal_rank * sorted_weights, dim=1, keepdim=True) for reciprocal_rank in reciprocal_rank_topn]
+    err = torch.stack(err,dim=0)
+    return torch.mean(err,dim=0)
 
 
 def average_relevance_position(labels, predictions, weights=None, name=None):
@@ -351,11 +352,12 @@ def average_relevance_position(labels, predictions, weights=None, name=None):
     Returns:
       A metric for the weighted average relevance position.
     """
-    _, list_size = array_ops.unstack(array_ops.shape(predictions))
+    list_size = predictions.size()[1]
     labels, predictions, weights, topn = _prepare_and_validate_params(
         labels, predictions, weights, list_size)
-    sorted_labels, sorted_weights = utils.sort_by_scores(
-        predictions, [labels, weights], topn=topn)
+    _, indices = predictions.sort(descending=True, dim=-1)
+    sorted_labels = torch.gather(labels, dim=1, index=indices)
+    sorted_weights = torch.gather(weights, dim=1, index=indices)
     relevance = sorted_labels * sorted_weights
     position = torch.arange(1, topn + 1, dtype=torch.float)
     # TODO(xuanhui): Consider to add a cap poistion topn + 1 when there is no
@@ -374,7 +376,7 @@ def precision(labels, predictions, weights=None, topn=None, name=None):
         the ranking score of the corresponding example.
       weights: A `Tensor` of the same shape of predictions or [batch_size, 1]. The
         former case is per-example and the latter case is per-list.
-      topn: A cutoff for how many examples to consider for this metric.
+      topn: A list of cutoff for how many examples to consider for this metric.
       name: A string used as the name for this metric.
 
     Returns:
@@ -382,8 +384,9 @@ def precision(labels, predictions, weights=None, topn=None, name=None):
     """
     labels, predictions, weights, topn = _prepare_and_validate_params(
         labels, predictions, weights, topn)
-    sorted_labels, sorted_weights = utils.sort_by_scores(
-        predictions, [labels, weights], topn=topn)
+    _, indices = predictions.sort(descending=True, dim=-1)
+    sorted_labels = torch.gather(labels, dim=1, index=indices)
+    sorted_weights = torch.gather(weights, dim=1, index=indices)
     # Relevance = 1.0 when labels >= 1.0.
     relevance = torch.ge(sorted_labels, 1.0).to(dtype=torch.float)
     per_list_precision = _safe_div(
@@ -393,7 +396,7 @@ def precision(labels, predictions, weights=None, topn=None, name=None):
     # 0 when there is no relevant example in topn.
     per_list_weights = _per_example_weights_to_per_list_weights(
         weights, torch.ge(labels, 1.0).to(dtype=torch.float))
-    return math_ops.reduce_mean(per_list_precision * per_list_weights)
+    return torch.mean(per_list_precision * per_list_weights)
 
 
 def mean_average_precision(labels,
@@ -413,7 +416,7 @@ def mean_average_precision(labels,
         the ranking score of the corresponding example.
       weights: A `Tensor` of the same shape of predictions or [batch_size, 1]. The
         former case is per-example and the latter case is per-list.
-      topn: A cutoff for how many examples to consider for this metric.
+      topn: A list of cutoff for how many examples to consider for this metric.
       name: A string used as the name for this metric.
 
     Returns:
@@ -421,11 +424,12 @@ def mean_average_precision(labels,
     """
     labels, predictions, weights, topn = _prepare_and_validate_params(
         labels, predictions, weights, topn)
-    sorted_labels, sorted_weights = utils.sort_by_scores(
-        predictions, [labels, weights], topn=topn)
+    _, indices = predictions.sort(descending=True, dim=-1)
+    sorted_labels = torch.gather(labels, dim=1, index=indices)
+    sorted_weights = torch.gather(weights, dim=1, index=indices)
     # Relevance = 1.0 when labels >= 1.0.
     sorted_relevance = torch.ge(sorted_labels, 1.0).to(dtype=torch.float32)
-    per_list_relevant_counts = tf.cumsum(sorted_relevance, axis=1)
+    per_list_relevant_counts = torch.cumsum(sorted_relevance, axis=1)
     per_list_cutoffs = torch.cumsum(torch.ones_like(sorted_relevance), dim=1)
     per_list_precisions = torch.nan_to_num(torch.div(per_list_relevant_counts,
                                                 per_list_cutoffs))
@@ -455,30 +459,32 @@ def normalized_discounted_cumulative_gain(labels,
         the ranking score of the corresponding example.
       weights: A `Tensor` of the same shape of predictions or [batch_size, 1]. The
         former case is per-example and the latter case is per-list.
-      topn: A cutoff for how many examples to consider for this metric.
+      topn: A list of cutoff for how many examples to consider for this metric.
       name: A string used as the name for this metric.
 
     Returns:
       A metric for the weighted normalized discounted cumulative gain of the
       batch.
     """
-    labels, predictions, weights, topn = _prepare_and_validate_params(
-        labels, predictions, weights, topn)
-    sorted_labels, sorted_weights = utils.sort_by_scores(
-        predictions, [labels, weights], topn=topn)
-    dcg = _discounted_cumulative_gain(sorted_labels, sorted_weights)
-    # Sorting over the weighted labels to get ideal ranking.
-    if torch.cuda.is_available():
-        labels = labels.to(device=device)
-    ideal_sorted_labels, ideal_sorted_weights = utils.sort_by_scores(
-        weights * labels, [labels, weights], topn=topn)
-    ideal_dcg = _discounted_cumulative_gain(ideal_sorted_labels,
-                                            ideal_sorted_weights)
-    per_list_ndcg = _safe_div(dcg, ideal_dcg)
-    per_list_weights = _per_example_weights_to_per_list_weights(
-        weights=weights,
-        relevance=torch.pow(torch.tensor(2.0),labels.to(torch.float)) - 1.0)
-    ndcg = torch.mean(per_list_ndcg * per_list_weights)
+    if weights is not None:
+        labels, predictions, weights, topn = _prepare_and_validate_params(
+            labels, predictions, weights, topn)
+        dcg = _discounted_cumulative_gain(predictions, labels, weights, topn)
+        # Sorting over the weighted labels to get ideal ranking.
+        ideal_dcg = _discounted_cumulative_gain(labels, labels, weights, topn)
+        per_list_ndcg = _safe_div(dcg, ideal_dcg)
+        per_list_weights = _per_example_weights_to_per_list_weights(
+            weights=weights,
+            relevance=torch.pow(torch.tensor(2.0),labels.to(torch.float)) - 1.0)
+        ndcg = torch.mean(per_list_ndcg * per_list_weights)
+    else:
+        labels, predictions, weights, topn = _prepare_and_validate_params(
+            labels, predictions, weights, topn)
+        dcg = _discounted_cumulative_gain(predictions, labels, weights, topn)
+        # Sorting over the weighted labels to get ideal ranking.
+        ideal_dcg = _discounted_cumulative_gain(labels, labels, weights, topn)
+        per_list_ndcg = _safe_div(dcg, ideal_dcg)
+        ndcg = torch.mean(per_list_ndcg,dim=0)
     return ndcg
 
 
@@ -495,7 +501,7 @@ def discounted_cumulative_gain(labels,
         the ranking score of the corresponding example.
       weights: A `Tensor` of the same shape of predictions or [batch_size, 1]. The
         former case is per-example and the latter case is per-list.
-      topn: A cutoff for how many examples to consider for this metric.
+      topn: A list of cutoff for how many examples to consider for this metric.
       name: A string used as the name for this metric.
 
     Returns:
@@ -503,15 +509,16 @@ def discounted_cumulative_gain(labels,
     """
     labels, predictions, weights, topn = _prepare_and_validate_params(
         labels, predictions, weights, topn)
-    sorted_labels, sorted_weights = utils.sort_by_scores(
-        predictions, [labels, weights], topn=topn)
+    _, indices = predictions.sort(descending=True, dim=-1)
+    sorted_labels = torch.gather(labels, dim=1, index=indices)
+    sorted_weights = torch.gather(weights, dim=1, index=indices)
     dcg = _discounted_cumulative_gain(sorted_labels,
                                       sorted_weights) * torch.log1p(1.0)
     per_list_weights = _per_example_weights_to_per_list_weights(
         weights=weights,
         relevance=torch.pow(2.0, labels.to(dtype=torch.float)) - 1.0)
     return torch.mean(
-        _safe_div(dcg, per_list_weights) * per_list_weights)
+        _safe_div(dcg, per_list_weights) * per_list_weights,dim=0)
 
 
 def ordered_pair_accuracy(labels, predictions, weights=None):

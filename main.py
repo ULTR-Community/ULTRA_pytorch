@@ -31,6 +31,8 @@ parser.add_argument("--model_dir", type=str, default="./tests/tmp_model/", help=
                                                                               "intermediate outputs.")
 parser.add_argument("--output_dir", type=str, default="./tests/tmp_output/", help="The directory to output results.")
 
+parser.add_argument("--click_model_dir", type=str, default=None, help="The directory that contains labels produced by the click model")
+parser.add_argument("--data_format", type=str, default="ULTRA", help="The format of the data")
 # model
 parser.add_argument("--setting_file", type=str, default="./example/offline_setting/dla_exp_settings.json",
                     help="A json file that contains all the settings of the algorithm.")
@@ -81,11 +83,11 @@ def create_model(exp_settings, data_set):
 def train(exp_settings):
     # Prepare data.
     print("Reading data in %s" % args.data_dir)
-    train_set = ultra.utils.read_data(args.data_dir, args.train_data_prefix, args.max_list_cutoff)
+    train_set = ultra.utils.read_data(args.data_dir, args.train_data_prefix, args.click_model_dir, args.max_list_cutoff)
     ultra.utils.find_class(exp_settings['train_input_feed']).preprocess_data(train_set,
                                                                              exp_settings['train_input_hparams'],
                                                                              exp_settings)
-    valid_set = ultra.utils.read_data(args.data_dir, args.valid_data_prefix, args.max_list_cutoff)
+    valid_set = ultra.utils.read_data(args.data_dir, args.valid_data_prefix, args.click_model_dir, args.max_list_cutoff)
     ultra.utils.find_class(exp_settings['train_input_feed']).preprocess_data(valid_set,
                                                                              exp_settings['train_input_hparams'],
                                                                              exp_settings)
@@ -147,12 +149,12 @@ def train(exp_settings):
     while True:
         # Get a batch and make a step.
         start_time= time.time()
-        input_feed, info_map = train_input_feed.get_batch(train_set, check_validation=True)
+        input_feed, info_map = train_input_feed.get_batch(train_set, check_validation=True, data_format=args.data_format)
         step_loss, _, summary = model.train(input_feed)
         step_time += (time.time() - start_time) / args.steps_per_checkpoint
         loss += step_loss / args.steps_per_checkpoint
         current_step += 1
-        # train_writer.add_scalars("Training at step %s" % model.global_step, summary)
+        train_writer.add_scalars("Training at step %s" % model.global_step, summary)
 
         # Once in a while, we save checkpoint, print statistics, and run evals.
         if current_step % args.steps_per_checkpoint == 0:
@@ -169,7 +171,8 @@ def train(exp_settings):
                 summary_list = []
                 batch_size_list = []
                 while it < len(data_set.initial_list):
-                    input_feed, info_map = data_input_feed.get_next_batch(it, data_set, check_validation=False)
+                    input_feed, info_map = data_input_feed.get_next_batch(
+                        it, data_set, check_validation=False, data_format=args.data_format)
                     _, _, summary = model.validation(input_feed)
                     summary_list.append(summary)
                     batch_size_list.append(len(info_map['input_list']))
@@ -199,8 +202,8 @@ def train(exp_settings):
                                                                "%s.ckpt" % exp_settings['learning_algorithm'])
                                 torch.save(model.model.state_dict(), checkpoint_path)
                                 best_perf = value
-                                print('Save model, valid %s:%.3f' % (key, best_perf))
                                 break
+                        print('Save model, valid %s:%.3f' % (key, best_perf))
 
             # Save checkpoint if there is no objective metric
             if best_perf == None and current_step > args.start_saving_iteration:
@@ -224,7 +227,7 @@ def train(exp_settings):
 def test(exp_settings):
     # Load test data.
     print("Reading data in %s" % args.data_dir)
-    test_set = ultra.utils.read_data(args.data_dir, args.test_data_prefix, args.max_list_cutoff)
+    test_set = ultra.utils.read_data(args.data_dir, args.test_data_prefix, args.click_model_dir, args.max_list_cutoff)
     ultra.utils.find_class(exp_settings['train_input_feed']).preprocess_data(test_set,
                                                                              exp_settings['train_input_hparams'],
                                                                              exp_settings)

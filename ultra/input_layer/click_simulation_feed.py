@@ -98,7 +98,7 @@ class ClickSimulationFeed(BaseInputFeed):
                                   < 0 else base + x for x in range(self.rank_list_size)]))
         labels.append(click_list)
 
-    def get_batch(self, data_set, check_validation=False):
+    def get_batch(self, data_set, check_validation=False, data_format = "ULTRA"):
         """Get a random batch of data, prepare for step. Typically used for training.
 
         To feed data in step(..) it must be a list of batch-major vectors, while
@@ -173,7 +173,7 @@ class ClickSimulationFeed(BaseInputFeed):
 
         return input_feed, info_map
 
-    def get_next_batch(self, index, data_set, check_validation=False):
+    def get_next_batch(self, index, data_set, check_validation=False, data_format = "ULTRA"):
         """Get the next batch of data from a specific index, prepare for step.
            Typically used for validation.
 

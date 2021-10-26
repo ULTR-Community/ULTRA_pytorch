@@ -11,29 +11,24 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import torch.nn as nn
-import torch.nn.functional as F
 import torch
 from torch.utils.tensorboard import SummaryWriter
+import torch.nn.functional as F
+
 
 from ultra.learning_algorithm.base_algorithm import BaseAlgorithm
 import ultra.utils
 
 
-def selu(x):
-    # with tf.name_scope('selu') as scope:
-    alpha = 1.6732632423543772848170429916717
-    scale = 1.0507009873554804934193349852946
-    return scale * torch.where(x >= 0.0, x, alpha * F.elu(x))
+class PRSrank(BaseAlgorithm):
+    """The Lambda Rank algorithm for unbiased learning to rank.
 
+    This class implements the training and testing of theLambda algorithm for unbiased learning to rank. See the following paper for more information on the algorithm.
 
-class IPWrank(BaseAlgorithm):
-    """The Inverse Propensity Weighting algorithm for unbiased learning to rank.
+    From RankNet to LambdaRank to LambdaMART: An Overview
+    https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2010-82.pdf
+    https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf
 
-    This class implements the training and testing of the Inverse Propensity Weighting algorithm for unbiased learning to rank. See the following paper for more information on the algorithm.
-
-    * Xuanhui Wang, Michael Bendersky, Donald Metzler, Marc Najork. 2016. Learning to Rank with Selection Bias in Personal Search. In Proceedings of SIGIR '16
-    * Thorsten Joachims, Adith Swaminathan, Tobias Schnahel. 2017. Unbiased Learning-to-Rank with Biased Feedback. In Proceedings of WSDM '17
 
     """
 
@@ -49,17 +44,14 @@ class IPWrank(BaseAlgorithm):
             propensity_estimator_type='ultra.utils.propensity_estimator.RandomizedPropensityEstimator',
             # the setting file for the predefined click models.
             propensity_estimator_json='./example/PropensityEstimator/randomized_pbm_0.1_1.0_4_1.0.json',
-            learning_rate=0.05,                 # Learning rate.
-            max_gradient_norm=5.0,            # Clip gradients to this norm.
-            loss_func='softmax_loss',      # Select Loss function
-            # Set strength for L2 regularization.
-            l2_loss=0.0,
-            grad_strategy='ada',            # Select gradient strategy
+            learning_rate=0.05,  # Learning rate.
+            max_gradient_norm=5.0,  # Clip gradients to this norm.
+            grad_strategy='ada',  # Select gradient strategy
+            sigma=1.0
         )
-
         self.is_cuda_avail = torch.cuda.is_available()
+        self.device = torch.device('cuda') if self.is_cuda_avail else torch.device('cpu')
         self.writer = SummaryWriter()
-        self.cuda = torch.device('cuda')
         self.train_summary = {}
         self.eval_summary = {}
         self.is_training = "is_train"
@@ -72,14 +64,14 @@ class IPWrank(BaseAlgorithm):
         self.letor_features = None
         self.feature_size = data_set.feature_size
         self.model = self.create_model(self.feature_size)
-        if self.is_cuda_avail:
-            self.model = self.model.to(device=self.cuda)
+        self.model = self.model.to(device=self.device)
         self.propensity_estimator = ultra.utils.find_class(
             self.hparams.propensity_estimator_type)(
             self.hparams.propensity_estimator_json)
 
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.learning_rate = float(self.hparams.learning_rate)
+        self.sigma = self.hparams.sigma
         self.global_step = 0
 
         # Feeds for inputs.
@@ -92,12 +84,12 @@ class IPWrank(BaseAlgorithm):
             self.docid_inputs_name.append("docid_input{0}".format(i))
             self.labels_name.append("label{0}".format(i))
         self.PAD_embed = torch.zeros(1, self.feature_size)
-        self.PAD_embed = self.PAD_embed.to(dtype = torch.float32)
+        self.PAD_embed = self.PAD_embed.to(dtype=torch.float32)
+        self.lambda_weights = None
         self.optimizer_func = torch.optim.Adagrad(self.model.parameters(), lr=self.learning_rate)
 
         if self.hparams.grad_strategy == 'sgd':
             self.optimizer_func = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
-
 
     def train(self, input_feed):
         """Run a step of the model feeding the given inputs for training process.
@@ -112,56 +104,57 @@ class IPWrank(BaseAlgorithm):
         """
         # Output feed: depends on whether we do a backward step or not.
         # compute propensity weights for the input data.
-        self.global_step += 1
-        pw = []
         self.model.train()
+        ipw = []
         for l in range(self.rank_list_size):
             input_feed["propensity_weights{0}".format(l)] = []
         for i in range(len(input_feed[self.labels_name[0]])):
             click_list = [input_feed[self.labels_name[l]][i]
                           for l in range(self.rank_list_size)]
             pw_list = self.propensity_estimator.getPropensityForOneList(
-                click_list)
-            pw.append(pw_list)
+                click_list,use_non_clicked_data=True)
+            ipw.append(torch.as_tensor(pw_list))
             for l in range(self.rank_list_size):
                 input_feed["propensity_weights{0}".format(l)].append(
                     pw_list[l])
+        ipw = torch.stack(ipw)
+        pw = ultra.utils.metrics._safe_div(torch.tensor(1.0), ipw)
 
         self.create_input_feed(input_feed, self.rank_list_size)
+        training_output = self.ranking_model(self.model,
+                                          self.rank_list_size)
+        preds_sorted, preds_sorted_inds = torch.sort(training_output, dim=1, descending=True)
+        labels_sorted_via_preds = torch.gather(self.labels, dim=1, index=preds_sorted_inds)
+        ipw_sorted_via_preds = torch.gather(ipw, dim=1, index=preds_sorted_inds)
+        print(ipw_sorted_via_preds[0])
+        pw_sorted_via_preds = torch.gather(pw, dim=1, index=preds_sorted_inds)
+        print(pw_sorted_via_preds[0])
 
-        self.propensity_weights = pw
-        # Gradients and SGD update operation for training the model.
+        #calculate the prs score using the pw of unclick document and ipw of clicked document
+        prs = torch.unsqueeze(ipw_sorted_via_preds, dim=2) * torch.unsqueeze(pw_sorted_via_preds, dim=1)
+        prs = torch.triu(prs, diagonal=1)
+        print(prs[0])
 
-        train_output = self.ranking_model(self.model,
-            self.rank_list_size)
-        train_labels = self.labels
-        train_pw = torch.as_tensor(self.propensity_weights)
-        if self.is_cuda_avail:
-            train_pw = train_pw.to(device=self.cuda)
-        self.loss = None
-
-        if self.hparams.loss_func == 'sigmoid_loss':
-            self.loss = self.sigmoid_loss_on_list(
-                train_output, train_labels, train_pw)
-        elif self.hparams.loss_func == 'pairwise_loss':
-            self.loss = self.pairwise_loss_on_list(
-                train_output, train_labels, train_pw)
-        else:
-            self.loss = self.softmax_loss(
-                train_output, train_labels, train_pw)
-
-        # params = tf.trainable_variables()
+        std_diffs = torch.unsqueeze(labels_sorted_via_preds, dim=2) - torch.unsqueeze(
+            labels_sorted_via_preds, dim=1)  # standard pairwise differences, i.e., S_{ij}
+        std_Sij = torch.clamp(std_diffs, min=-1.0, max=1.0)  # ensuring S_{ij} \in {-1, 0, 1}
+        std_p_ij = 0.5 * (1.0 + std_Sij)
+        # s_ij has shape [batch_size, rank_list_size, rank_list_size]
+        s_ij = torch.unsqueeze(preds_sorted, dim=2) - torch.unsqueeze(preds_sorted,dim=1)  # computing pairwise differences, i.e., s_i - s_j
+        p_ij = 1.0 / (torch.exp(-self.sigma * s_ij) + 1.0)
+        ideally_sorted_labels, _ = torch.sort(self.labels, dim =1, descending=True)
+        delta_NDCG = self.compute_delta_ndcg(ideally_sorted_labels, labels_sorted_via_preds)
+        self.loss = F.binary_cross_entropy(torch.triu(p_ij, diagonal=1),
+                                            torch.triu(std_p_ij,diagonal=1),
+                                            torch.triu(delta_NDCG,diagonal=1), reduction='none')
+        self.loss = self.loss * prs
+        self.loss = torch.sum(self.loss)
         params = self.model.parameters()
-        if self.hparams.l2_loss > 0:
-            for p in params:
-                self.loss += self.hparams.l2_loss * self.l2_loss(p)
-
         self.opt_step(self.optimizer_func, params)
         # self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
         #                     True)
         # self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate,True)
 
-        nn.utils.clip_grad_value_(train_labels, 1)
         # pad_removed_train_output = self.remove_padding_for_metric_eval(
         #     self.docid_inputs, train_output)
         # for metric in self.exp_settings['metrics']:
@@ -178,10 +171,11 @@ class IPWrank(BaseAlgorithm):
         #         #                     'Weighted_%s_%d at global step %d' %(metric, topn, self.global_step),
         #         #                     weighted_metric_value, True)
 
-        print(" Loss %f at Global Step %d: " % (self.loss.item(),self.global_step))
+        print(" Loss %f at Global Step %d: " % (self.loss.item(), self.global_step))
+        self.global_step += 1
         return self.loss.item(), None, self.train_summary
 
-    def validation(self, input_feed, is_online_simulation= False):
+    def validation(self, input_feed, is_online_simulation=False):
         """Run a step of the model feeding the given inputs for validating process.
 
         Args:
@@ -196,16 +190,62 @@ class IPWrank(BaseAlgorithm):
         self.create_input_feed(input_feed, self.max_candidate_num)
         with torch.no_grad():
             self.output = self.ranking_model(self.model,
-                self.max_candidate_num)
-        if not is_online_simulation:
-            pad_removed_output = self.remove_padding_for_metric_eval(
-                self.docid_inputs, self.output)
+                                             self.max_candidate_num)
+            if not is_online_simulation:
+                pad_removed_output = self.remove_padding_for_metric_eval(
+                    self.docid_inputs, self.output)
 
-            for metric in self.exp_settings['metrics']:
-                topn = self.exp_settings['metrics_topn']
-                metric_values = ultra.utils.make_ranking_metric_fn(
-                    metric, topn)(self.labels, pad_removed_output, None)
-                for topn, metric_value in zip(topn, metric_values):
-                    self.create_summary('%s_%d' % (metric, topn),
-                                        '%s_%d' % (metric, topn), metric_value.item(), False)
+                for metric in self.exp_settings['metrics']:
+                    topn = self.exp_settings['metrics_topn']
+                    metric_values = ultra.utils.make_ranking_metric_fn(
+                        metric, topn)(self.labels, pad_removed_output, None)
+                    for topn, metric_value in zip(topn, metric_values):
+                        self.create_summary('%s_%d' % (metric, topn),
+                                            '%s_%d' % (metric, topn), metric_value.item(), False)
         return None, self.output, self.eval_summary  # loss, outputs, summary.
+
+    def dcg(self, labels):
+        """Computes discounted cumulative gain (DCG).
+
+        DCG =  SUM((2^label -1) / (log(1+rank))).
+
+        Args:
+         labels: The relevance `Tensor` of shape [batch_size, list_size]. For the
+           ideal ranking, the examples are sorted by relevance in reverse order.
+          weights: A `Tensor` of the same shape as labels or [batch_size, 1]. The
+            former case is per-example and the latter case is per-list.
+
+        Returns:
+          A `Tensor` as the weighted discounted cumulative gain per-list. The
+          tensor shape is [batch_size, 1].
+        """
+        list_size = labels.shape[1]
+        position = torch.arange(1, list_size + 1, device=self.device, dtype=torch.float32)
+        denominator = torch.log(position + 1)
+        numerator = torch.pow(torch.tensor(2.0, device=self.device), labels.to(torch.float32)) - 1.0
+        return torch.sum(ultra.utils.metrics._safe_div(numerator, denominator))
+
+    def compute_delta_ndcg(self, ideally_sorted_stds, stds_sorted_via_preds):
+        '''
+        Delta-nDCG w.r.t. pairwise swapping of the currently predicted ltr_adhoc
+        :param batch_stds: the standard labels sorted in a descending order
+        :param batch_stds_sorted_via_preds: the standard labels sorted based on the corresponding predictions
+        :return:
+        '''
+        # ideal discount cumulative gains
+        batch_idcgs = self.dcg(ideally_sorted_stds)
+
+        batch_gains = torch.pow(2.0, stds_sorted_via_preds) - 1.0
+
+        batch_n_gains = batch_gains / batch_idcgs  # normalised gains
+        batch_ng_diffs = torch.unsqueeze(batch_n_gains, dim=2) - torch.unsqueeze(batch_n_gains, dim=1)
+
+        batch_std_ranks = torch.arange(stds_sorted_via_preds.size(1)).type(torch.cuda.FloatTensor) if self.is_cuda_avail \
+            else torch.arange(stds_sorted_via_preds.size(1))
+        batch_dists = 1.0 / torch.log2(batch_std_ranks + 2.0)  # discount co-efficients
+        batch_dists = torch.unsqueeze(batch_dists, dim=0)
+        batch_dists_diffs = torch.unsqueeze(batch_dists, dim=2) - torch.unsqueeze(batch_dists, dim=1)
+        batch_delta_ndcg = torch.abs(batch_ng_diffs) * torch.abs(
+            batch_dists_diffs)  # absolute changes w.r.t. pairwise swapping
+
+        return batch_delta_ndcg

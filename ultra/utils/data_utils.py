@@ -22,7 +22,7 @@ from . import metrics
 
 
 class Raw_data:
-    def __init__(self, data_path=None, file_prefix=None, rank_cut=None):
+    def __init__(self, data_path=None, file_prefix=None, click_model_dir=None, rank_cut=None):
         """
         Initialize a dataset
 
@@ -36,10 +36,12 @@ class Raw_data:
         """
         self.data_path = data_path
         self.file_prefix = file_prefix
+        self.click_model_dir = click_model_dir
         self.feature_size = -1
         self.rank_list_size = -1
         self.removed_feature_ids = []
         self.features = []
+        self.features_dict = {}
         self.dids = []
         self.initial_list = []
         self.qids = []
@@ -51,7 +53,10 @@ class Raw_data:
 
         if os.path.isfile(data_path + file_prefix + '/' +
                           file_prefix + '.feature'):  # files in ULTRA data format
-            self.load_data_in_ULTRA_format(data_path, file_prefix, rank_cut)
+            if click_model_dir != None:
+                self.load_data_in_ULTRE_format(data_path, file_prefix, click_model_dir, rank_cut)
+            else:
+                self.load_data_in_ULTRA_format(data_path, file_prefix, rank_cut)
         # files in libsvm data format
         elif os.path.isfile(data_path + file_prefix + '/' + file_prefix + '.txt'):
             self.load_data_in_libsvm_format(data_path, file_prefix, rank_cut)
@@ -180,6 +185,102 @@ class Raw_data:
         self.initial_list_lengths = [
             len(self.initial_list[i]) for i in range(len(self.initial_list))]
         self.remove_invalid_data()
+        print('Data reading finish!')
+        return
+
+    def load_data_in_ULTRE_format(
+            self, data_path=None, file_prefix=None, click_model_dir=None, rank_cut=None):
+        """
+        Read dataset in ULTRE format including:
+            rank_list_size: the maximum number of documents for a query in the data.
+            features: the feature vectors of each query-document pair.
+            dids: the doc ids for each query-document pair.
+            initial_list: the initial ranking list for each query
+            qids: the query ids for each query.
+            labels: the relevance label for each query-document pair in the initial_list.
+            initial_list_lengths: the length of the initial list for each query.
+
+        Args:
+            data_path: (string) the root directory of the experimental dataset.
+            file_prefix: (string) the prefix of the data to process, e.g. 'train', 'valid', or 'test'.
+            rank_cut: (int) the maximum number of top documents considered in each list.
+
+        Returns:
+            None
+        """
+        print(
+            'Read data from %s/%s in ULTRE format.' %
+            (data_path, file_prefix))
+        self.load_basic_data_information(data_path)
+
+        feature_fin = open(
+            data_path +
+            file_prefix +
+            '/' +
+            file_prefix +
+            '.feature')
+        for line in feature_fin:
+            arr = line.strip().split(' ')
+            self.dids.append(arr[0])
+            # self.features.append(np.zeros(self.feature_size))
+            features = [0.0 for _ in range(self.feature_size)]
+            for x in arr[1:]:
+                arr2 = x.split(':')
+                feautre_idx = int(arr2[0]) - 1
+                if feautre_idx < self.feature_size:
+                    features[int(feautre_idx)] = float(arr2[1])
+            for rf_idx in self.removed_feature_ids:
+                del features[rf_idx - 1]
+            self.features_dict[arr[0]] = features
+        self.feature_size -= len(self.removed_feature_ids)
+        feature_fin.close()
+
+        print('Feature reading finish.')
+
+        init_list_fin = open(
+            data_path +
+            file_prefix +
+            '/' +
+            file_prefix +
+            '.init_list')
+        for line in init_list_fin:
+            arr = line.strip().split(' ')
+            first_element = arr[0].split(':')
+            arr[0] = first_element[1]
+            self.qids.append(first_element[0])
+            self.initial_list.append([x for x in arr])
+            if len(self.initial_list[-1]) > self.rank_list_size:
+                self.rank_list_size = len(self.initial_list[-1])
+        init_list_fin.close()
+
+        print('List reading finish.')
+        if os.path.isfile(data_path + file_prefix + '/' + click_model_dir +
+                          file_prefix + '.labels'):
+            label_fin = open(
+                data_path +
+                file_prefix +
+                '/' +
+                click_model_dir +
+                file_prefix +
+                '.labels')
+        else:
+            label_fin = open(
+                data_path +
+                file_prefix +
+                '/' +
+                file_prefix +
+                '.labels')
+        for line in label_fin:
+            arr = line.strip().split(' ')
+            first_label = arr[0].split(':')[1]
+            arr[0] = first_label
+            self.labels.append([int(x) for x in arr])
+        label_fin.close()
+
+        print('Label reading finish.')
+        self.initial_list_lengths = [
+            len(self.initial_list[i]) for i in range(len(self.initial_list))]
+        self.remove_invalid_ULTRE_data()
         print('Data reading finish!')
         return
 
@@ -320,6 +421,58 @@ class Raw_data:
                 self.rank_list_size = x
         return
 
+    def remove_invalid_ULTRE_data(self):
+        """
+        Remove query lists with no relevant items or less than 2 items
+
+        self.feature_size = -1
+        self.rank_list_size = -1
+        self.removed_feature_ids = []
+        self.features = []
+        self.dids = []
+        self.initial_list = []
+        self.qids = []
+        self.initial_scores = []
+        self.initial_list_lengths = []
+
+        Returns:
+            None
+        """
+
+        # Find invalid queries and documents
+        invalid_qidx = []
+        for i in range(len(self.qids)):
+            qidx = len(self.qids) - 1 - i
+            if len(self.initial_list[qidx]) < 2:
+                invalid_qidx.append(qidx)
+        print('Remove %d invalid queries.' % len(invalid_qidx))
+
+        ''' need to maintain the features and dids to avoid wrong index.
+        invalid_didx = []
+        for qidx in invalid_qidx:
+            for idx in self.initial_list[qidx]:
+                if idx >= 0:
+                    invalid_didx.append(idx)
+        invalid_didx = sorted(invalid_didx, reverse=True)
+        '''
+
+        # Remove invalid queries and documents
+        for qidx in invalid_qidx:
+            del self.qids[qidx]
+            del self.initial_list[qidx]
+            del self.labels[qidx]
+            if len(self.initial_scores) > 0:
+                del self.initial_scores[qidx]
+
+        # Recompute list lengths and maximum rank list size
+        self.initial_list_lengths = [
+            len(self.initial_list[i]) for i in range(len(self.initial_list))]
+        for i in range(len(self.initial_list_lengths)):
+            x = self.initial_list_lengths[i]
+            if self.rank_list_size < x:
+                self.rank_list_size = x
+        return
+
     def pad(self, rank_list_size, pad_tails=True):
         """
         Pad a rank list with zero feature vectors when it is shorter than the required rank list size.
@@ -361,8 +514,8 @@ def merge_Summary(summary_list, weights):
     return merged_values
 
 
-def read_data(data_path, file_prefix, rank_cut=None):
-    data = Raw_data(data_path, file_prefix, rank_cut)
+def read_data(data_path, file_prefix, click_model_dir, rank_cut=None):
+    data = Raw_data(data_path, file_prefix, click_model_dir, rank_cut)
     return data
 
 

@@ -68,6 +68,8 @@ class PairDebias(BaseAlgorithm):
 
         self.hparams.parse(exp_settings['learning_algorithm_hparams'])
         self.exp_settings = exp_settings
+        if 'selection_bias_cutoff' in self.exp_settings.keys():
+            self.rank_list_size = self.exp_settings['selection_bias_cutoff']
         self.feature_size = data_set.feature_size
         self.model = self.create_model(self.feature_size)
         self.max_candidate_num = exp_settings['max_candidate_num']
@@ -86,15 +88,15 @@ class PairDebias(BaseAlgorithm):
             self.labels_name.append("label{0}".format(i))
 
         self.global_step = 0
-        self.rank_list_size = exp_settings['selection_bias_cutoff']
-        self.t_plus = torch.ones([1, self.rank_list_size])
-        self.t_plus.requires_grad = False
-        self.t_minus = torch.ones([1, self.rank_list_size])
-        if self.is_cuda_avail:
-            self.t_plus = torch.ones([1, self.rank_list_size], device=self.cuda)
-            self.t_minus = torch.ones([1, self.rank_list_size], device=self.cuda)
-        self.t_plus.requires_grad = False
-        self.t_minus.requires_grad = False
+        if 'selection_bias_cutoff' in self.exp_settings:
+            self.rank_list_size = self.exp_settings['selection_bias_cutoff']
+            self.t_plus = torch.ones([1, self.rank_list_size])
+            self.t_minus = torch.ones([1, self.rank_list_size])
+            if self.is_cuda_avail:
+                self.t_plus = torch.ones([1, self.rank_list_size], device=self.cuda)
+                self.t_minus = torch.ones([1, self.rank_list_size], device=self.cuda)
+            self.t_plus.requires_grad = False
+            self.t_minus.requires_grad = False
 
         # Select optimizer
         self.optimizer_func = torch.optim.Adagrad(self.model.parameters(), lr=self.hparams.learning_rate)
@@ -131,16 +133,7 @@ class PairDebias(BaseAlgorithm):
             self.t_plus, 1, dim=1)
         self.splitted_t_minus = torch.split(
             self.t_minus, 1, dim=1)
-        # for i in range(self.rank_list_size):
-        #     self.create_summary('t_plus Probability %d' % i,
-        #                         't_plus Probability %d at global step %d' % (i, self.global_step),
-        #                         torch.max(self.splitted_t_plus[i]), True)
-        #
-        #     self.create_summary('t_minus Probability %d' % i,
-        #                         't_minus Probability %d at global step %d' % (i, self.global_step),
-        #                         torch.max(self.splitted_t_plus[i]), True)
 
-        # Build pairwise loss based on clicks (0 for unclick, 1 for click)
         split_size = int(train_output.shape[1] / self.rank_list_size)
         output_list = torch.split(train_output, split_size, dim=1)
         t_plus_loss_list = [0.0 for _ in range(self.rank_list_size)]
@@ -150,7 +143,6 @@ class PairDebias(BaseAlgorithm):
             for j in range(self.rank_list_size):
                 if i == j:
                     continue
-                minus = self.labels[i] - self.labels[j]
                 valid_pair_mask = torch.minimum(
                     torch.ones_like(
                         self.labels[i]), F.relu(self.labels[i] - self.labels[j]))
@@ -177,20 +169,6 @@ class PairDebias(BaseAlgorithm):
                 self.loss += self.hparams.l2_loss * self.l2_loss(p)
 
         self.opt_step(self.optimizer_func, params)
-        # self.create_summary('Learning Rate', 'Learning_rate at global step %d' % self.global_step, self.learning_rate,
-        #                     True)
-        # self.create_summary('Loss', 'Loss at global step %d' % self.global_step, self.learning_rate,True)
-
-        # reshape from [rank_list_size, ?] to [?, rank_list_size]
-        # reshaped_train_labels = torch.transpose(self.labels, 0, 1)
-        # pad_removed_train_output = self.remove_padding_for_metric_eval(
-        #     self.docid_inputs, train_output)
-        # for metric in self.exp_settings['metrics']:
-        #     for topn in self.exp_settings['metrics_topn']:
-        #         metric_value = ultra.utils.make_ranking_metric_fn(metric, topn)(
-        #             reshaped_train_labels, pad_removed_train_output, None)
-        #         self.create_summary( '%s_%d' % (metric, topn),
-        #                              '%s_%d at global step %d' % (metric, topn, self.global_step), metric_value, True)
         print(" Loss %f at Global Step %d" % (self.loss.item(), self.global_step))
         self.global_step+=1
         return self.loss.item(), None, self.train_summary
@@ -216,9 +194,10 @@ class PairDebias(BaseAlgorithm):
                 self.docid_inputs, self.output)
 
             for metric in self.exp_settings['metrics']:
-                for topn in self.exp_settings['metrics_topn']:
-                    metric_value = ultra.utils.make_ranking_metric_fn(
-                        metric, topn)(self.labels, pad_removed_output, None)
+                topn = self.exp_settings['metrics_topn']
+                metric_values = ultra.utils.make_ranking_metric_fn(
+                    metric, topn)(self.labels, pad_removed_output, None)
+                for topn, metric_value in zip(topn, metric_values):
                     self.create_summary('%s_%d' % (metric, topn),
-                                        '%s_%d' % (metric, topn), metric_value, False)
+                                        '%s_%d' % (metric, topn), metric_value.item(), False)
         return None, self.output, self.eval_summary  # loss, outputs, summary.

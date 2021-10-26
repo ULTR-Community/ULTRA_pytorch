@@ -10,6 +10,8 @@ from .pairwise_debias import *
 from .navie_algorithm import *
 from .mgd import *
 from .nsgd import *
+from .lambda_rank import *
+from .prs_rank import *
 
 
 def list_available() -> list:

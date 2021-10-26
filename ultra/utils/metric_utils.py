@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import torch
 
-device = torch.device("cuda")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def _to_nd_indices(indices):
     """Returns indices used for tf.gather_nd or tf.scatter_nd.
 
@@ -35,13 +35,9 @@ def _to_nd_indices(indices):
 
     """
     assert indices.dim() == 2
-    if torch.cuda.is_available():
-      indices = indices.to(device=device)
-      batch_ids = torch.ones_like(indices) * torch.unsqueeze(
-        torch.arange(indices.size()[0],device=device), 1)
-    else:
-      batch_ids = torch.ones_like(indices) * torch.unsqueeze(
-        torch.arange(indices.size()[0]), 1)
+    indices = indices.to(device=device)
+    batch_ids = torch.ones_like(indices) * torch.unsqueeze(
+    torch.arange(indices.size()[0],device=device), 1)
     return torch.stack([batch_ids, indices], dim=-1)
 
 
@@ -89,37 +85,37 @@ def sort_by_scores(scores,
     return result
 
 
-# def sorted_ranks(scores, shuffle_ties=True, seed=None):
-#     """Returns an int `Tensor` as the ranks (1-based) after sorting scores.
-#
-#     Example: Given scores = [[1.0, 3.5, 2.1]], the returned ranks will be [[3, 1,
-#     2]]. It means that scores 1.0 will be ranked at position 3, 3.5 will be ranked
-#     at position 1, and 2.1 will be ranked at position 2.
-#
-#     Args:
-#       scores: A `Tensor` of shape [batch_size, list_size] representing the
-#         per-example scores.
-#       shuffle_ties: See `sort_by_scores`.
-#       seed: See `sort_by_scores`.
-#
-#     Returns:
-#       A 1-based int `Tensor`s as the ranks.
-#     """
-#     batch_size, list_size = torch.unbind(scores.size())
-#     # The current position in the list for each score.
-#     positions = tf.tile(
-#         torch.unsqueeze(
-#             torch.arange(list_size), 0), [
-#             batch_size, 1])
-#     # For score [[1.0, 3.5, 2.1]], sorted_positions are [[1, 2, 0]], meaning the
-#     # largest score is at poistion 1, the second is at postion 2 and third is at
-#     # position 0.
-#     sorted_positions = sort_by_scores(
-#         scores, [positions], shuffle_ties=shuffle_ties, seed=seed)[0]
-#     # The indices of sorting sorted_postions will be [[2, 0, 1]] and ranks are
-#     # 1-based and thus are [[3, 1, 2]].
-#     ranks = torch.argsort(sorted_positions) + 1
-#     return ranks
+def sorted_ranks(scores, shuffle_ties=True, seed=None):
+    """Returns an int `Tensor` as the ranks (1-based) after sorting scores.
+
+    Example: Given scores = [[1.0, 3.5, 2.1]], the returned ranks will be [[3, 1,
+    2]]. It means that scores 1.0 will be ranked at position 3, 3.5 will be ranked
+    at position 1, and 2.1 will be ranked at position 2.
+
+    Args:
+      scores: A `Tensor` of shape [batch_size, list_size] representing the
+        per-example scores.
+      shuffle_ties: See `sort_by_scores`.
+      seed: See `sort_by_scores`.
+
+    Returns:
+      A 1-based int `Tensor`s as the ranks.
+    """
+    batch_size, list_size = scores.size()
+    # The current position in the list for each score.
+    positions = torch.tile(
+        torch.unsqueeze(
+            torch.arange(list_size), 0), [
+            batch_size, 1])
+    # For score [[1.0, 3.5, 2.1]], sorted_positions are [[1, 2, 0]], meaning the
+    # largest score is at poistion 1, the second is at postion 2 and third is at
+    # position 0.
+    sorted_positions = sort_by_scores(
+        scores, [positions], shuffle_ties=shuffle_ties, seed=seed)[0]
+    # The indices of sorting sorted_postions will be [[2, 0, 1]] and ranks are
+    # 1-based and thus are [[3, 1, 2]].
+    ranks = torch.argsort(sorted_positions) + 1
+    return ranks
 
 #
 # def shuffle_valid_indices(is_valid, seed=None):
@@ -234,11 +230,12 @@ def inverse_max_dcg(labels,
       A `Tensor` with shape [batch_size, 1].
     """
     ideal_sorted_labels, = sort_by_scores(labels, [labels], topn=topn)
-    rank = torch.range(ideal_sorted_labels.size()[1]) + 1
+    list_size = ideal_sorted_labels.shape[1]
+    rank = torch.arange(1, list_size + 1, device=device, dtype=torch.float32)
     discounted_gain = gain_fn(ideal_sorted_labels) * rank_discount_fn(
         rank.type(dtype=torch.float32))
     discounted_gain = torch.sum(
-        input=discounted_gain, axis=1, keepdims=True)
+        input=discounted_gain, dim=1, keepdim=True)
     return torch.where(
         torch.greater(discounted_gain, 0.), 1. / discounted_gain,
         torch.zeros_like(discounted_gain))

@@ -46,11 +46,15 @@ class NavieAlgorithm(BaseAlgorithm):
         print(exp_settings['learning_algorithm_hparams'])
         self.hparams.parse(exp_settings['learning_algorithm_hparams'])
         self.exp_settings = exp_settings
+        if 'selection_bias_cutoff' in self.exp_settings.keys():
+            self.rank_list_size = self.exp_settings['selection_bias_cutoff']
+        self.feature_size = data_set.feature_size
+
         self.model = self.create_model(self.feature_size)
         if self.is_cuda_avail:
             self.model = self.model.to(device=self.cuda)
         self.max_candidate_num = exp_settings['max_candidate_num']
-        self.feature_size = data_set.feature_size
+
         self.learning_rate = float(self.hparams.learning_rate)
         self.global_step = 0
 
@@ -80,8 +84,6 @@ class NavieAlgorithm(BaseAlgorithm):
             and a tf.summary containing related information about the step.
 
         """
-        # Output feed: depends on whether we do a backward step or not.
-        # compute propensity weights for the input data.
         self.global_step += 1
         self.model.train()
         self.create_input_feed(input_feed, self.rank_list_size)
@@ -138,9 +140,10 @@ class NavieAlgorithm(BaseAlgorithm):
                 self.docid_inputs, self.output)
 
             for metric in self.exp_settings['metrics']:
-                for topn in self.exp_settings['metrics_topn']:
-                    metric_value = ultra.utils.make_ranking_metric_fn(
-                        metric, topn)(self.labels, pad_removed_output, None)
+                topn = self.exp_settings['metrics_topn']
+                metric_values = ultra.utils.make_ranking_metric_fn(
+                    metric, topn)(self.labels, pad_removed_output, None)
+                for topn, metric_value in zip(topn,metric_values):
                     self.create_summary('%s_%d' % (metric, topn),
-                                        '%s_%d' % (metric, topn), metric_value, False)
+                                        '%s_%d' % (metric, topn), metric_value.item(), False)
         return None, self.output, self.eval_summary  # loss, outputs, summary.

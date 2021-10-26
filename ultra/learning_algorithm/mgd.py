@@ -52,6 +52,8 @@ class MGD(DBGD):
         self.train_summary = {}
         self.eval_summary = {}
         self.exp_settings = exp_settings
+        if 'selection_bias_cutoff' in self.exp_settings.keys():
+            self.rank_list_size = self.exp_settings['selection_bias_cutoff']
         self.feature_size = data_set.feature_size
         self.model = self.create_model(self.feature_size)
         if self.is_cuda_avail:
@@ -62,7 +64,7 @@ class MGD(DBGD):
         self.winners_name = "winners"
 
         # Feeds for inputs.
-        self.rank_list_size = exp_settings['selection_bias_cutoff']
+
         self.is_training = True
         self.letor_features_name = "letor_features"
         self.letor_features = None
@@ -191,11 +193,12 @@ class MGD(DBGD):
                 self.docid_inputs, self.output)
 
             for metric in self.exp_settings['metrics']:
-                for topn in self.exp_settings['metrics_topn']:
-                    metric_value = ultra.utils.make_ranking_metric_fn(
-                        metric, topn)(self.labels, pad_removed_output, None)
+                topn = self.exp_settings['metrics_topn']
+                metric_values = ultra.utils.make_ranking_metric_fn(
+                    metric, topn)(self.labels, pad_removed_output, None)
+                for topn, metric_value in zip(topn, metric_values):
                     self.create_summary('%s_%d' % (metric, topn),
-                                        '%s_%d' % (metric, topn), metric_value, False)
+                                        '%s_%d' % (metric, topn), metric_value.item(), False)
 
         return None, self.output, self.eval_summary  # no loss, outputs, summary.
 

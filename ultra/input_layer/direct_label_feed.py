@@ -12,6 +12,7 @@ from __future__ import print_function
 
 import random
 import numpy as np
+import time
 # We disable pylint because we need python3 compatibility.
 from six.moves import zip     # pylint: disable=redefined-builtin
 from ultra.input_layer import BaseInputFeed
@@ -51,7 +52,25 @@ class DirectLabelFeed(BaseInputFeed):
             'Create direct label feed with list size %d with feature size %d' %
             (self.rank_list_size, self.feature_size))
 
-    def prepare_true_labels_with_index(
+    def prepare_true_labels_with_index_ULTRE(
+            self, data_set, index, docid_inputs, letor_features, labels, check_validation=True):
+        i = index
+        # Generate label list.
+        label_list = [data_set.labels[i][x] for x in range(
+                self.rank_list_size)]
+
+        # Check if data is valid
+        if check_validation and sum(label_list) == 0:
+            return
+        base = len(letor_features)
+        for x in range(self.rank_list_size):
+            # feature_idx = data_set.dids.index(data_set.initial_list[i][x])
+            letor_features.append(data_set.features_dict[data_set.initial_list[i][x]])
+        docid_inputs.append(list([base + x for x in range(self.rank_list_size)]))
+        labels.append(label_list)
+        return
+
+    def prepare_true_labels_with_index_ULTRA(
             self, data_set, index, docid_inputs, letor_features, labels, check_validation=True):
         i = index
         # Generate label list.
@@ -72,7 +91,7 @@ class DirectLabelFeed(BaseInputFeed):
         labels.append(label_list)
         return
 
-    def get_batch(self, data_set, check_validation=False):
+    def get_batch(self, data_set, check_validation=False, data_format = "ULTRA"):
         """Get a random batch of data, prepare for step. Typically used for training.
 
         To feed data in step(..) it must be a list of batch-major vectors, while
@@ -98,9 +117,12 @@ class DirectLabelFeed(BaseInputFeed):
         for _ in range(self.batch_size):
             i = int(random.random() * length)
             rank_list_idxs.append(i)
-            self.prepare_true_labels_with_index(data_set, i,
-                                                docid_inputs, letor_features, labels, check_validation)
-
+            if data_format == "ULTRE":
+                self.prepare_true_labels_with_index_ULTRE(data_set, i,
+                                                    docid_inputs, letor_features, labels, check_validation)
+            else:
+                self.prepare_true_labels_with_index_ULTRA(data_set, i,
+                                                          docid_inputs, letor_features, labels, check_validation)
         local_batch_size = len(docid_inputs)
         letor_features_length = len(letor_features)
         for i in range(local_batch_size):
@@ -136,7 +158,7 @@ class DirectLabelFeed(BaseInputFeed):
 
         return input_feed, info_map
 
-    def get_next_batch(self, index, data_set, check_validation=False):
+    def get_next_batch(self, index, data_set, check_validation=False, data_format = "ULTRA"):
         """Get the next batch of data from a specific index, prepare for step.
            Typically used for validation.
 
@@ -163,8 +185,12 @@ class DirectLabelFeed(BaseInputFeed):
         num_remain_data = len(data_set.initial_list) - index
         for offset in range(min(self.batch_size, num_remain_data)):
             i = index + offset
-            self.prepare_true_labels_with_index(
-                data_set, i, docid_inputs, letor_features, labels, check_validation)
+            if data_format == "ULTRE":
+                self.prepare_true_labels_with_index_ULTRE(data_set, i,
+                                                          docid_inputs, letor_features, labels, check_validation)
+            else:
+                self.prepare_true_labels_with_index_ULTRA(data_set, i,
+                                                          docid_inputs, letor_features, labels, check_validation)
 
         local_batch_size = len(docid_inputs)
         letor_features_length = len(letor_features)

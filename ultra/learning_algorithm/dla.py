@@ -94,13 +94,13 @@ class DLA(BaseAlgorithm):
         self.exp_settings = exp_settings
         self.max_candidate_num = exp_settings['max_candidate_num']
         self.feature_size = data_set.feature_size
-        self.rank_list_size = exp_settings['selection_bias_cutoff']
-        self.propensity_model = DenoisingNet(self.rank_list_size)
+        if 'selection_bias_cutoff' in exp_settings.keys():
+            self.rank_list_size = self.exp_settings['selection_bias_cutoff']
+            self.propensity_model = DenoisingNet(self.rank_list_size)
         self.model = self.create_model(self.feature_size)
         if self.is_cuda_avail:
             self.model = self.model.to(device=self.cuda)
             self.propensity_model = self.propensity_model.to(device=self.cuda)
-        self.rank_list_size = exp_settings['selection_bias_cutoff']
         self.letor_features_name = "letor_features"
         self.letor_features = None
         self.docid_inputs_name = []  # a list of top documents
@@ -188,6 +188,7 @@ class DLA(BaseAlgorithm):
 
         """
         # Build model
+        self.rank_list_size = self.exp_settings['selection_bias_cutoff']
         self.model.train()
         self.create_input_feed(input_feed, self.rank_list_size)
         train_output = self.ranking_model(self.model,
@@ -216,6 +217,7 @@ class DLA(BaseAlgorithm):
         with torch.no_grad():
             self.relevance_weights = self.get_normalized_weights(
                 self.logits_to_prob(train_output))
+
         self.exam_loss = self.loss_func(
             self.propensity,
             self.labels,
@@ -274,14 +276,12 @@ class DLA(BaseAlgorithm):
                 self.docid_inputs, self.output)
             # reshape from [max_candidate_num, ?] to [?, max_candidate_num]
             for metric in self.exp_settings['metrics']:
-                for topn in self.exp_settings['metrics_topn']:
-                    metric_value = ultra.utils.make_ranking_metric_fn(
-                        metric, topn)(self.labels, pad_removed_output, None)
-                    # self.writer.add_scalar(
-                    #     '%s_%d' %
-                    #     (metric, topn), metric_value)
-                    self.eval_summary['%s_%d' %
-                        (metric, topn)] = metric_value
+                topn = self.exp_settings['metrics_topn']
+                metric_values = ultra.utils.make_ranking_metric_fn(
+                    metric, topn)(self.labels, pad_removed_output, None)
+                for topn, metric_value in zip(topn, metric_values):
+                    self.create_summary('%s_%d' % (metric, topn),
+                                        '%s_%d' % (metric, topn), metric_value.item(), False)
         return None, self.output, self.eval_summary # no loss, outputs, summary.
 
     def get_normalized_weights(self, propensity):
