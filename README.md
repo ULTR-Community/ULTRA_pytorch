@@ -16,6 +16,7 @@
 <!---[![codecov](https://codecov.io/gh/NTMC-Community/MatchZoo/branch/master/graph/badge.svg)](https://codecov.io/gh/NTMC-Community/MatchZoo)---> 
 <!---[![Requirements Status](https://requires.io/github/NTMC-Community/MatchZoo/requirements.svg?branch=master)](https://requires.io/github/NTMC-Community/MatchZoo/requirements/?branch=master)---> 
 
+🔥**News: A TensorFlow version of this package can be found in [ULTRA](https://github.com/ULTR-Community/ULTRA).**
 
 This is an Unbiased Learning To Rank Algorithms (ULTRA) toolbox, which provides a codebase for experiments and research on learning to rank with human annotated or noisy labels. With the unified data processing pipeline, ULTRA supports multiple unbiased learning-to-rank algorithms, online learning-to-rank algorithms, neural learning-to-rank models, as well as different methods to use and simulate noisy labels (e.g., clicks) to train and test different algorithms/ranking models. A user-friendly documentation can be found [here](https://ultr-community.github.io/ULTRA_pytorch/).
 
@@ -30,7 +31,7 @@ source venv/bin/activate
 
 **Install ULTRA from the source:**
 ```
-https://github.com/ULTR-Community/ULTRA_pytorch.git
+git clone https://github.com/ULTR-Community/ULTRA_pytorch.git
 cd ULTRA
 make init
 ```
@@ -125,32 +126,34 @@ python ultra/utils/propensity_estimator.py example/ClickModel/pbm_0.1_1.0_4_1.0.
 If you use ULTRA in your research, please use the following BibTex entry.
 
 ```
-@misc{ai2020unbiased,
-    title={Unbiased Learning to Rank: Online or Offline?},
-    author={Qingyao Ai and Tao Yang and Huazheng Wang and Jiaxin Mao},
-    year={2020},
-    eprint={2004.13574},
-    archivePrefix={arXiv},
-    primaryClass={cs.IR}
+@misc{tran2021ultra,
+      title={ULTRA: An Unbiased Learning To Rank Algorithm Toolbox}, 
+      author={Anh Tran and Tao Yang and Qingyao Ai},
+      year={2021},
+      eprint={2108.05073},
+      archivePrefix={arXiv},
+      primaryClass={cs.IR}
 }
 
-@inproceedings{Ai:2018:ULR:3269206.3274274,
- author = {Ai, Qingyao and Mao, Jiaxin and Liu, Yiqun and Croft, W. Bruce},
- title = {Unbiased Learning to Rank: Theory and Practice},
- booktitle = {Proceedings of the 27th ACM International Conference on Information and Knowledge Management},
- series = {CIKM '18},
- year = {2018},
- isbn = {978-1-4503-6014-2},
- location = {Torino, Italy},
- pages = {2305--2306},
- numpages = {2},
- url = {http://doi.acm.org/10.1145/3269206.3274274},
- doi = {10.1145/3269206.3274274},
- acmid = {3274274},
- publisher = {ACM},
- address = {New York, NY, USA},
- keywords = {click model, counterfactual learning, unbiased learning to rank, user bias},
+@article{10.1145/3439861,
+author = {Ai, Qingyao and Yang, Tao and Wang, Huazheng and Mao, Jiaxin},
+title = {Unbiased Learning to Rank: Online or Offline?},
+year = {2021},
+issue_date = {February 2021},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {39},
+number = {2},
+issn = {1046-8188},
+url = {https://doi.org/10.1145/3439861},
+doi = {10.1145/3439861},
+journal = {ACM Trans. Inf. Syst.},
+month = feb,
+articleno = {21},
+numpages = {29},
+keywords = {unbiased learning, online learning, Learning to rank}
 }
+
 ```
 
 

@@ -71,10 +71,11 @@ def create_model(exp_settings, data_set):
 
     model = ultra.utils.find_class(exp_settings['learning_algorithm'])(data_set, exp_settings)
     try:
-        ckpt = torch.load(args.model_dir)
-        print("Reading model parameters from %s" % args.model_dir)
-        model.load_state_dict(ckpt)
-        model.eval()
+        checkpoint_path = os.path.join(args.model_dir, "%s.ckpt" % exp_settings['learning_algorithm'])
+        ckpt = torch.load(checkpoint_path)
+        print("Reading model parameters from %s" % checkpoint_path)
+        model.model.load_state_dict(ckpt)
+        model.model.eval()
     except FileNotFoundError:
         print("Created model with fresh parameters.")
     return model
@@ -233,6 +234,13 @@ def test(exp_settings):
                                                                              exp_settings)
     exp_settings['max_candidate_num'] = test_set.rank_list_size
 
+    if 'selection_bias_cutoff' not in exp_settings:  # check if there is a limit on the number of items per training query.
+        exp_settings['selection_bias_cutoff'] = args.selection_bias_cutoff if args.selection_bias_cutoff > 0 else \
+            exp_settings['max_candidate_num']
+    exp_settings['selection_bias_cutoff'] = min(exp_settings['selection_bias_cutoff'],
+                                                exp_settings['max_candidate_num'])
+    print('Users can only see the top %d documents for each query in training.' % exp_settings['selection_bias_cutoff'])
+    
     test_set.pad(exp_settings['max_candidate_num'])
 
     # Create model and load parameters.
