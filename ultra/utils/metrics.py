@@ -84,12 +84,12 @@ def make_ranking_metric_fn(metric_key,
     def _average_relevance_position_fn(labels, predictions, weights):
         """Returns average relevance position as the metric."""
         return average_relevance_position(
-            labels, predictions, weights=weights, name=name)
+            labels, predictions, weights=weights, topn=topn, name=name)
 
     def _mean_reciprocal_rank_fn(labels, predictions, weights):
         """Returns mean reciprocal rank as the metric."""
         return mean_reciprocal_rank(
-            labels, predictions, weights=weights, name=name)
+            labels, predictions, weights=weights, topn=topn, name=name)
 
     def _expected_reciprocal_rank_fn(labels, predictions, weights):
         """Returns expected reciprocal rank as the metric."""
@@ -136,7 +136,7 @@ def make_ranking_metric_fn(metric_key,
     def _ordered_pair_accuracy_fn(labels, predictions, weights):
         """Returns ordered pair accuracy as the metric."""
         return ordered_pair_accuracy(
-            labels, predictions, weights=weights, name=name)
+            labels, predictions, weights=weights, topn=topn, name=name)
 
     metric_fn_dict = {
         RankingMetricKey.ARP: _average_relevance_position_fn,
@@ -265,7 +265,7 @@ def _prepare_and_validate_params(labels, predictions, weights=None, topn=None):
     return labels, predictions, example_weights, topn
 
 
-def mean_reciprocal_rank(labels, predictions, weights=None, name=None):
+def mean_reciprocal_rank(labels, predictions, weights=None, topn=None, name=None):
     """Computes mean reciprocal rank (MRR).
 
     Args:
@@ -275,6 +275,7 @@ def mean_reciprocal_rank(labels, predictions, weights=None, name=None):
         the ranking score of the corresponding example.
       weights: A `Tensor` of the same shape of predictions or [batch_size, 1]. The
         former case is per-example and the latter case is per-list.
+      topn: A list of cutoff for how many examples to consider for this metric.
       name: A string used as the name for this metric.
 
     Returns:
@@ -282,19 +283,19 @@ def mean_reciprocal_rank(labels, predictions, weights=None, name=None):
     """
     list_size = predictions.size()[-1]
     labels, predictions, weights, topn = _prepare_and_validate_params(
-        labels, predictions, weights, list_size)
+        labels, predictions, weights, topn)
     _, indices = predictions.sort(descending=True, dim=-1)
     sorted_labels = torch.gather(labels, dim=1, index=indices)
     # Relevance = 1.0 when labels >= 1.0 to accommodate graded relevance.
     relevance = torch.ge(sorted_labels, 1.0).type(torch.float32)
-    reciprocal_rank = 1.0 / torch.arange(start=1, end=topn + 1, device=device,
+    reciprocal_rank = 1.0 / torch.arange(start=1, end=list_size + 1, device=device,
                                          dtype=torch.float32)
     # MRR has a shape of [batch_size, 1]
     mrr = torch.max(
         relevance * reciprocal_rank, dim=1, keepdim=True).values
-    return torch.mean(
-        mrr * torch.ones_like(weights) * weights)
-
+    mrr =  torch.mean(
+        mrr * torch.ones_like(weights) * weights).repeat(len(topn))
+    return mrr
 
 def expected_reciprocal_rank(
         labels, predictions, weights=None, topn=None, name=None):
@@ -334,7 +335,7 @@ def expected_reciprocal_rank(
     return torch.mean(err,dim=0)
 
 
-def average_relevance_position(labels, predictions, weights=None, name=None):
+def average_relevance_position(labels, predictions, weights=None, topn=None, name=None):
     """Computes average relevance position (ARP).
 
     This can also be named as average_relevance_rank, but this can be confusing
@@ -347,6 +348,7 @@ def average_relevance_position(labels, predictions, weights=None, name=None):
         the ranking score of the corresponding example.
       weights: A `Tensor` of the same shape of predictions or [batch_size, 1]. The
         former case is per-example and the latter case is per-list.
+      topn: A list of cutoff for how many examples to consider for this metric.
       name: A string used as the name for this metric.
 
     Returns:
@@ -354,16 +356,19 @@ def average_relevance_position(labels, predictions, weights=None, name=None):
     """
     list_size = predictions.size()[1]
     labels, predictions, weights, topn = _prepare_and_validate_params(
-        labels, predictions, weights, list_size)
+        labels, predictions, weights,topn)
     _, indices = predictions.sort(descending=True, dim=-1)
     sorted_labels = torch.gather(labels, dim=1, index=indices)
     sorted_weights = torch.gather(weights, dim=1, index=indices)
-    relevance = sorted_labels * sorted_weights
-    position = torch.arange(1, topn + 1, dtype=torch.float)
+    position = torch.arange(1, list_size + 1, dtype=torch.float)
+    weighted_labels = sorted_labels * sorted_weights
+    per_list_weights = torch.sum(weighted_labels, dim=1, keepdim=True)
     # TODO(xuanhui): Consider to add a cap poistion topn + 1 when there is no
     # relevant examples.
-    return torch.mean(
-        position * torch.ones_like(relevance) * relevance)
+    per_list_arp = _safe_div(torch.sum(position * weighted_labels, dim=1, keepdim=True),
+        per_list_weights)
+    arp= torch.mean( per_list_arp).repeat(len(topn))
+    return arp
 
 
 def precision(labels, predictions, weights=None, topn=None, name=None):
@@ -429,7 +434,7 @@ def mean_average_precision(labels,
     sorted_weights = torch.gather(weights, dim=1, index=indices)
     # Relevance = 1.0 when labels >= 1.0.
     sorted_relevance = torch.ge(sorted_labels, 1.0).to(dtype=torch.float32)
-    per_list_relevant_counts = torch.cumsum(sorted_relevance, axis=1)
+    per_list_relevant_counts = torch.cumsum(sorted_relevance, dim=1)
     per_list_cutoffs = torch.cumsum(torch.ones_like(sorted_relevance), dim=1)
     per_list_precisions = torch.nan_to_num(torch.div(per_list_relevant_counts,
                                                 per_list_cutoffs))
@@ -444,7 +449,8 @@ def mean_average_precision(labels,
     # 0 when there is no relevant example in topn.
     per_list_weights = _per_example_weights_to_per_list_weights(
         weights, torch.ge(labels, 1.0).to(dtype=torch.float32))
-    return torch.mean(per_list_map, per_list_weights)
+    map= torch.mean(per_list_map* per_list_weights).repeat(len(topn))
+    return map
 
 def normalized_discounted_cumulative_gain(labels,
                                           predictions,
@@ -521,7 +527,7 @@ def discounted_cumulative_gain(labels,
         _safe_div(dcg, per_list_weights) * per_list_weights,dim=0)
 
 
-def ordered_pair_accuracy(labels, predictions, weights=None):
+def ordered_pair_accuracy(labels, predictions, weights=None, topn=None, name=None):
     """Computes the percentage of correctedly ordered pair.
 
     For any pair of examples, we compare their orders determined by `labels` and
@@ -535,13 +541,14 @@ def ordered_pair_accuracy(labels, predictions, weights=None):
         the ranking score of the corresponding example.
       weights: A `Tensor` of the same shape of predictions or [batch_size, 1]. The
         former case is per-example and the latter case is per-list.
+      topn: A list of cutoff for how many examples to consider for this metric.
       name: A string used as the name for this metric.
 
     Returns:
       A metric for the accuracy or ordered pairs.
     """
-    clean_labels, predictions, weights, _ = _prepare_and_validate_params(
-        labels, predictions, weights)
+    clean_labels, predictions, weights, topn = _prepare_and_validate_params(
+        labels, predictions, weights, topn)
     label_valid = torch.eq(clean_labels, labels)
     valid_pair = torch.logical_and(
         torch.unsqueeze(label_valid, 2),
@@ -556,4 +563,5 @@ def ordered_pair_accuracy(labels, predictions, weights=None):
                     torch.gt(pair_pred_diff, 0).to(dtype=torch.float)
     pair_weights = torch.gt(pair_label_diff, 0).to(dtype=torch.float) * torch.unsqueeze(
             weights, 2) * valid_pair.to(dtype=torch.float)
-    return torch.mean(correct_pairs * pair_weights)
+    opa = torch.mean(correct_pairs * pair_weights).repeat(len(topn))
+    return opa
