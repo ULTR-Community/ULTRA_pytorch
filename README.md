@@ -176,6 +176,12 @@ keywords = {unbiased learning, online learning, Learning to rank}
         Ph.D., Univ. of Utah</p>​
       </td>
       <td>
+        ​ <a href="https://github.com/rowedenny"><img width="50" height="50" src="https://github.com/rowedenny.png?s=50" alt="rowedenny"></a><br>
+        ​ <a href="https://github.com/rowedenny">Dan Luo</a> ​
+        <p>Core Dev<br>
+        Ph.D., Lehigh Univ.</p>​
+      </td>
+      <td>
          <a href="https://github.com/Taosheng-ty"><img width="50" height="50" src="https://github.com/Taosheng-ty.png?s=50" alt="Taosheng-ty"></a><br>
          <a href="https://github.com/Taosheng-ty">Tao Yang</a> ​
         <p>Core Dev<br> Ph.D., Univ. of Utah</p>​
