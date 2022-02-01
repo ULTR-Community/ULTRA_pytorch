@@ -13,6 +13,7 @@ from __future__ import print_function
 import os
 import sys
 import time
+import copy
 import torch
 from torch.utils.tensorboard import SummaryWriter
 import argparse
@@ -175,7 +176,8 @@ def train(exp_settings):
                     input_feed, info_map = data_input_feed.get_next_batch(
                         it, data_set, check_validation=False, data_format=args.data_format)
                     _, _, summary = model.validation(input_feed)
-                    summary_list.append(summary)
+                    # deep copy the summary dict
+                    summary_list.append(copy.deepcopy(summary))
                     batch_size_list.append(len(info_map['input_list']))
                     it += batch_size_list[-1]
                     count_batch += 1.0
@@ -262,7 +264,8 @@ def test(exp_settings):
     while it < len(test_set.initial_list):
         input_feed, info_map = test_input_feed.get_next_batch(it, test_set, check_validation=False)
         _, output_logits, summary = model.validation(input_feed)
-        summary_list.append(summary)
+        # deep copy the summary dict
+        summary_list.append(copy.deepcopy(summary))
         batch_size_list.append(len(info_map['input_list']))
         for x in range(batch_size_list[-1]):
             rerank_scores.append(output_logits[x])
