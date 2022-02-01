@@ -263,7 +263,7 @@ class DLA(BaseAlgorithm):
         # print(" Loss %f at Global Step %d: " % (self.loss.item(),self.global_step))
         print(" Loss %f at Global Step %d: " % (self.loss.item(), self.global_step))
         self.global_step+=1
-        return self.loss, None, self.train_summary
+        return self.loss.item(), None, self.train_summary
 
     def validation(self, input_feed, is_online_simulation=False):
         self.model.eval()

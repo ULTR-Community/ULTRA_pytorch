@@ -203,7 +203,7 @@ class NSGD(DBGD):
         #                             True)
         # loss, no outputs, summary.
         self.global_step += 1
-        return self.loss, self.output, self.train_summary
+        return self.loss.item(), self.output, self.train_summary
 
     def validation(self, input_feed, is_online_simulation=False):
         self.model.eval()
