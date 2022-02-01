@@ -190,7 +190,7 @@ class RegressionEM(BaseAlgorithm):
 
         self.global_step += 1
         print('Loss %f at global step %d' % (self.loss, self.global_step))
-        return self.loss, None, self.train_summary
+        return self.loss.item(), None, self.train_summary
 
     def validation(self, input_feed, is_online_simulation= False):
         """Run a step of the model feeding the given inputs for validating process.

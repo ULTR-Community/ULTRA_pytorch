@@ -180,7 +180,7 @@ class MGD(DBGD):
         #                             True)
         self.global_step+=1
         print(" Loss %f at Global Step %d: " % (self.loss.item(), self.global_step))
-        return self.loss, self.output, self.train_summary
+        return self.loss.item(), self.output, self.train_summary
 
     def validation(self, input_feed, is_online_simulation=False):
         self.model.eval()

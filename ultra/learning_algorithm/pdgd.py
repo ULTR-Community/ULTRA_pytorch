@@ -216,7 +216,7 @@ class PDGD(BaseAlgorithm):
         # loss, no outputs, summary.
         self.global_step+=1
         print(" Loss %f at Global Step %d: " % (self.loss.item(), self.global_step))
-        return self.loss, None, self.train_summary
+        return self.loss.item(), None, self.train_summary
 
     def validation(self, input_feed, is_online_simulation=False):
         self.model.eval()
