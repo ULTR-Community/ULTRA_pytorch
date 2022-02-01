@@ -332,7 +332,8 @@ def expected_reciprocal_rank(
     err = [torch.sum(
         relevance * non_rel * reciprocal_rank * sorted_weights, dim=1, keepdim=True) for reciprocal_rank in reciprocal_rank_topn]
     err = torch.stack(err,dim=0)
-    return torch.mean(err,dim=0)
+    # ERR has size [top_N, batch_size, 1]
+    return torch.mean(err,dim=1)
 
 
 def average_relevance_position(labels, predictions, weights=None, topn=None, name=None):
