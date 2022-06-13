@@ -326,7 +326,7 @@ def expected_reciprocal_rank(
     non_rel = torch.cumprod(1.0 - relevance, dim=1) / (1.0 - relevance)
     reciprocal_rank = 1.0 / \
       torch.arange(start=1, end=list_size + 1,device=device,dtype=torch.float32)
-    mask = [torch.ge(reciprocal_rank, 1.0 / (n + 1)).type(torch.float32) for n in topn]
+    mask = [torch.ge(reciprocal_rank, 1.0 / n).type(torch.float32) for n in topn]
     reciprocal_rank_topn = [reciprocal_rank * top_n_mask for top_n_mask in mask]
     # ERR has a shape of [batch_size, 1]
     err = [torch.sum(
