@@ -167,7 +167,7 @@ keywords = {unbiased learning, online learning, Learning to rank}
         ​ <a href="https://github.com/QingyaoAi"><img width="50" height="50" src="https://github.com/QingyaoAi.png?s=50" alt="QingyaoAi"></a><br>
         ​ <a href="http://ir.aiqingyao.org/">Qingyao Ai</a> ​
         <p>Core Dev<br>
-        ASST PROF, Univ. of Utah</p>​
+        ASST PROF, Tsinghua Univ.</p>​
       </td>
       <td>
         ​ <a href="https://github.com/anhtran1010"><img width="50" height="50" src="https://github.com/anhtran1010.png?s=50" alt="anhtran1010"></a><br>
@@ -210,7 +210,7 @@ Please read the [Contributing Guide](./CONTRIBUTING.md) before creating a pull r
 ## Project Organizers
 
 - Qingyao Ai
-  * School of Computing, University of Utah
+  * Dept. of CS&T, Tsinghua University
   * [Homepage](http://ir.aiqingyao.org/)
 
 
