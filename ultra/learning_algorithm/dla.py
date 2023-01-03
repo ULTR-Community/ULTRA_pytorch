@@ -156,7 +156,8 @@ class DLA(BaseAlgorithm):
         opt_denoise.zero_grad()
         opt_ranker.zero_grad()
 
-        self.loss.backward()
+        self.exam_loss.backward()
+        self.rank_loss.backward()
 
         if self.hparams.max_gradient_norm > 0:
             nn.utils.clip_grad_norm_(self.propensity_model.parameters(), self.hparams.max_gradient_norm)
@@ -201,7 +202,7 @@ class DLA(BaseAlgorithm):
             self.propensity_weights = self.get_normalized_weights(
                 self.logits_to_prob(self.propensity))
         self.rank_loss = self.loss_func(
-            train_output, self.labels, self.propensity_weights)
+            train_output, self.labels, self.propensity_weights.detach().clone())
         # pw_list = torch.unbind(
         #     self.propensity_weights,
         #     dim=1)  # Compute propensity weights
@@ -221,7 +222,7 @@ class DLA(BaseAlgorithm):
         self.exam_loss = self.loss_func(
             self.propensity,
             self.labels,
-            self.relevance_weights)
+            self.relevance_weights.detach().clone())
         # rw_list = torch.unbind(
         #     self.relevance_weights,
         #     dim=1)  # Compute propensity weights
